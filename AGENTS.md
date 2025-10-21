@@ -50,6 +50,30 @@ This document defines the agents and protocols for the Disk Bloat Scanner projec
    - Use branches for experimental changes.
    - Backup important files externally.
 
+### After Repository Migration
+1. **Clone Repository**:
+   - `git clone <repository-url> disk-bloat-scanner`
+   - `cd disk-bloat-scanner`
+
+2. **Setup Dependencies**:
+   - Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+   - Install Node.js: Download from https://nodejs.org/
+   - Install dependencies: `npm install`
+
+3. **Initialize BD Tracker**:
+   - Run `bd init` to set up issue tracking
+   - Import existing issues if available
+
+4. **Verify Setup**:
+   - Build backend: `cargo build` (in src-tauri/)
+   - Test frontend: `npm run dev`
+   - Run full app: `cargo tauri dev`
+
+5. **Resume Development**:
+   - Check BD issues: `bd list`
+   - Claim work: `bd ready`
+   - Follow EDGS schedule in EDGS_SCHEDULE.md
+
 ### Emergency Protocol (TES-2025-v6.9)
 - If both crash and git issues occur, follow TES protocol:
   - Isolate project directory.
@@ -64,4 +88,7 @@ This document defines the agents and protocols for the Disk Bloat Scanner projec
 - Keep backups of critical data.
 
 ## Contact
+- **Repository**: https://github.com/yourusername/disk-bloat-scanner
+- **Issues**: Use BD tracker (`bd create`) or GitHub Issues
+- **Documentation**: See README.md and DESIGN_SPEC.md
 We track work and issues in Beads instead of Markdown. MANDATORY - Run `bd quickstart` to see how.
