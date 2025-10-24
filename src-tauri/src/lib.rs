@@ -687,14 +687,48 @@ async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
     Ok(result)
 }
 
+// Safety limits for batch deletion
+const MAX_BATCH_DELETE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
+const MAX_BATCH_DELETE_COUNT: usize = 10_000; // 10k files
+
+fn validate_deletion_request(req: &CleanupReq) -> Result<(), String> {
+    if req.paths.len() > MAX_BATCH_DELETE_COUNT {
+        return Err(format!(
+            "Cannot delete {} files at once (maximum: {})",
+            req.paths.len(),
+            MAX_BATCH_DELETE_COUNT
+        ));
+    }
+
+    // Calculate total size
+    let total_size: u64 = req.paths
+        .iter()
+        .filter_map(|p| std::fs::metadata(p).ok())
+        .map(|m| m.len())
+        .sum();
+
+    if total_size > MAX_BATCH_DELETE_SIZE {
+        let total_gb = total_size as f64 / (1024.0 * 1024.0 * 1024.0);
+        let max_gb = MAX_BATCH_DELETE_SIZE as f64 / (1024.0 * 1024.0 * 1024.0);
+        return Err(format!(
+            "Cannot delete {:.1} GB at once (maximum: {:.0} GB)",
+            total_gb, max_gb
+        ));
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     let mut deleted = Vec::new();
     let mut skipped = Vec::new();
     let mut errors = Vec::new();
 
-    log::info!("Starting cleanup of {} paths", req.paths.len());
-    // Logging moved to combined line above
+    log::info!("Starting cleanup of {} paths (dry_run={}, trash={})", req.paths.len(), req.dry_run, req.trash);
+
+    // Validate deletion request
+    validate_deletion_request(&req)?;
 
     if req.dry_run {
         // Dry run - just return what would be deleted
