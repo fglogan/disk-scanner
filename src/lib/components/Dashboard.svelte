@@ -338,8 +338,8 @@
       <p class="text-3xl font-bold text-white mt-1">
         {$summaryStats.project_bloat_gb.toFixed(1)} GB
       </p>
-      <p class="text-xs text-slate-400">
-        in {$summaryStats.project_bloat_count} projects
+      <p class="text-lg font-semibold text-indigo-300 mt-1">
+        {$summaryStats.project_bloat_count} dirs
       </p>
     </div>
     <!-- Summary Item -->
@@ -348,8 +348,8 @@
       <p class="text-3xl font-bold text-white mt-1">
         {$summaryStats.large_files_gb.toFixed(1)} GB
       </p>
-      <p class="text-xs text-slate-400">
-        {$summaryStats.large_files_count} files > 1GB
+      <p class="text-lg font-semibold text-teal-300 mt-1">
+        {$summaryStats.large_files_count} files
       </p>
     </div>
     <!-- Summary Item -->
@@ -358,8 +358,8 @@
       <p class="text-3xl font-bold text-white mt-1">
         {$summaryStats.duplicates_gb.toFixed(1)} GB
       </p>
-      <p class="text-xs text-slate-400">
-        {$summaryStats.duplicates_count} file sets
+      <p class="text-lg font-semibold text-amber-300 mt-1">
+        {$summaryStats.duplicates_count} sets
       </p>
     </div>
     <!-- Summary Item -->
@@ -368,8 +368,8 @@
       <p class="text-3xl font-bold text-white mt-1">
         {$summaryStats.junk_files_mb.toFixed(1)} MB
       </p>
-      <p class="text-xs text-slate-400">
-        {$summaryStats.junk_files_count} junk files
+      <p class="text-lg font-semibold text-emerald-300 mt-1">
+        {$summaryStats.junk_files_count} files
       </p>
     </div>
     <!-- Summary Item -->
