@@ -42,14 +42,27 @@
         req: { paths, dry_run: false, trash: true },
       });
 
-      alert(
-        `Deleted: ${result.deleted.length}, Skipped: ${result.skipped.length}, Errors: ${result.errors.length}`,
-      );
+      let message = `✅ Deleted: ${result.deleted.length}`;
+      if (result.skipped.length > 0) {
+        message += `\n⚠️ Skipped: ${result.skipped.length} (already deleted)`;
+      }
+      if (result.errors.length > 0) {
+        message += `\n❌ Errors: ${result.errors.length}`;
+      }
+      
+      alert(message);
 
       // Clear selection
       selectedPaths.set(new Set());
 
-      // TODO: Re-run scan to refresh results
+      // Refresh page to update results
+      if (result.deleted.length > 0) {
+        setTimeout(() => {
+          if (confirm("Files deleted! Refresh to update the list?")) {
+            window.location.reload();
+          }
+        }, 500);
+      }
     } catch (e) {
       alert("Cleanup failed: " + e);
     }
