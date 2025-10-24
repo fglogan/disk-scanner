@@ -28,6 +28,8 @@
 
   let currentScanDir = "";
   let statsInterval = null;
+  let filesScanned = 0;
+  let scanningTimer = null;
 
   async function loadSystemInfo() {
     try {
@@ -69,7 +71,13 @@
   async function runManualScan() {
     isScanning.set(true);
     currentScanDir = $settings.directories[0];
+    filesScanned = 0;
     scanProgress.set("Getting system info...");
+
+    // Start file counter animation
+    scanningTimer = setInterval(() => {
+      filesScanned += Math.floor(Math.random() * 50) + 10; // Simulate progress
+    }, 100);
 
     try {
       console.log("Starting scan on directory:", $settings.directories[0]);
@@ -146,6 +154,10 @@
       currentScanDir = "";
     } finally {
       isScanning.set(false);
+      if (scanningTimer) {
+        clearInterval(scanningTimer);
+        scanningTimer = null;
+      }
     }
   }
 

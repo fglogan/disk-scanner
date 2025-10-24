@@ -1,8 +1,8 @@
 [package]
 name = "disk-bloat-scanner"
 version = "0.1.0"
-description = "Cross-platform desktop app for identifying and managing disk bloat, build artifacts, and duplicate files"
-authors = ["Disk Bloat Scanner Contributors"]
+description = "Cross-platform desktop app by Tempext AI for identifying and managing disk space usage by detecting build artifacts, duplicate files, and large files on your system"
+authors = ["Tempext AI"]
 license = "Apache-2.0"
 repository = "https://github.com/yourusername/disk-bloat-scanner"
 homepage = "https://github.com/yourusername/disk-bloat-scanner"

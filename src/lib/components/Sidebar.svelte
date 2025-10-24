@@ -18,7 +18,16 @@
 <nav
   class="sidebar-vibrant w-64 h-full flex-shrink-0 p-4 space-y-2 overflow-y-auto"
 >
-  <div class="px-4 py-2 mb-4">
+  <div class="px-4 py-2 mb-6">
+    <!-- Tempext Branding -->
+    <div class="flex items-center space-x-2 mb-2">
+      <img 
+        src="/tempext-logo.png" 
+        alt="Tempext" 
+        class="h-6 w-auto"
+      />
+    </div>
+    <!-- App Title -->
     <h1 class="text-xl font-bold text-white flex items-center space-x-2">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -41,8 +50,9 @@
           y2="17"
         /><line x1="14" x2="14" y1="11" y2="17" />
       </svg>
-      <span>Repo-Sweep</span>
+      <span>Disk Bloat Scanner</span>
     </h1>
+    <p class="text-xs text-slate-400 mt-1 ml-8">by Tempext AI</p>
   </div>
 
   <ul class="space-y-1">

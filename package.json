@@ -1,19 +1,10 @@
 {
   "name": "disk-bloat-scanner",
+  "private": true,
   "version": "0.1.0",
-  "description": "Cross-platform desktop app for identifying and managing disk bloat",
-  "author": "Disk Bloat Scanner Contributors",
+  "description": "Cross-platform desktop app by Tempext AI for identifying and managing disk bloat",
+  "author": "Tempext AI",
   "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/disk-bloat-scanner.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/disk-bloat-scanner/issues"
-  },
-  "homepage": "https://github.com/yourusername/disk-bloat-scanner#readme",
-  "keywords": ["tauri", "disk-space", "cleanup", "svelte", "desktop-app"],
-  "private": false,
   "type": "module",
   "scripts": {
     "dev": "vite",
