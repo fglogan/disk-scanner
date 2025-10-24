@@ -54,9 +54,28 @@
       }
     }
 
+    // Calculate total size from selected directories
+    const totalSizeMB = Array.from($selectedPaths).reduce((sum, path) => {
+      const category = $bloatCategories.find((cat) =>
+        cat.examples.some((ex) => ex.path === path),
+      );
+      if (category) {
+        const example = category.examples.find((ex) => ex.path === path);
+        return sum + (example ? example.size_mb : 0);
+      }
+      return sum;
+    }, 0);
+
+    const totalSizeGB = totalSizeMB / 1024;
+    const sizeDisplay = totalSizeGB < 1
+      ? `${totalSizeMB.toFixed(1)} MB`
+      : `${totalSizeGB.toFixed(2)} GB`;
+
     if (
       !confirm(
-        `Delete ${$selectedPaths.size} directories? This will remove all contents. Files will be moved to trash.`,
+        `Delete ${$selectedPaths.size} directories?\n\n` +
+        `Total size: ${sizeDisplay}\n\n` +
+        `This will remove all contents. Files will be moved to trash.`,
       )
     ) {
       return;

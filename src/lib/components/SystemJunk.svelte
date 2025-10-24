@@ -54,8 +54,29 @@
       }
     }
 
+    // Calculate total size
+    const totalSizeKB = Array.from($selectedPaths).reduce((sum, path) => {
+      // Find the file in all categories
+      for (const category of $junkFiles) {
+        const file = category.files.find((f) => f.path === path);
+        if (file) {
+          return sum + file.size_kb;
+        }
+      }
+      return sum;
+    }, 0);
+
+    const totalSizeMB = totalSizeKB / 1024;
+    const sizeDisplay = totalSizeMB < 1 
+      ? `${totalSizeKB.toFixed(1)} KB`
+      : totalSizeMB < 1024
+        ? `${totalSizeMB.toFixed(1)} MB`
+        : `${(totalSizeMB / 1024).toFixed(2)} GB`;
+
     const confirmDelete = confirm(
-      `Delete ${$selectedPaths.size} junk file(s)? They will be moved to trash.`,
+      `Delete ${$selectedPaths.size} junk file(s)?\n\n` +
+      `Total size: ${sizeDisplay}\n\n` +
+      `Files will be moved to trash.`,
     );
     
     if (!confirmDelete) {
