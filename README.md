@@ -1,47 +1,262 @@
-# Svelte + TS + Vite
+# Disk Bloat Scanner
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+A cross-platform desktop application for identifying and managing disk space usage by detecting build artifacts, duplicate files, and large files on your system.
 
-## Recommended IDE Setup
+## ⚠️ Development Status
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+**This software is actively in development and not fully tested.** Use with caution. While the application moves files to the system trash (not permanent deletion), there is no guarantee of data safety. Always verify what you're deleting and maintain backups of important data.
 
-## Need an official Svelte framework?
+**Current Version:** 0.1.0-alpha  
+**Status:** Alpha - Core features implemented, extensive testing in progress
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+### Known Issues
+- Delete confirmation dialog may not work correctly in some scenarios
+- Duplicate file scanning limited to files under 100MB
+- Some UI components still under development
+- Performance not optimized for very large directory trees (>1M files)
 
-## Technical considerations
+## Features
 
-**Why use this over SvelteKit?**
+### Implemented
+- **Disk Information Display**: View total, used, and available disk space
+- **Bloat Detection**: Scan directories for common build artifacts and caches
+  - Node.js (`node_modules`)
+  - Rust (`target/`)
+  - Python (`venv/`, `__pycache__/`)
+  - Git (`.git/`)
+  - iOS/Android build outputs
+- **Large File Scanner**: Identify files over a configurable size threshold
+- **Duplicate File Detection**: Find duplicate files using SHA256 hashing
+- **Progressive Scan Updates**: Real-time feedback during scan operations
+- **Safety Indicators**: Color-coded warnings (green/amber/red) for file deletion decisions
+- **Trash Integration**: Files moved to system trash, not permanently deleted
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+### Planned
+- Scheduled automated scans
+- Advanced filtering and search
+- Export scan results to CSV/JSON
+- Custom bloat pattern definitions
+- Improved multi-directory scanning
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+## Technology Stack
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+- **Backend**: Rust 1.89.0, Tauri 2.8.5
+- **Frontend**: Svelte 5.39.6, Tailwind CSS 4.1.16
+- **Build Tool**: Vite 7.1.12
+- **Architecture**: Desktop application with IPC communication between Rust backend and web-based UI
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+## Prerequisites
 
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
+- **Rust**: 1.75.0 or later
+- **Node.js**: 18.0.0 or later
+- **npm**: 9.0.0 or later
+- **Platform**: macOS, Windows, or Linux
 
-**Why include `.vscode/extensions.json`?**
+## Installation
 
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+### Development Build
 
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd disk-bloat-scanner
 ```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Run the application in development mode:
+```bash
+npm run tauri:dev
+```
+
+### Production Build
+
+```bash
+npm run tauri:build
+```
+
+The built application will be in `src-tauri/target/release/bundle/`.
+
+## Usage
+
+### Basic Workflow
+
+1. **Launch the application**
+2. **Select a scan type** from the sidebar:
+   - Dashboard: Overview and quick actions
+   - Large Files: Find files over 100MB (configurable)
+   - Project Bloat: Detect build artifacts and caches
+   - Duplicates: Find duplicate files
+3. **Review results** with safety indicators:
+   - 🟢 Green: Generally safe to delete (caches, build outputs)
+   - 🟡 Amber: Review carefully (media files, archives)
+   - 🔴 Red: Danger - source code, documents, databases
+4. **Select files** to remove using checkboxes
+5. **Delete selected** items (moved to trash, not permanent)
+
+### Safety Guidelines
+
+- Always review what you're about to delete
+- Pay attention to safety indicators
+- Start with small, non-critical directories
+- Keep backups of important data
+- Test the trash/restore functionality on your system
+- Do not run scans as root/administrator unless necessary
+
+### Configuration
+
+Settings are accessible from the Settings page in the sidebar. You can configure:
+- Minimum file size for large file detection
+- Scan depth limits
+- Symlink following behavior
+- Excluded directories (planned)
+
+## Project Structure
+
+```
+disk-bloat-scanner/
+├── src/                    # Frontend source (Svelte)
+│   ├── lib/
+│   │   ├── components/    # UI components
+│   │   └── stores.js      # State management
+│   ├── App.svelte         # Main app component
+│   └── main.js            # Entry point
+├── src-tauri/             # Backend source (Rust)
+│   ├── src/
+│   │   ├── lib.rs         # Core scanning logic
+│   │   └── main.rs        # Tauri app initialization
+│   └── Cargo.toml         # Rust dependencies
+├── docs/                  # Documentation
+│   ├── compliance/        # Standards and compliance
+│   ├── design/            # Design specifications
+│   └── schedule/          # Development schedule
+└── public/                # Static assets
+```
+
+## Development
+
+### Code Quality
+
+The project uses automated formatting and linting:
+
+```bash
+# Format Rust code
+cargo fmt
+
+# Lint Rust code
+cargo clippy
+
+# Format frontend code
+npx prettier --write "src/**/*.{js,svelte,css,html}"
+```
+
+### Testing
+
+```bash
+# Run Rust tests
+cargo test
+
+# Run frontend tests (when implemented)
+npm test
+```
+
+### Adding New Scan Patterns
+
+Edit `src-tauri/src/lib.rs` and add patterns to the `BLOAT_PATTERNS` array:
+
+```rust
+BloatPattern {
+    category_id: "your_category",
+    display_name: "Your Category",
+    dir_names: &["dir1", "dir2"],
+}
+```
+
+## Architecture
+
+The application follows a clean separation between frontend and backend:
+
+- **Frontend (Svelte)**: Handles UI rendering, user interactions, and state management
+- **Backend (Rust/Tauri)**: Performs file system operations, hashing, and scanning
+- **IPC Layer**: Tauri commands provide type-safe communication between layers
+
+### Key Backend Commands
+
+- `get_disk_info()`: Retrieve disk usage statistics
+- `scan_bloat(opts)`: Scan for build artifacts and caches
+- `scan_large_files(opts)`: Find files over size threshold
+- `scan_duplicates(opts)`: Detect duplicate files via SHA256
+- `cleanup_dirs(req)`: Move files to trash
+
+## Performance Considerations
+
+- **Large File Hashing Limit**: Files over 100MB are excluded from duplicate detection
+- **Parallel Scanning**: Uses Rayon for multi-threaded directory traversal
+- **Memory Usage**: Scans are streamed; entire directory trees are not loaded into memory
+- **Incremental Updates**: UI updates progressively as scans complete
+
+## Security and Privacy
+
+- All file operations are performed locally
+- No data is transmitted over the network
+- No telemetry or analytics collection
+- Files are moved to system trash, allowing recovery
+- Path validation prevents scanning of protected system directories
+
+## Contributing
+
+This is an active development project. Contributions are welcome but please be aware:
+
+- Code is subject to frequent changes
+- No formal contribution guidelines established yet
+- Test thoroughly on your platform before submitting PRs
+- Follow existing code style (use `cargo fmt` and `prettier`)
+
+## License
+
+```
+Copyright 2025 [Your Name/Organization]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+See [LICENSE](LICENSE) file for full license text.
+
+## Disclaimer
+
+THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. THE AUTHORS OR COPYRIGHT HOLDERS SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+
+**Use at your own risk. Always maintain backups of important data.**
+
+## Acknowledgments
+
+- Built with [Tauri](https://tauri.app/) - Desktop application framework
+- UI powered by [Svelte](https://svelte.dev/) - Reactive web framework
+- Styled with [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- Hash functions from [RustCrypto](https://github.com/RustCrypto) project
+
+## Contact and Support
+
+- **Issues**: [GitHub Issues](<repository-url>/issues)
+- **Discussions**: [GitHub Discussions](<repository-url>/discussions)
+
+This project is provided as-is without formal support commitments. Issue reports and pull requests are reviewed on a best-effort basis.
+
+---
+
+**Last Updated**: October 24, 2025  
+**Minimum Rust Version**: 1.75.0  
+**Minimum Node Version**: 18.0.0
