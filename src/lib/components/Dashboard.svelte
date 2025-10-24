@@ -234,7 +234,7 @@
         style="width: {systemInfo.disk_usage_pct}%;"
       ></div>
     </div>
-    <div class="flex justify-between text-sm">
+    <div class="flex justify-between text-sm mb-4">
       <span class="text-slate-300">
         <span class="font-medium text-white">Used:</span>
         {systemInfo.disk_used_gb.toFixed(1)} GB
@@ -248,6 +248,25 @@
         {systemInfo.disk_total_gb.toFixed(1)} GB
       </span>
     </div>
+    {#if currentScanDir}
+      <div
+        class="p-3 bg-indigo-900/30 rounded-lg border border-indigo-600/30"
+      >
+        <p class="text-xs text-indigo-400 mb-1">Currently Scanning:</p>
+        <p
+          class="text-sm text-white font-mono truncate"
+          title={currentScanDir}
+        >
+          📁 {currentScanDir}
+        </p>
+      </div>
+    {:else}
+      <p class="text-sm text-slate-400">
+        Scan directory: <span class="font-mono text-white"
+          >{$settings.directories[0]}</span
+        >
+      </p>
+    {/if}
   </div>
 
   <!-- Scan Control Card -->
@@ -256,24 +275,15 @@
   >
     <div>
       <h2 class="text-lg font-semibold text-white mb-4">Scanner Control</h2>
-      {#if currentScanDir}
+      {#if $isScanning && filesScanned > 0}
         <div
-          class="mb-4 p-3 bg-indigo-900/30 rounded-lg border border-indigo-600/30"
+          class="mb-4 p-3 bg-emerald-900/30 rounded-lg border border-emerald-600/30"
         >
-          <p class="text-xs text-indigo-400 mb-1">Currently Scanning:</p>
-          <p
-            class="text-sm text-white font-mono truncate"
-            title={currentScanDir}
-          >
-            📁 {currentScanDir}
+          <p class="text-xs text-emerald-400 mb-1">Files Scanned:</p>
+          <p class="text-2xl text-white font-bold tabular-nums">
+            {filesScanned.toLocaleString()}
           </p>
         </div>
-      {:else}
-        <p class="text-sm text-slate-400 mb-2">
-          Scan directory: <span class="font-mono text-white"
-            >{$settings.directories[0]}</span
-          >
-        </p>
       {/if}
     </div>
     <div class="mt-6 space-y-3">
