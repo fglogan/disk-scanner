@@ -319,11 +319,6 @@
           Scan Manually Now
         {/if}
       </button>
-      {#if $scanProgress}
-        <p class="text-sm text-indigo-400 text-center animate-pulse">
-          {$scanProgress}
-        </p>
-      {/if}
     </div>
   </div>
 </div>
