@@ -331,7 +331,7 @@
 <!-- Scan Summary -->
 <div class="mt-8 bg-slate-800 rounded-xl shadow-lg p-6">
   <h2 class="text-lg font-semibold text-white mb-6">Last Scan Summary</h2>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
     <!-- Summary Item -->
     <div class="text-center">
       <p class="text-sm text-indigo-400 font-medium">Project Bloat</p>
