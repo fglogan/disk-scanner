@@ -529,3 +529,292 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::{self, File};
+    use std::io::Write;
+    use tempfile::TempDir;
+
+    // Helper function to create test directory structure
+    fn setup_test_dir() -> TempDir {
+        let temp_dir = TempDir::new().unwrap();
+        let base = temp_dir.path();
+
+        // Create node_modules structure
+        fs::create_dir_all(base.join("project1/node_modules/package1")).unwrap();
+        File::create(base.join("project1/node_modules/package1/index.js"))
+            .unwrap()
+            .write_all(b"module.exports = {};")
+            .unwrap();
+
+        // Create Rust target directory
+        fs::create_dir_all(base.join("project2/target/debug")).unwrap();
+        File::create(base.join("project2/target/debug/app"))
+            .unwrap()
+            .write_all(b"binary content here")
+            .unwrap();
+
+        // Create Python venv
+        fs::create_dir_all(base.join("project3/venv/lib")).unwrap();
+        File::create(base.join("project3/venv/lib/module.py"))
+            .unwrap()
+            .write_all(b"print('hello')")
+            .unwrap();
+
+        // Create large file (simulate)
+        let large_file = base.join("large_video.mp4");
+        let mut file = File::create(&large_file).unwrap();
+        // Write 2MB of data
+        file.write_all(&vec![0u8; 2 * 1024 * 1024]).unwrap();
+
+        // Create duplicate files
+        fs::create_dir_all(base.join("docs")).unwrap();
+        File::create(base.join("docs/file1.txt"))
+            .unwrap()
+            .write_all(b"duplicate content")
+            .unwrap();
+        File::create(base.join("docs/file2.txt"))
+            .unwrap()
+            .write_all(b"duplicate content")
+            .unwrap();
+
+        temp_dir
+    }
+
+    #[test]
+    fn test_bloat_pattern_detection() {
+        // Test that bloat patterns are correctly defined
+        assert!(!BLOAT_PATTERNS.is_empty());
+        
+        // Check specific patterns exist
+        let has_node_modules = BLOAT_PATTERNS
+            .iter()
+            .any(|p| p.category_id == "node_modules");
+        assert!(has_node_modules);
+
+        let has_rust_target = BLOAT_PATTERNS
+            .iter()
+            .any(|p| p.category_id == "rust_target");
+        assert!(has_rust_target);
+    }
+
+    #[test]
+    fn test_dir_size_calculation() {
+        let temp_dir = setup_test_dir();
+        let test_path = temp_dir.path().join("project1/node_modules");
+        
+        let size = dir_size(&test_path);
+        assert!(size > 0, "Directory size should be greater than 0");
+    }
+
+    #[tokio::test]
+    async fn test_scan_bloat() {
+        let temp_dir = setup_test_dir();
+        
+        let opts = ScanOpts {
+            root: temp_dir.path().to_string_lossy().to_string(),
+            min_bytes: Some(1024), // 1KB minimum
+            follow_symlinks: false,
+        };
+
+        let result = scan_bloat(opts).await;
+        assert!(result.is_ok());
+
+        let categories = result.unwrap();
+        // Should find at least node_modules, target, or venv
+        assert!(!categories.is_empty(), "Should find at least one bloat category");
+
+        // Verify category structure
+        for category in &categories {
+            assert!(!category.category_id.is_empty());
+            assert!(!category.display_name.is_empty());
+            assert!(category.total_size_mb >= 0.0);
+            assert!(!category.entries.is_empty());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_scan_large_files() {
+        let temp_dir = setup_test_dir();
+        
+        let opts = ScanOpts {
+            root: temp_dir.path().to_string_lossy().to_string(),
+            min_bytes: Some(1024 * 1024), // 1MB minimum
+            follow_symlinks: false,
+        };
+
+        let result = scan_large_files(opts).await;
+        assert!(result.is_ok());
+
+        let files = result.unwrap();
+        // Should find the large_video.mp4 we created (2MB)
+        assert!(!files.is_empty(), "Should find at least one large file");
+
+        // Verify file structure
+        for file in &files {
+            assert!(!file.path.is_empty());
+            assert!(file.size_mb >= 1.0); // At least 1MB
+            assert!(file.last_modified > 0);
+        }
+
+        // Files should be sorted by size (largest first)
+        if files.len() > 1 {
+            assert!(files[0].size_mb >= files[1].size_mb);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_scan_duplicates() {
+        let temp_dir = setup_test_dir();
+        
+        let opts = ScanOpts {
+            root: temp_dir.path().to_string_lossy().to_string(),
+            min_bytes: Some(1024), // 1KB minimum
+            follow_symlinks: false,
+        };
+
+        let result = scan_duplicates(opts).await;
+        assert!(result.is_ok());
+
+        let duplicate_sets = result.unwrap();
+        // Should find the duplicate txt files
+        assert!(!duplicate_sets.is_empty(), "Should find duplicate files");
+
+        // Verify duplicate set structure
+        for dup_set in &duplicate_sets {
+            assert!(!dup_set.hash.is_empty());
+            assert!(dup_set.entries.len() >= 2); // At least 2 files are duplicates
+            assert!(dup_set.total_savable_mb >= 0.0);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_cleanup_dirs_dry_run() {
+        let temp_dir = setup_test_dir();
+        let test_file = temp_dir.path().join("test_file.txt");
+        File::create(&test_file).unwrap().write_all(b"test").unwrap();
+
+        let req = CleanupReq {
+            paths: vec![test_file.to_string_lossy().to_string()],
+            dry_run: true,
+            trash: true,
+        };
+
+        let result = cleanup_dirs(req).await;
+        assert!(result.is_ok());
+
+        let cleanup_result = result.unwrap();
+        // In dry run, file should be in "deleted" list but not actually deleted
+        assert_eq!(cleanup_result.deleted.len(), 1);
+        assert!(test_file.exists(), "File should still exist in dry run");
+    }
+
+    #[tokio::test]
+    async fn test_cleanup_dirs_trash() {
+        let temp_dir = setup_test_dir();
+        let test_file = temp_dir.path().join("test_file_trash.txt");
+        File::create(&test_file).unwrap().write_all(b"test").unwrap();
+
+        let req = CleanupReq {
+            paths: vec![test_file.to_string_lossy().to_string()],
+            dry_run: false,
+            trash: true,
+        };
+
+        let result = cleanup_dirs(req).await;
+        assert!(result.is_ok());
+
+        let cleanup_result = result.unwrap();
+        assert_eq!(cleanup_result.deleted.len(), 1);
+        assert!(cleanup_result.errors.is_empty());
+        
+        // File should be moved to trash (no longer in original location)
+        assert!(!test_file.exists(), "File should be moved to trash");
+    }
+
+    #[tokio::test]
+    async fn test_cleanup_nonexistent_file() {
+        let req = CleanupReq {
+            paths: vec!["/nonexistent/path/file.txt".to_string()],
+            dry_run: false,
+            trash: true,
+        };
+
+        let result = cleanup_dirs(req).await;
+        assert!(result.is_ok());
+
+        let cleanup_result = result.unwrap();
+        // Nonexistent files should be skipped
+        assert_eq!(cleanup_result.skipped.len(), 1);
+        assert_eq!(cleanup_result.deleted.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_get_disk_info() {
+        let result = get_disk_info().await;
+        assert!(result.is_ok());
+
+        let disk_info = result.unwrap();
+        assert!(disk_info.total_gb > 0.0);
+        assert!(disk_info.used_gb >= 0.0);
+        assert!(disk_info.free_gb >= 0.0);
+        assert!(disk_info.usage_pct >= 0.0 && disk_info.usage_pct <= 100.0);
+    }
+
+    #[tokio::test]
+    async fn test_get_system_info() {
+        let result = get_system_info().await;
+        assert!(result.is_ok());
+
+        let sys_info = result.unwrap();
+        
+        // Disk info
+        assert!(sys_info.disk_total_gb > 0.0);
+        assert!(sys_info.disk_usage_pct >= 0.0 && sys_info.disk_usage_pct <= 100.0);
+        
+        // Memory info
+        assert!(sys_info.memory_total_gb > 0.0);
+        assert!(sys_info.memory_usage_pct >= 0.0 && sys_info.memory_usage_pct <= 100.0);
+        
+        // CPU info
+        assert!(sys_info.cpu_count > 0);
+        
+        // OS info
+        assert!(!sys_info.os_name.is_empty());
+        assert!(!sys_info.hostname.is_empty());
+    }
+
+    #[test]
+    fn test_scan_opts_serialization() {
+        let opts = ScanOpts {
+            root: "/test/path".to_string(),
+            min_bytes: Some(1024),
+            follow_symlinks: true,
+        };
+
+        let json = serde_json::to_string(&opts).unwrap();
+        let deserialized: ScanOpts = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(opts.root, deserialized.root);
+        assert_eq!(opts.min_bytes, deserialized.min_bytes);
+        assert_eq!(opts.follow_symlinks, deserialized.follow_symlinks);
+    }
+
+    #[test]
+    fn test_cleanup_req_serialization() {
+        let req = CleanupReq {
+            paths: vec!["/path1".to_string(), "/path2".to_string()],
+            dry_run: true,
+            trash: true,
+        };
+
+        let json = serde_json::to_string(&req).unwrap();
+        let deserialized: CleanupReq = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(req.paths, deserialized.paths);
+        assert_eq!(req.dry_run, deserialized.dry_run);
+        assert_eq!(req.trash, deserialized.trash);
+    }
+}

@@ -1,31 +1,54 @@
 {
   "name": "disk-bloat-scanner",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Cross-platform desktop app for identifying and managing disk bloat",
+  "author": "Disk Bloat Scanner Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/disk-bloat-scanner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/disk-bloat-scanner/issues"
+  },
+  "homepage": "https://github.com/yourusername/disk-bloat-scanner#readme",
+  "keywords": ["tauri", "disk-space", "cleanup", "svelte", "desktop-app"],
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "tauri:test": "cd src-tauri && cargo test",
+    "tauri:clippy": "cd src-tauri && cargo clippy --all-targets --all-features -- -D warnings",
+    "test:all": "npm run test && npm run tauri:test"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/cli": "^2.9.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^5.2.8",
     "@tsconfig/svelte": "^5.0.5",
     "@types/node": "^24.6.0",
     "autoprefixer": "^10.4.21",
+    "jsdom": "^27.0.1",
     "postcss": "^8.5.6",
     "prettier-plugin-svelte": "^3.4.0",
     "svelte": "^5.39.6",
     "svelte-check": "^4.3.2",
     "tailwindcss": "^4.1.16",
     "typescript": "~5.9.3",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^4.0.3"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.16",

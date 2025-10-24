@@ -1,17 +1,20 @@
 [package]
-name = "app"
+name = "disk-bloat-scanner"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "Cross-platform desktop app for identifying and managing disk bloat, build artifacts, and duplicate files"
+authors = ["Disk Bloat Scanner Contributors"]
+license = "Apache-2.0"
+repository = "https://github.com/yourusername/disk-bloat-scanner"
+homepage = "https://github.com/yourusername/disk-bloat-scanner"
+keywords = ["disk-space", "cleanup", "duplicates", "tauri", "desktop"]
+categories = ["command-line-utilities", "filesystem"]
 edition = "2021"
 rust-version = "1.77.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "app_lib"
+name = "disk_bloat_scanner_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -31,3 +34,36 @@ trash = "3"
 rayon = "1.10"
 ignore = "0.4"
 tauri-plugin-dialog = "2.4.0"
+
+[dev-dependencies]
+tempfile = "3"
+serial_test = "3"
+
+[lints.clippy]
+# Pedantic lints for code quality
+pedantic = "warn"
+# Nursery lints (experimental but useful)
+nursery = "warn"
+# Performance lints
+perf = "warn"
+# Cargo lints
+cargo = "warn"
+
+# Specific lints we want to enforce
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+
+# Allow some pedantic lints that are too strict
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[lints.rust]
+unsafe_code = "warn"
+missing_docs = "warn"
