@@ -86,6 +86,25 @@ pub struct CleanupResult {
     pub errors: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct JunkFileEntry {
+    pub path: String,
+    pub size_kb: f32,
+    pub pattern: String,
+    pub category: String,
+    pub safety: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct JunkCategory {
+    pub category_id: String,
+    pub display_name: String,
+    pub total_size_kb: f32,
+    pub file_count: usize,
+    pub safety: String,
+    pub files: Vec<JunkFileEntry>,
+}
+
 // ============================================================================
 // Bloat Pattern Detection
 // ============================================================================
@@ -160,6 +179,141 @@ fn dir_size(path: &Path) -> u64 {
         .filter(|m| m.is_file())
         .map(|m| m.len())
         .sum()
+}
+
+// ============================================================================
+// Junk File Pattern Detection
+// ============================================================================
+
+#[derive(Debug)]
+struct JunkPattern {
+    pattern: &'static str,
+    category_id: &'static str,
+    display_name: &'static str,
+    safety: &'static str,
+}
+
+const JUNK_PATTERNS: &[JunkPattern] = &[
+    // Tier 1: System Junk (100% Safe)
+    JunkPattern {
+        pattern: ".DS_Store",
+        category_id: "system",
+        display_name: "System Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "Thumbs.db",
+        category_id: "system",
+        display_name: "System Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "desktop.ini",
+        category_id: "system",
+        display_name: "System Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: ".localized",
+        category_id: "system",
+        display_name: "System Files",
+        safety: "safe",
+    },
+    // Tier 2: Build Artifacts
+    JunkPattern {
+        pattern: "*.pyc",
+        category_id: "build",
+        display_name: "Build Artifacts",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.pyo",
+        category_id: "build",
+        display_name: "Build Artifacts",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.class",
+        category_id: "build",
+        display_name: "Build Artifacts",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.o",
+        category_id: "build",
+        display_name: "Build Artifacts",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.obj",
+        category_id: "build",
+        display_name: "Build Artifacts",
+        safety: "safe",
+    },
+    // Tier 3: Editor Junk
+    JunkPattern {
+        pattern: "*.swp",
+        category_id: "editor",
+        display_name: "Editor Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.swo",
+        category_id: "editor",
+        display_name: "Editor Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.swn",
+        category_id: "editor",
+        display_name: "Editor Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*~",
+        category_id: "editor",
+        display_name: "Editor Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.bak",
+        category_id: "editor",
+        display_name: "Editor Files",
+        safety: "safe",
+    },
+    JunkPattern {
+        pattern: "*.backup",
+        category_id: "editor",
+        display_name: "Editor Files",
+        safety: "safe",
+    },
+];
+
+fn matches_junk_pattern(filename: &str, pattern: &str) -> bool {
+    if pattern.starts_with("*.") {
+        // Extension match (e.g., "*.pyc")
+        let ext = &pattern[1..]; // Remove the *
+        filename.ends_with(ext)
+    } else if pattern.ends_with('*') {
+        // Prefix match (e.g., "test*")
+        let prefix = &pattern[..pattern.len() - 1];
+        filename.starts_with(prefix)
+    } else if pattern.contains('*') {
+        // Middle wildcard (not implemented for now)
+        false
+    } else {
+        // Exact match (e.g., ".DS_Store")
+        filename == pattern
+    }
+}
+
+fn detect_junk_file(filename: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    for pattern in JUNK_PATTERNS {
+        if matches_junk_pattern(filename, pattern.pattern) {
+            return Some((pattern.category_id, pattern.display_name, pattern.safety));
+        }
+    }
+    None
 }
 
 // ============================================================================
@@ -463,6 +617,73 @@ async fn scan_duplicates(opts: ScanOpts) -> Result<Vec<DuplicateSet>, String> {
 }
 
 #[tauri::command]
+async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
+    use std::sync::Mutex;
+    use walkdir::WalkDir;
+
+    let junk_files: Mutex<HashMap<String, (String, String, Vec<JunkFileEntry>)>> =
+        Mutex::new(HashMap::new());
+
+    // Walk the directory tree and find junk files
+    for entry in WalkDir::new(&opts.root)
+        .follow_links(opts.follow_symlinks)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        if entry.file_type().is_file() {
+            if let Some(filename) = entry.path().file_name().and_then(|n| n.to_str()) {
+                if let Some((category_id, display_name, safety)) = detect_junk_file(filename) {
+                    // Get file size
+                    let size_bytes = entry.metadata().ok().map(|m| m.len()).unwrap_or(0);
+                    let size_kb = size_bytes as f32 / 1024.0;
+
+                    // NO minimum size - catch even 0-byte files
+                    let mut junk = junk_files.lock().unwrap();
+                    let cat_entry = junk
+                        .entry(category_id.to_string())
+                        .or_insert_with(|| {
+                            (display_name.to_string(), safety.to_string(), Vec::new())
+                        });
+
+                    cat_entry.2.push(JunkFileEntry {
+                        path: entry.path().to_string_lossy().to_string(),
+                        size_kb,
+                        pattern: filename.to_string(),
+                        category: category_id.to_string(),
+                        safety: safety.to_string(),
+                    });
+                }
+            }
+        }
+    }
+
+    // Convert to result format
+    let mut result: Vec<JunkCategory> = junk_files
+        .lock()
+        .unwrap()
+        .drain()
+        .map(|(category_id, (display_name, safety, files))| {
+            let total_size_kb: f32 = files.iter().map(|f| f.size_kb).sum();
+            let file_count = files.len();
+
+            JunkCategory {
+                category_id,
+                display_name,
+                total_size_kb,
+                file_count,
+                safety,
+                files,
+            }
+        })
+        .collect();
+
+    // Sort by file count (most files first)
+    result.sort_by(|a, b| b.file_count.cmp(&a.file_count));
+
+    Ok(result)
+}
+
+#[tauri::command]
 async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     let mut deleted = Vec::new();
     let mut skipped = Vec::new();
@@ -524,6 +745,7 @@ pub fn run() {
             scan_large_files,
             scan_bloat,
             scan_duplicates,
+            scan_junk_files,
             cleanup_dirs
         ])
         .run(tauri::generate_context!())

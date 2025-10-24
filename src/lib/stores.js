@@ -17,6 +17,7 @@ export const diskInfo = writable({
 export const largeFiles = writable([]);
 export const bloatCategories = writable([]);
 export const duplicates = writable([]);
+export const junkFiles = writable([]); // System junk, build artifacts, editor files
 
 // Settings
 export const settings = writable({
@@ -39,6 +40,8 @@ export const summaryStats = writable({
   large_files_count: 0,
   duplicates_gb: 0,
   duplicates_count: 0,
+  junk_files_mb: 0,
+  junk_files_count: 0,
   total_cleanable_gb: 0,
   last_scan_time: null,
 });

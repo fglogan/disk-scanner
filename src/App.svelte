@@ -8,6 +8,7 @@
   import Dashboard from "./lib/components/Dashboard.svelte";
   import LargeFiles from "./lib/components/LargeFiles.svelte";
   import ProjectBloat from "./lib/components/ProjectBloat.svelte";
+  import SystemJunk from "./lib/components/SystemJunk.svelte";
   import Duplicates from "./lib/components/Duplicates.svelte";
   import DevCaches from "./lib/components/DevCaches.svelte";
   import GitScanner from "./lib/components/GitScanner.svelte";
@@ -33,6 +34,8 @@
       <LargeFiles />
     {:else if $currentPage === "project-bloat"}
       <ProjectBloat />
+    {:else if $currentPage === "system-junk"}
+      <SystemJunk />
     {:else if $currentPage === "duplicates"}
       <Duplicates />
     {:else if $currentPage === "dev-caches"}

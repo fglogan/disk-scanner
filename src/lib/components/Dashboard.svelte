@@ -6,6 +6,7 @@
     bloatCategories,
     largeFiles,
     duplicates,
+    junkFiles,
     isScanning,
     scanProgress,
     settings,
@@ -136,6 +137,18 @@
       duplicates.set(dupResults);
       updateSummaryStats();
 
+      scanProgress.set("Scanning for junk files...");
+      const junkResults = await invoke("scan_junk_files", {
+        opts: {
+          root: $settings.directories[0],
+          min_bytes: 0,
+          follow_symlinks: false,
+        },
+      });
+      console.log("Junk files found:", junkResults.reduce((sum, cat) => sum + cat.file_count, 0) + " files");
+      junkFiles.set(junkResults);
+      updateSummaryStats();
+
       // Update summary stats
       const bloatTotal =
         bloatResults.reduce((sum, cat) => sum + cat.total_size_mb, 0) / 1024;
@@ -168,6 +181,10 @@
       $largeFiles.reduce((sum, file) => sum + file.size_mb, 0) / 1024;
     const dupTotal =
       $duplicates.reduce((sum, set) => sum + set.total_savable_mb, 0) / 1024;
+    const junkTotal =
+      $junkFiles.reduce((sum, cat) => sum + cat.total_size_kb, 0) / 1024; // KB to MB
+    const junkCount =
+      $junkFiles.reduce((sum, cat) => sum + cat.file_count, 0);
 
     summaryStats.set({
       project_bloat_gb: bloatTotal,
@@ -176,7 +193,9 @@
       large_files_count: $largeFiles.length,
       duplicates_gb: dupTotal,
       duplicates_count: $duplicates.length,
-      total_cleanable_gb: bloatTotal + dupTotal,
+      junk_files_mb: junkTotal,
+      junk_files_count: junkCount,
+      total_cleanable_gb: bloatTotal + dupTotal + (junkTotal / 1024), // Add junk to cleanable
       last_scan_time: Date.now(),
     });
   }
@@ -339,6 +358,16 @@
       </p>
       <p class="text-xs text-slate-400">
         {$summaryStats.duplicates_count} file sets
+      </p>
+    </div>
+    <!-- Summary Item -->
+    <div class="text-center">
+      <p class="text-sm text-emerald-400 font-medium">System Junk</p>
+      <p class="text-3xl font-bold text-white mt-1">
+        {$summaryStats.junk_files_mb.toFixed(1)} MB
+      </p>
+      <p class="text-xs text-slate-400">
+        {$summaryStats.junk_files_count} junk files
       </p>
     </div>
     <!-- Summary Item -->
