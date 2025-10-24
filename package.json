@@ -1,8 +1,8 @@
 {
-  "name": "disk-bloat-scanner",
+  "name": "project-scanner",
   "private": true,
-  "version": "0.1.0",
-  "description": "Cross-platform desktop app by Tempext AI for identifying and managing disk bloat",
+  "version": "0.1.1",
+  "description": "Cross-platform desktop app by Tempext AI for scanning and managing project bloat, large files, and system junk",
   "author": "Tempext AI",
   "license": "Apache-2.0",
   "type": "module",

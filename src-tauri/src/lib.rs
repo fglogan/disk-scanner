@@ -693,8 +693,8 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     let mut skipped = Vec::new();
     let mut errors = Vec::new();
 
-    println!("[cleanup_dirs] Starting cleanup of {} paths", req.paths.len());
-    println!("[cleanup_dirs] dry_run={}, trash={}", req.dry_run, req.trash);
+    log::info!("Starting cleanup of {} paths", req.paths.len());
+    // Logging moved to combined line above
 
     if req.dry_run {
         // Dry run - just return what would be deleted
@@ -707,31 +707,31 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 
     for path in &req.paths {
         let p = Path::new(path);
-        println!("[cleanup_dirs] Processing: {}", path);
+        log::debug!("Processing: {}", path);
 
         if !p.exists() {
-            println!("[cleanup_dirs]   -> File does not exist, skipping");
+            log::debug!("File does not exist, skipping: {}", path);
             skipped.push(path.clone());
             continue;
         }
 
-        println!("[cleanup_dirs]   -> File exists, attempting to delete (trash={})", req.trash);
+        log::debug!("File exists, attempting deletion (trash={}): {}", req.trash, path);
 
         if req.trash {
             // Move to trash
             match trash::delete(p) {
                 Ok(_) => {
-                    println!("[cleanup_dirs]   -> Successfully moved to trash");
+                    log::debug!("Successfully moved to trash: {}", path);
                     // Verify it's actually gone
                     if p.exists() {
-                        println!("[cleanup_dirs]   -> WARNING: File still exists after trash!");
+                        log::warn!("File still exists after trash: {}", path);
                         errors.push(format!("{}: Moved to trash but file still exists", path));
                     } else {
                         deleted.push(path.clone());
                     }
                 },
                 Err(e) => {
-                    println!("[cleanup_dirs]   -> Error: {}", e);
+                    log::error!("Cleanup error for {}: {}", path, e);
                     errors.push(format!("{}: {}", path, e));
                 }
             }
@@ -745,18 +745,18 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 
             match result {
                 Ok(_) => {
-                    println!("[cleanup_dirs]   -> Successfully deleted");
+                    log::debug!("Successfully deleted: {}", path);
                     deleted.push(path.clone());
                 },
                 Err(e) => {
-                    println!("[cleanup_dirs]   -> Error: {}", e);
+                    log::error!("Cleanup error for {}: {}", path, e);
                     errors.push(format!("{}: {}", path, e));
                 }
             }
         }
     }
 
-    println!("[cleanup_dirs] Complete: deleted={}, skipped={}, errors={}", 
+    log::info!("Cleanup complete: deleted={}, skipped={}, errors={}", 
              deleted.len(), skipped.len(), errors.len());
 
     Ok(CleanupResult {

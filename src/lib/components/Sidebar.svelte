@@ -22,11 +22,11 @@
 >
   <div class="px-4 py-2 mb-6">
     <!-- Tempext Branding -->
-    <div class="flex items-center space-x-2 mb-2">
+    <div class="flex items-center space-x-2 mb-6">
       <img 
         src={tempextLogo}
         alt="Tempext" 
-        class="h-6 w-auto"
+        class="h-18 w-auto"
       />
     </div>
     <!-- App Title -->
@@ -52,7 +52,7 @@
           y2="17"
         /><line x1="14" x2="14" y1="11" y2="17" />
       </svg>
-      <span>Disk Bloat Scanner</span>
+      <span>Project Scanner</span>
     </h1>
     <p class="text-xs text-slate-400 mt-1 ml-8">by Tempext AI</p>
   </div>

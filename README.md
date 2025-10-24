@@ -1,13 +1,15 @@
-# Disk Bloat Scanner
+# Project Scanner
 
-A cross-platform desktop application for identifying and managing disk space usage by detecting build artifacts, duplicate files, and large files on your system.
+**by Tempext AI**
+
+A cross-platform desktop application for identifying and managing disk space usage by detecting build artifacts, duplicate files, large files, and system junk on your system.
 
 ## ⚠️ Development Status
 
 **This software is actively in development and not fully tested.** Use with caution. While the application moves files to the system trash (not permanent deletion), there is no guarantee of data safety. Always verify what you're deleting and maintain backups of important data.
 
-**Current Version:** 0.1.0-alpha  
-**Status:** Alpha - Core features implemented, extensive testing in progress
+**Current Version:** 0.1.1  
+**Status:** Beta - Core features implemented, system junk scanner added
 
 ### Platform Support
 

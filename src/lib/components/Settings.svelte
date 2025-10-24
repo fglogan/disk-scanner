@@ -4,7 +4,8 @@
 
   let bgMonitorEnabled = $settings.bg_monitor_enabled;
   let scanInterval = $settings.scan_interval;
-  let minDupSize = $settings.min_dup_size;
+  // Convert MB to KB for display (min_dup_size is stored in MB)
+  let minDupSizeKB = $settings.min_dup_size * 1024;
 
   function toggleBgMonitor() {
     bgMonitorEnabled = !bgMonitorEnabled;
@@ -100,14 +101,14 @@
         <input
           type="number"
           id="min-dup-size"
-          bind:value={minDupSize}
+          bind:value={minDupSizeKB}
           on:change={() =>
-            settings.update((s) => ({ ...s, min_dup_size: minDupSize }))}
+            settings.update((s) => ({ ...s, min_dup_size: minDupSizeKB / 1024 }))}
           class="w-20 bg-slate-700 border border-slate-600 text-white text-lg rounded-md p-2 text-right focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           min="1"
           step="1"
         />
-        <span class="text-slate-400 text-lg">MB</span>
+        <span class="text-slate-400 text-lg">KB</span>
       </div>
     </div>
   </div>

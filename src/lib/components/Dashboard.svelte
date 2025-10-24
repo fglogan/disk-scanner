@@ -181,8 +181,8 @@
       $bloatCategories.reduce((sum, cat) => sum + cat.total_size_mb, 0) / 1024;
     const largeFilesTotal =
       $largeFiles.reduce((sum, file) => sum + file.size_mb, 0) / 1024;
-    const dupTotal =
-      $duplicates.reduce((sum, set) => sum + set.total_savable_mb, 0) / 1024;
+    const dupTotalMB =
+      $duplicates.reduce((sum, set) => sum + set.total_savable_mb, 0); // Keep in MB
     const junkTotal =
       $junkFiles.reduce((sum, cat) => sum + cat.total_size_kb, 0) / 1024; // KB to MB
     const junkCount =
@@ -193,11 +193,11 @@
       project_bloat_count: $bloatCategories.length,
       large_files_gb: largeFilesTotal,
       large_files_count: $largeFiles.length,
-      duplicates_gb: dupTotal,
+      duplicates_mb: dupTotalMB, // Changed from duplicates_gb to duplicates_mb
       duplicates_count: $duplicates.length,
       junk_files_mb: junkTotal,
       junk_files_count: junkCount,
-      total_cleanable_gb: bloatTotal + dupTotal + (junkTotal / 1024), // Add junk to cleanable
+      total_cleanable_gb: bloatTotal + (dupTotalMB / 1024) + (junkTotal / 1024), // Convert MB to GB
       last_scan_time: Date.now(),
     });
   }
@@ -351,7 +351,11 @@
     <div class="text-center">
       <p class="text-sm text-amber-400 font-medium">Duplicates</p>
       <p class="text-3xl font-bold text-white mt-1">
-        {$summaryStats.duplicates_gb.toFixed(1)} GB
+        {#if $summaryStats.duplicates_mb >= 1024}
+          {($summaryStats.duplicates_mb / 1024).toFixed(1)} GB
+        {:else}
+          {$summaryStats.duplicates_mb.toFixed(1)} MB
+        {/if}
       </p>
       <p class="text-lg font-semibold text-amber-300 mt-1">
         {$summaryStats.duplicates_count} sets

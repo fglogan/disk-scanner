@@ -21,7 +21,7 @@ export const junkFiles = writable([]); // System junk, build artifacts, editor f
 
 // Settings
 export const settings = writable({
-  directories: ["/Users/frank/Development/private/projects"],
+  directories: [], // User must select directories via UI (was hardcoded to /Users/frank/...)
   min_dup_size: 1, // 1 MB (lowered from 10)
   min_large_file_size: 100, // 100 MB (lowered from 1024)
   ignore_patterns: ["*.log", "*/.git/*"],
@@ -38,7 +38,7 @@ export const summaryStats = writable({
   project_bloat_count: 0,
   large_files_gb: 0,
   large_files_count: 0,
-  duplicates_gb: 0,
+  duplicates_mb: 0, // Changed from duplicates_gb to duplicates_mb (auto-scales to GB when >= 1024 MB)
   duplicates_count: 0,
   junk_files_mb: 0,
   junk_files_count: 0,
