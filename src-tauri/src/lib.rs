@@ -294,6 +294,10 @@ fn matches_junk_pattern(filename: &str, pattern: &str) -> bool {
         // Extension match (e.g., "*.pyc")
         let ext = &pattern[1..]; // Remove the *
         filename.ends_with(ext)
+    } else if pattern.starts_with('*') && !pattern.ends_with('*') {
+        // Suffix match (e.g., "*~" matches "test~")
+        let suffix = &pattern[1..]; // Remove the *
+        filename.ends_with(suffix)
     } else if pattern.ends_with('*') {
         // Prefix match (e.g., "test*")
         let prefix = &pattern[..pattern.len() - 1];
