@@ -104,6 +104,12 @@
   }
 
   async function deleteSelected() {
+    console.log(
+      "deleteSelected() called, selected count:",
+      $selectedPaths.size,
+    );
+    console.log("Selected paths:", Array.from($selectedPaths));
+
     if ($selectedPaths.size === 0) {
       await ask("No files selected", {
         title: "Delete Files",
@@ -115,7 +121,7 @@
     // Check for critical paths
     const criticalPaths = Array.from($selectedPaths).filter(isCriticalPath);
     if (criticalPaths.length > 0) {
-      const extraConfirm = await ask(
+      const criticalConfirm = await ask(
         `⚠️ DANGER: ${criticalPaths.length} SOURCE CODE FILE(S) SELECTED!\n\n` +
           `These appear to be source code or critical system files:\n` +
           `${criticalPaths.slice(0, 3).join("\n")}\n\n` +
@@ -127,26 +133,10 @@
         },
       );
 
-      if (!extraConfirm) {
+      if (!criticalConfirm) {
+        console.log("User cancelled critical file deletion");
         return;
       }
-    }
-
-    const totalSize = Array.from($selectedPaths).reduce((sum, path) => {
-      const file = $largeFiles.find((f) => f.path === path);
-      return sum + (file ? file.size_mb : 0);
-    }, 0);
-
-    const confirmed = await ask(
-      `Delete ${$selectedPaths.size} file(s)? Total size: ${totalSize.toFixed(1)} GB\n\nFiles will be moved to trash.`,
-      {
-        title: "Confirm Deletion",
-        kind: "warning",
-      },
-    );
-
-    if (!confirmed) {
-      return;
     }
 
     const count = $selectedPaths.size;
