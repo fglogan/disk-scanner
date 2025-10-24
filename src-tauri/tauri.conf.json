@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "disk-bloat-scanner",
+  "productName": "Disk Bloat Scanner",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.diskbloat.scanner",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3001",
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "disk-bloat-scanner",
-        "width": 800,
-        "height": 600,
+        "title": "Disk Bloat Scanner",
+        "width": 1200,
+        "height": 800,
         "resizable": true,
         "fullscreen": false
       }
