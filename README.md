@@ -9,6 +9,16 @@ A cross-platform desktop application for identifying and managing disk space usa
 **Current Version:** 0.1.0-alpha  
 **Status:** Alpha - Core features implemented, extensive testing in progress
 
+### Platform Support
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| **macOS** | ✅ Tested | Primary development platform (macOS 14+) |
+| **Windows** | ⚠️ Not Tested | Built but completely untested - use at your own risk |
+| **Linux** | ⚠️ Not Tested | Built but completely untested - use at your own risk |
+
+**Windows and Linux users:** This application has been developed and tested exclusively on macOS. While it should theoretically work on Windows and Linux due to Tauri's cross-platform nature, it has not been tested on these platforms. File operations, trash functionality, and path handling may behave unexpectedly.
+
 ### Known Issues
 - Delete confirmation dialog may not work correctly in some scenarios
 - Duplicate file scanning limited to files under 100MB
@@ -74,11 +84,28 @@ npm run tauri:dev
 
 ### Production Build
 
+**macOS:**
 ```bash
 npm run tauri:build
 ```
 
-The built application will be in `src-tauri/target/release/bundle/`.
+The built application will be available at:
+- **macOS DMG**: `src-tauri/target/release/bundle/dmg/Disk Bloat Scanner_0.1.0_x64.dmg`
+- **macOS App**: `src-tauri/target/release/bundle/macos/Disk Bloat Scanner.app`
+
+**Windows (untested):**
+```bash
+npm run tauri:build
+```
+Output: `src-tauri/target/release/bundle/msi/` or `src-tauri/target/release/bundle/nsis/`
+
+**Linux (untested):**
+```bash
+npm run tauri:build
+```
+Output: `src-tauri/target/release/bundle/deb/` or `src-tauri/target/release/bundle/appimage/`
+
+**Note:** Production builds are code-signed on macOS. Windows and Linux builds are not signed and will show security warnings.
 
 ## Usage
 

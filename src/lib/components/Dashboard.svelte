@@ -11,16 +11,52 @@
     settings,
   } from "../stores.js";
 
+  let systemInfo = {
+    disk_total_gb: 0,
+    disk_used_gb: 0,
+    disk_free_gb: 0,
+    disk_usage_pct: 0,
+    memory_total_gb: 0,
+    memory_used_gb: 0,
+    memory_free_gb: 0,
+    memory_usage_pct: 0,
+    cpu_count: 0,
+    os_name: "",
+    os_version: "",
+    hostname: "",
+  };
+
+  let currentScanDir = "";
+
+  async function loadSystemInfo() {
+    try {
+      systemInfo = await invoke("get_system_info");
+    } catch (e) {
+      console.error("Failed to load system info:", e);
+    }
+  }
+
+  // Load system info on mount
+  loadSystemInfo();
+
   async function runManualScan() {
     isScanning.set(true);
-    scanProgress.set("Getting disk info...");
+    currentScanDir = $settings.directories[0];
+    scanProgress.set("Getting system info...");
 
     try {
       console.log("Starting scan on directory:", $settings.directories[0]);
 
-      // Get fresh disk info
-      const info = await invoke("get_disk_info");
-      diskInfo.set(info);
+      // Get fresh system info
+      systemInfo = await invoke("get_system_info");
+
+      // Also update legacy diskInfo store for compatibility
+      diskInfo.set({
+        total_gb: systemInfo.disk_total_gb,
+        used_gb: systemInfo.disk_used_gb,
+        free_gb: systemInfo.disk_free_gb,
+        usage_pct: systemInfo.disk_usage_pct,
+      });
 
       console.log("Running scans with params:", {
         root: $settings.directories[0],
@@ -29,7 +65,7 @@
       });
 
       // Run scans sequentially so UI updates progressively
-      scanProgress.set("Scanning for bloat...");
+      scanProgress.set(`Scanning for bloat in ${$settings.directories[0]}...`);
       const bloatResults = await invoke("scan_bloat", {
         opts: {
           root: $settings.directories[0],
@@ -75,10 +111,12 @@
 
       console.log("✅ Scan completed successfully!");
       scanProgress.set("");
+      currentScanDir = "";
     } catch (e) {
       console.error("❌ Scan failed:", e);
       alert("Scan failed: " + e);
       scanProgress.set("");
+      currentScanDir = "";
     } finally {
       isScanning.set(false);
     }
@@ -117,28 +155,58 @@
 
 <h1 class="text-3xl font-bold text-white mb-8">Dashboard</h1>
 
+<!-- System Info Banner -->
+<div class="mb-6 bg-slate-800 rounded-xl shadow-lg p-4">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div>
+      <span class="text-slate-400">System:</span>
+      <span class="ml-2 text-white font-medium"
+        >{systemInfo.os_name} {systemInfo.os_version}</span
+      >
+    </div>
+    <div>
+      <span class="text-slate-400">Host:</span>
+      <span class="ml-2 text-white font-medium">{systemInfo.hostname}</span>
+    </div>
+    <div>
+      <span class="text-slate-400">CPUs:</span>
+      <span class="ml-2 text-white font-medium"
+        >{systemInfo.cpu_count} cores</span
+      >
+    </div>
+    <div>
+      <span class="text-slate-400">Memory:</span>
+      <span class="ml-2 text-white font-medium"
+        >{systemInfo.memory_used_gb.toFixed(1)} / {systemInfo.memory_total_gb.toFixed(
+          1,
+        )} GB ({systemInfo.memory_usage_pct.toFixed(0)}%)</span
+      >
+    </div>
+  </div>
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <!-- Disk Usage Card -->
   <div class="lg:col-span-2 bg-slate-800 rounded-xl shadow-lg p-6">
-    <h2 class="text-lg font-semibold text-white mb-4">Macintosh HD</h2>
+    <h2 class="text-lg font-semibold text-white mb-4">Disk Storage</h2>
     <div class="w-full bg-slate-700 rounded-full h-5 mb-4 overflow-hidden">
       <div
         class="bg-indigo-600 h-5"
-        style="width: {$diskInfo.usage_pct}%;"
+        style="width: {systemInfo.disk_usage_pct}%;"
       ></div>
     </div>
     <div class="flex justify-between text-sm">
       <span class="text-slate-300">
         <span class="font-medium text-white">Used:</span>
-        {$diskInfo.used_gb.toFixed(1)} GB
+        {systemInfo.disk_used_gb.toFixed(1)} GB
       </span>
       <span class="text-slate-300">
         <span class="font-medium text-white">Free:</span>
-        {$diskInfo.free_gb.toFixed(1)} GB
+        {systemInfo.disk_free_gb.toFixed(1)} GB
       </span>
       <span class="text-slate-300">
         <span class="font-medium text-white">Total:</span>
-        {$diskInfo.total_gb.toFixed(1)} GB
+        {systemInfo.disk_total_gb.toFixed(1)} GB
       </span>
     </div>
   </div>
@@ -171,6 +239,14 @@
       {#if $scanProgress}
         <p class="text-sm text-indigo-400 text-center animate-pulse">
           {$scanProgress}
+        </p>
+      {/if}
+      {#if currentScanDir}
+        <p
+          class="text-xs text-slate-500 text-center truncate"
+          title={currentScanDir}
+        >
+          📁 {currentScanDir}
         </p>
       {/if}
     </div>

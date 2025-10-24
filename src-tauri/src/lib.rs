@@ -15,6 +15,22 @@ pub struct DiskInfoResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct SystemInfoResponse {
+    pub disk_total_gb: f32,
+    pub disk_used_gb: f32,
+    pub disk_free_gb: f32,
+    pub disk_usage_pct: f32,
+    pub memory_total_gb: f32,
+    pub memory_used_gb: f32,
+    pub memory_free_gb: f32,
+    pub memory_usage_pct: f32,
+    pub cpu_count: usize,
+    pub os_name: String,
+    pub os_version: String,
+    pub hostname: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct LargeFileEntry {
     pub path: String,
     pub size_mb: f32,
@@ -180,6 +196,70 @@ async fn get_disk_info() -> Result<DiskInfoResponse, String> {
         used_gb,
         free_gb,
         usage_pct,
+    })
+}
+
+#[tauri::command]
+async fn get_system_info() -> Result<SystemInfoResponse, String> {
+    use sysinfo::{Disks, System};
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let disks = Disks::new_with_refreshed_list();
+
+    // Get disk info
+    let disk = disks
+        .iter()
+        .max_by_key(|d| d.total_space())
+        .ok_or("No disks found")?;
+
+    let disk_total_bytes = disk.total_space();
+    let disk_available_bytes = disk.available_space();
+    let disk_used_bytes = disk_total_bytes - disk_available_bytes;
+
+    let disk_total_gb = disk_total_bytes as f32 / 1_073_741_824.0;
+    let disk_used_gb = disk_used_bytes as f32 / 1_073_741_824.0;
+    let disk_free_gb = disk_available_bytes as f32 / 1_073_741_824.0;
+    let disk_usage_pct = if disk_total_bytes > 0 {
+        (disk_used_bytes as f32 / disk_total_bytes as f32) * 100.0
+    } else {
+        0.0
+    };
+
+    // Get memory info
+    let memory_total_bytes = sys.total_memory();
+    let memory_used_bytes = sys.used_memory();
+    let memory_free_bytes = sys.available_memory();
+
+    let memory_total_gb = memory_total_bytes as f32 / 1_073_741_824.0;
+    let memory_used_gb = memory_used_bytes as f32 / 1_073_741_824.0;
+    let memory_free_gb = memory_free_bytes as f32 / 1_073_741_824.0;
+    let memory_usage_pct = if memory_total_bytes > 0 {
+        (memory_used_bytes as f32 / memory_total_bytes as f32) * 100.0
+    } else {
+        0.0
+    };
+
+    // Get CPU and system info
+    let cpu_count = sys.cpus().len();
+    let os_name = System::name().unwrap_or_else(|| "Unknown".to_string());
+    let os_version = System::os_version().unwrap_or_else(|| "Unknown".to_string());
+    let hostname = System::host_name().unwrap_or_else(|| "Unknown".to_string());
+
+    Ok(SystemInfoResponse {
+        disk_total_gb,
+        disk_used_gb,
+        disk_free_gb,
+        disk_usage_pct,
+        memory_total_gb,
+        memory_used_gb,
+        memory_free_gb,
+        memory_usage_pct,
+        cpu_count,
+        os_name,
+        os_version,
+        hostname,
     })
 }
 
@@ -439,6 +519,7 @@ pub fn run() {
         .plugin(tauri_plugin_log::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             get_disk_info,
+            get_system_info,
             scan_large_files,
             scan_bloat,
             scan_duplicates,

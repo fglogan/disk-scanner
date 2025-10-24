@@ -44,7 +44,15 @@ QUICK_START.md
 STARTUP_*.md
 SUCCESS.md
 WBS.md
+GIT_COMMIT_STATUS.md
 
 # Test files
 accurate_scanner.rs
 Cargo-test.toml
+
+# Proprietary Tempext content (not for public distribution)
+docs/compliance/
+TES-*.md
+AGENTS.md
+*_PLAYBOOK.md
+tempext_*.ko
