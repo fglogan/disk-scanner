@@ -1,41 +1,50 @@
-# Rust
-target/
-Cargo.lock
-
-# Node.js
-node_modules/
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Rust / Cargo
+target/
+Cargo.lock
 
 # Tauri
 src-tauri/target/
-src-tauri/Cargo.lock
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-logs/
-*.log
-
-# Build outputs
-dist/
-build/
-
-# Environment
-.env
-.env.local
 
 # Beads
-.beads/*.db-journal
+.beads/
+.issues.json
+daemon.pid
 
-# Screenshots (untracked until added)
-screenshots/
+# Status docs (temporary)
+*_SUMMARY.md
+FINAL_*.md
+FIXED_*.md
+IMPLEMENTATION_*.md
+QUICK_START.md
+STARTUP_*.md
+SUCCESS.md
+WBS.md
+
+# Test files
+accurate_scanner.rs
+Cargo-test.toml

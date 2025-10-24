@@ -15,11 +15,18 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.4.1", features = [] }
+tauri-build = { version = "2.5.1", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.8.5", features = [] }
+tauri = { version = "2.9.1", features = [] }
 tauri-plugin-log = "2"
+tokio = { version = "1", features = ["full"] }
+walkdir = "2"
+sysinfo = "0.30"
+sha2 = "0.10"
+trash = "3"
+rayon = "1.10"
+ignore = "0.4"

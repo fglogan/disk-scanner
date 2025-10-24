@@ -1,141 +1,47 @@
-# Disk Bloat Scanner
+# Svelte + TS + Vite
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/Rust-1.89+-000000.svg)](https://www.rust-lang.org/)
-[![Tauri](https://img.shields.io/badge/Tauri-2.0+-24c8db.svg)](https://tauri.app/)
-[![Svelte](https://img.shields.io/badge/Svelte-4+-ff3e00.svg)](https://svelte.dev/)
+This template should help get you started developing with Svelte and TypeScript in Vite.
 
-A powerful, cross-platform desktop application for scanning and cleaning disk bloat. Built with Rust and Tauri for performance, featuring a modern Svelte UI.
+## Recommended IDE Setup
 
-![Disk Bloat Scanner Screenshot](screenshots/main-interface.png)
+[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
 
-## ✨ Features
+## Need an official Svelte framework?
 
-- **Disk Analysis**: Real-time disk usage monitoring across all mounts
-- **Bloat Detection**: Intelligent scanning for large directories and files
-- **Duplicate Finder**: SHA256-based duplicate file detection
-- **Safe Cleanup**: Secure file removal with trash integration
-- **Modern UI**: Responsive Svelte interface with TailwindCSS
-- **Cross-Platform**: Native binaries for macOS, Windows, and Linux
-- **Privacy-Focused**: Local processing, no data collection
+Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
 
-## 🚀 Quick Start
+## Technical considerations
 
-### Prerequisites
-- [Rust 1.89+](https://rustup.rs/)
-- [Node.js 18+](https://nodejs.org/)
-- For macOS: Xcode Command Line Tools
-- For Windows: Visual Studio Build Tools
-- For Linux: WebKitGTK and appindicator
+**Why use this over SvelteKit?**
 
-### Installation
+- It brings its own routing solution which might not be preferable for some users.
+- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/disk-bloat-scanner.git
-cd disk-bloat-scanner
+This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
 
-# Install dependencies
-npm install
+Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
 
-# Run in development mode
-npm run dev
-# or build for production
-npm run build
+**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+
+Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
+
+**Why include `.vscode/extensions.json`?**
+
+Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+
+**Why enable `allowJs` in the TS template?**
+
+While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
+
+**Why is HMR not preserving my local component state?**
+
+HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
+
+If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
+
+```ts
+// store.ts
+// An extremely simple external store
+import { writable } from 'svelte/store'
+export default writable(0)
 ```
-
-### Download Releases
-Download the latest release from [GitHub Releases](https://github.com/yourusername/disk-bloat-scanner/releases).
-
-## 📖 Usage
-
-1. **Launch the app** and grant necessary permissions
-2. **View disk info** to see current usage across drives
-3. **Scan for bloat** by selecting a root directory and minimum size
-4. **Find duplicates** to identify identical files
-5. **Clean up** selected items safely (moves to trash)
-
-### Settings
-- Adjust minimum file size thresholds
-- Configure scan depth and exclusions
-- Toggle symlink following
-
-![Settings Panel](screenshots/settings-panel.png)
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    IPC    ┌─────────────────┐
-│   Svelte UI     │◄────────►│   Rust Backend   │
-│                 │           │                 │
-│ • Components    │           │ • Scan Engine   │
-│ • State Mgmt    │           │ • File Ops      │
-│ • Responsive    │           │ • Async Tasks   │
-└─────────────────┘           └─────────────────┘
-         │                               │
-         └───────────────────────────────┘
-              Tauri Runtime
-```
-
-## 🧪 Development
-
-```bash
-# Install Tauri CLI
-cargo install tauri-cli
-
-# Run with hot reload
-cargo tauri dev
-
-# Build release
-cargo tauri build
-```
-
-### Project Structure
-```
-disk-bloat-scanner/
-├── src-tauri/          # Rust backend
-│   ├── src/
-│   └── tauri.conf.json
-├── ui/                 # Svelte frontend
-│   ├── src/
-│   └── vite.config.js
-├── docs/               # Documentation
-└── package.json
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-### Development Setup
-- Follow the installation steps above
-- Run tests: `cargo test` and `npm test`
-- Use the BD issue tracker for task management
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Tauri](https://tauri.app/) for the amazing desktop framework
-- [Svelte](https://svelte.dev/) for the reactive UI framework
-- [TailwindCSS](https://tailwindcss.com/) for utility-first styling
-- [Beads](https://github.com/steveyegge/beads) for issue tracking
-
-## 📞 Support
-
-- 📧 Email: support@diskbloatscanner.com
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/disk-bloat-scanner/issues)
-- 📖 Docs: [Full Documentation](https://diskbloatscanner.com/docs)
-
----
-
-**Made with ❤️ using Rust and Tauri**</content>
-</xai:function_call">Create a comprehensive README.md file for the repository

@@ -1,0 +1,215 @@
+<script>
+  import { currentPage } from "../stores.js";
+
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", icon: "home" },
+    { id: "large-files", label: "Large Files", icon: "file-stack" },
+    { id: "project-bloat", label: "Project Bloat", icon: "package-x" },
+    { id: "duplicates", label: "Duplicates", icon: "copy" },
+    { id: "dev-caches", label: "Developer Caches", icon: "recycle" },
+    { id: "git-scanner", label: ".git Scanner", icon: "git-branch" },
+  ];
+
+  function navigateTo(pageId) {
+    currentPage.set(pageId);
+  }
+</script>
+
+<nav
+  class="sidebar-vibrant w-64 h-full flex-shrink-0 p-4 space-y-2 overflow-y-auto"
+>
+  <div class="px-4 py-2 mb-4">
+    <h1 class="text-xl font-bold text-white flex items-center space-x-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="text-indigo-400"
+      >
+        <path d="M3 6h18" /><path
+          d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+        /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line
+          x1="10"
+          x2="10"
+          y1="11"
+          y2="17"
+        /><line x1="14" x2="14" y1="11" y2="17" />
+      </svg>
+      <span>Repo-Sweep</span>
+    </h1>
+  </div>
+
+  <ul class="space-y-1">
+    {#each navItems as item}
+      <li>
+        <button
+          on:click={() => navigateTo(item.id)}
+          class="nav-link w-full text-left {$currentPage === item.id
+            ? 'active'
+            : ''} flex items-center space-x-3 px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+        >
+          {#if item.icon === "home"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path
+                d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+              /><polyline points="9 22 9 12 15 12 15 22" /></svg
+            >
+          {:else if item.icon === "file-stack"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path
+                d="M16 22h2c.5 0 1-.2 1.4-.6.4-.4.6-.9.6-1.4V7.5L14.5 2H6c-1.1 0-2 .9-2 2v3"
+              /><path d="M14 2v6h6" /><path
+                d="M10 20v-1c0-1.1.9-2 2-2h2c1.1 0 2 .9 2 2v1"
+              /><path d="M10 16h6" /><path
+                d="M4 11.2V20c0 1.1.9 2 2 2h2"
+              /></svg
+            >
+          {:else if item.icon === "package-x"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path
+                d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v2"
+              /><path
+                d="M21 14v4a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 18v-4"
+              /><path d="M3 10V8" /><path d="M21 10V8" /><path
+                d="M12 22v-8"
+              /><path d="m3.29 7 8.71 5 8.71-5" /><path
+                d="m3.29 17 8.71 5 8.71-5"
+              /><line x1="9" x2="15" y1="12" y2="12" /><line
+                x1="14.8"
+                x2="9.2"
+                y1="9"
+                y2="15"
+              /></svg
+            >
+          {:else if item.icon === "copy"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path
+                d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+              /></svg
+            >
+          {:else if item.icon === "recycle"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path d="M7 19a5 5 0 1 0 10 0" /><path d="M11 19V8l-4 4" /><path
+                d="m15 13-4-4"
+              /><path d="M12 11v8" /><path d="M10.5 13.5 7 10l-4 4" /><path
+                d="m13.5 10.5 3.5 3.5 4-4"
+              /><path d="M14 7h4a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-4" /></svg
+            >
+          {:else if item.icon === "git-branch"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><line x1="6" x2="6" y1="3" y2="15" /><circle
+                cx="18"
+                cy="6"
+                r="3"
+              /><circle cx="6" cy="18" r="3" /><path
+                d="M18 9a9 9 0 0 1-9 9"
+              /></svg
+            >
+          {/if}
+          <span>{item.label}</span>
+        </button>
+      </li>
+    {/each}
+  </ul>
+
+  <ul class="pt-4 mt-4 space-y-1 border-t border-slate-700">
+    <li>
+      <button
+        on:click={() => navigateTo("settings")}
+        class="nav-link w-full text-left {$currentPage === 'settings'
+          ? 'active'
+          : ''} flex items-center space-x-3 px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><path
+            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+          /><circle cx="12" cy="12" r="3" /></svg
+        >
+        <span>Settings</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<style>
+  .sidebar-vibrant {
+    background-color: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-right: 1px solid rgba(71, 85, 105, 0.5);
+  }
+
+  .nav-link.active {
+    background-color: #334155;
+    color: #ffffff;
+  }
+</style>
