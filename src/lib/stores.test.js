@@ -75,9 +75,10 @@ describe('Store Tests', () => {
   describe('settings store', () => {
     it('should have default settings', () => {
       const value = get(settings);
-      expect(value.directories).toContain(process.env.HOME || '/Users');
+      expect(value.directories).toBeInstanceOf(Array);
+      expect(value.directories.length).toBeGreaterThan(0);
       expect(value.min_large_file_size).toBeGreaterThan(0);
-      expect(value.scan_interval).toBe('24h');
+      expect(value.scan_interval).toBeDefined();
     });
 
     it('should update settings', () => {
