@@ -1,5 +1,6 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
+  import { ask } from "@tauri-apps/plugin-dialog";
   import { largeFiles, selectedPaths } from "../stores.js";
 
   let selectionCount = 0;
@@ -100,13 +101,29 @@
     console.log("Selected paths:", Array.from($selectedPaths));
 
     if ($selectedPaths.size === 0) {
-      alert("No files selected");
+      await ask("No files selected", {
+        title: "Delete Files",
+        kind: "warning",
+      });
       return;
     }
 
     const count = $selectedPaths.size;
+    const totalSizeMB = Array.from($selectedPaths).reduce((sum, path) => {
+      const file = $largeFiles.find((f) => f.path === path);
+      return sum + (file ? file.size_mb : 0);
+    }, 0);
+
     console.log("Showing confirmation for", count, "files");
-    if (!confirm(`Move ${count} file(s) to trash?`)) {
+    const confirmed = await ask(
+      `Move ${count} file(s) (${(totalSizeMB / 1024).toFixed(2)} GB) to trash?\n\nThis action can be undone by restoring from Trash.`,
+      {
+        title: "Confirm Delete",
+        kind: "warning",
+      },
+    );
+
+    if (!confirmed) {
       console.log("User cancelled");
       return;
     }

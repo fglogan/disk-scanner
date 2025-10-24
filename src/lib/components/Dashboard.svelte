@@ -27,6 +27,7 @@
   };
 
   let currentScanDir = "";
+  let statsInterval = null;
 
   async function loadSystemInfo() {
     try {
@@ -36,8 +37,34 @@
     }
   }
 
-  // Load system info on mount
+  // Start periodic stats updates
+  function startStatsUpdates() {
+    if (statsInterval) return; // Already running
+
+    statsInterval = setInterval(async () => {
+      if (!$isScanning) {
+        await loadSystemInfo();
+      }
+    }, 3000); // Update every 3 seconds
+  }
+
+  // Stop stats updates
+  function stopStatsUpdates() {
+    if (statsInterval) {
+      clearInterval(statsInterval);
+      statsInterval = null;
+    }
+  }
+
+  // Load system info on mount and start periodic updates
   loadSystemInfo();
+  startStatsUpdates();
+
+  // Cleanup on component destroy
+  import { onDestroy } from "svelte";
+  onDestroy(() => {
+    stopStatsUpdates();
+  });
 
   async function runManualScan() {
     isScanning.set(true);
@@ -217,12 +244,25 @@
   >
     <div>
       <h2 class="text-lg font-semibold text-white mb-4">Scanner Control</h2>
-      <p class="text-sm text-slate-400 mb-2">
-        Background monitoring is <span class="font-semibold text-green-400"
-          >Active</span
-        >.
-      </p>
-      <p class="text-sm text-slate-400">Next scan: 10:00 PM</p>
+      {#if currentScanDir}
+        <div
+          class="mb-4 p-3 bg-indigo-900/30 rounded-lg border border-indigo-600/30"
+        >
+          <p class="text-xs text-indigo-400 mb-1">Currently Scanning:</p>
+          <p
+            class="text-sm text-white font-mono truncate"
+            title={currentScanDir}
+          >
+            📁 {currentScanDir}
+          </p>
+        </div>
+      {:else}
+        <p class="text-sm text-slate-400 mb-2">
+          Scan directory: <span class="font-mono text-white"
+            >{$settings.directories[0]}</span
+          >
+        </p>
+      {/if}
     </div>
     <div class="mt-6 space-y-3">
       <button
@@ -239,14 +279,6 @@
       {#if $scanProgress}
         <p class="text-sm text-indigo-400 text-center animate-pulse">
           {$scanProgress}
-        </p>
-      {/if}
-      {#if currentScanDir}
-        <p
-          class="text-xs text-slate-500 text-center truncate"
-          title={currentScanDir}
-        >
-          📁 {currentScanDir}
         </p>
       {/if}
     </div>

@@ -1,5 +1,6 @@
 <script>
   import { settings } from "../stores.js";
+  import { open } from "@tauri-apps/plugin-dialog";
 
   let bgMonitorEnabled = $settings.bg_monitor_enabled;
   let scanInterval = $settings.scan_interval;
@@ -8,6 +9,40 @@
   function toggleBgMonitor() {
     bgMonitorEnabled = !bgMonitorEnabled;
     settings.update((s) => ({ ...s, bg_monitor_enabled: bgMonitorEnabled }));
+  }
+
+  async function addDirectory() {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: "Select Directory to Scan",
+      });
+
+      if (selected) {
+        const newDir = typeof selected === "string" ? selected : selected.path;
+        console.log("Selected directory:", newDir);
+
+        settings.update((s) => {
+          if (!s.directories.includes(newDir)) {
+            return {
+              ...s,
+              directories: [...s.directories, newDir],
+            };
+          }
+          return s;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to select directory:", error);
+    }
+  }
+
+  function removeDirectory(dir) {
+    settings.update((s) => ({
+      ...s,
+      directories: s.directories.filter((d) => d !== dir),
+    }));
   }
 </script>
 
@@ -86,13 +121,16 @@
           class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg"
         >
           <span class="font-mono text-sm text-slate-300">{dir}</span>
-          <button class="text-slate-400 hover:text-red-400 text-xl font-bold"
-            >&times;</button
+          <button
+            on:click={() => removeDirectory(dir)}
+            class="text-slate-400 hover:text-red-400 text-xl font-bold transition-colors"
+            title="Remove directory">&times;</button
           >
         </li>
       {/each}
     </ul>
     <button
+      on:click={addDirectory}
       class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors duration-150"
     >
       Add Directory
