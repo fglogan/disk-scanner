@@ -43,7 +43,11 @@
 
   // Start periodic stats updates
   function startStatsUpdates() {
-    if (statsInterval) return; // Already running
+    // Always clear existing interval first to prevent duplicates
+    if (statsInterval) {
+      clearInterval(statsInterval);
+      statsInterval = null;
+    }
 
     statsInterval = setInterval(async () => {
       if (!$isScanning) {
@@ -60,14 +64,24 @@
     }
   }
 
-  // Load system info on mount and start periodic updates
-  loadSystemInfo();
-  startStatsUpdates();
-
   // Cleanup on component destroy
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
+  
+  onMount(() => {
+    // Load system info on mount and start periodic updates
+    loadSystemInfo();
+    startStatsUpdates();
+  });
+
   onDestroy(() => {
+    // Ensure cleanup happens
     stopStatsUpdates();
+    
+    // Also clear scanning timer if active
+    if (scanningTimer) {
+      clearInterval(scanningTimer);
+      scanningTimer = null;
+    }
   });
 
   async function selectDirectory() {
