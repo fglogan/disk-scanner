@@ -1,5 +1,6 @@
 <script>
   import { currentPage } from "../stores.js";
+  import tempextLogo from "../../assets/tempext-logo.png";
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: "home" },
@@ -23,7 +24,7 @@
     <!-- Tempext Branding -->
     <div class="flex items-center space-x-2 mb-2">
       <img 
-        src="/tempext-logo.png" 
+        src={tempextLogo}
         alt="Tempext" 
         class="h-6 w-auto"
       />
