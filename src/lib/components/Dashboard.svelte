@@ -1,5 +1,6 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
+  import { open } from "@tauri-apps/plugin-dialog";
   import {
     diskInfo,
     summaryStats,
@@ -69,7 +70,39 @@
     stopStatsUpdates();
   });
 
+  async function selectDirectory() {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: "Select Directory to Scan",
+      });
+
+      if (selected) {
+        const newDir = typeof selected === "string" ? selected : selected.path;
+        console.log("Selected directory:", newDir);
+
+        settings.update((s) => {
+          // Replace first directory or add if empty
+          return {
+            ...s,
+            directories: [newDir],
+          };
+        });
+      }
+    } catch (error) {
+      console.error("Failed to select directory:", error);
+      alert("Failed to select directory: " + error);
+    }
+  }
+
   async function runManualScan() {
+    // Check if user has selected a directory
+    if (!$settings.directories || $settings.directories.length === 0) {
+      alert("Please select a directory to scan first!");
+      return;
+    }
+
     isScanning.set(true);
     currentScanDir = $settings.directories[0];
     filesScanned = 0;
@@ -282,11 +315,17 @@
         </p>
       </div>
     {:else}
-      <p class="text-sm text-slate-400">
-        Scan directory: <span class="font-mono text-white"
-          >{$settings.directories[0]}</span
-        >
-      </p>
+      {#if $settings.directories && $settings.directories.length > 0}
+        <p class="text-sm text-slate-400">
+          Scan directory: <span class="font-mono text-white"
+            >{$settings.directories[0]}</span
+          >
+        </p>
+      {:else}
+        <p class="text-sm text-amber-400">
+          ⚠️ No directory selected. Go to Settings to add a directory.
+        </p>
+      {/if}
     {/if}
   </div>
 
@@ -308,17 +347,32 @@
       {/if}
     </div>
     <div class="mt-6 space-y-3">
-      <button
-        on:click={runManualScan}
-        disabled={$isScanning}
-        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-150 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {#if $isScanning}
-          Scanning...
-        {:else}
-          Scan Manually Now
-        {/if}
-      </button>
+      {#if !$settings.directories || $settings.directories.length === 0}
+        <button
+          on:click={selectDirectory}
+          class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-150 shadow-lg shadow-indigo-600/20"
+        >
+          📁 Select Directory
+        </button>
+      {:else}
+        <button
+          on:click={selectDirectory}
+          class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-150"
+        >
+          Change Directory
+        </button>
+        <button
+          on:click={runManualScan}
+          disabled={$isScanning}
+          class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-150 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {#if $isScanning}
+            Scanning...
+          {:else}
+            Scan Directory
+          {/if}
+        </button>
+      {/if}
     </div>
   </div>
 </div>
