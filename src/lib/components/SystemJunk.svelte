@@ -72,6 +72,7 @@
             window.location.reload();
           }
         }, 500);
+      }
     } catch (e) {
       alert("Cleanup failed: " + e);
     }
