@@ -42,14 +42,36 @@
         req: { paths, dry_run: false, trash: true },
       });
 
-      alert(
-        `Deleted: ${result.deleted.length}, Skipped: ${result.skipped.length}, Errors: ${result.errors.length}`,
-      );
+      let message = `✅ Deleted: ${result.deleted.length}\n`;
+      
+      if (result.skipped.length > 0) {
+        message += `⚠️ Skipped: ${result.skipped.length} (files not found)\n`;
+        message += `Skipped files:\n${result.skipped.slice(0, 3).join('\n')}`;
+        if (result.skipped.length > 3) {
+          message += `\n... and ${result.skipped.length - 3} more`;
+        }
+      }
+      
+      if (result.errors.length > 0) {
+        message += `\n\n❌ Errors: ${result.errors.length}\n`;
+        message += result.errors.slice(0, 3).join('\n');
+        if (result.errors.length > 3) {
+          message += `\n... and ${result.errors.length - 3} more`;
+        }
+      }
 
-      // Clear selection
+      alert(message);
+
+      // Clear selection and refresh
       selectedPaths.set(new Set());
-
-      // TODO: Re-run scan to refresh results
+      
+      // If any files were deleted, suggest re-scan
+      if (result.deleted.length > 0) {
+        setTimeout(() => {
+          if (confirm("Files deleted! Re-scan to refresh the list?")) {
+            window.location.reload();
+          }
+        }, 500);
     } catch (e) {
       alert("Cleanup failed: " + e);
     }
@@ -105,8 +127,14 @@
 
 {#if $junkFiles.length === 0}
   <div class="bg-slate-800 rounded-xl shadow-lg p-8 text-center">
-    <p class="text-slate-400 text-lg">
+    <p class="text-slate-400 text-lg mb-4">
       ✨ No junk files found! Your system is clean.
+    </p>
+    <p class="text-sm text-slate-500">
+      Run a scan from the Dashboard to detect:<br />
+      • System files (.DS_Store, Thumbs.db)<br />
+      • Build artifacts (*.pyc, *.class)<br />
+      • Editor temp files (*.swp, *~)
     </p>
   </div>
 {:else}
