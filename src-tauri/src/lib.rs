@@ -689,6 +689,9 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     let mut skipped = Vec::new();
     let mut errors = Vec::new();
 
+    println!("[cleanup_dirs] Starting cleanup of {} paths", req.paths.len());
+    println!("[cleanup_dirs] dry_run={}, trash={}", req.dry_run, req.trash);
+
     if req.dry_run {
         // Dry run - just return what would be deleted
         return Ok(CleanupResult {
@@ -700,17 +703,33 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 
     for path in &req.paths {
         let p = Path::new(path);
+        println!("[cleanup_dirs] Processing: {}", path);
 
         if !p.exists() {
+            println!("[cleanup_dirs]   -> File does not exist, skipping");
             skipped.push(path.clone());
             continue;
         }
 
+        println!("[cleanup_dirs]   -> File exists, attempting to delete (trash={})", req.trash);
+
         if req.trash {
             // Move to trash
             match trash::delete(p) {
-                Ok(_) => deleted.push(path.clone()),
-                Err(e) => errors.push(format!("{}: {}", path, e)),
+                Ok(_) => {
+                    println!("[cleanup_dirs]   -> Successfully moved to trash");
+                    // Verify it's actually gone
+                    if p.exists() {
+                        println!("[cleanup_dirs]   -> WARNING: File still exists after trash!");
+                        errors.push(format!("{}: Moved to trash but file still exists", path));
+                    } else {
+                        deleted.push(path.clone());
+                    }
+                },
+                Err(e) => {
+                    println!("[cleanup_dirs]   -> Error: {}", e);
+                    errors.push(format!("{}: {}", path, e));
+                }
             }
         } else {
             // Permanent deletion
@@ -721,11 +740,20 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
             };
 
             match result {
-                Ok(_) => deleted.push(path.clone()),
-                Err(e) => errors.push(format!("{}: {}", path, e)),
+                Ok(_) => {
+                    println!("[cleanup_dirs]   -> Successfully deleted");
+                    deleted.push(path.clone());
+                },
+                Err(e) => {
+                    println!("[cleanup_dirs]   -> Error: {}", e);
+                    errors.push(format!("{}: {}", path, e));
+                }
             }
         }
     }
+
+    println!("[cleanup_dirs] Complete: deleted={}, skipped={}, errors={}", 
+             deleted.len(), skipped.len(), errors.len());
 
     Ok(CleanupResult {
         deleted,
