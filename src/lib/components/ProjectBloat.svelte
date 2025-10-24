@@ -22,9 +22,43 @@
     selectedPaths.set($selectedPaths); // Trigger reactivity
   }
 
+  function isCriticalPath(path) {
+    // Check for paths that might contain important source code
+    return (
+      path.includes("/src/") ||
+      path.includes("/lib/") ||
+      path.includes("/.git/") ||
+      path.endsWith("/src") ||
+      path.endsWith("/lib")
+    );
+  }
+
   async function cleanupSelected() {
     if ($selectedPaths.size === 0) {
-      alert("No items selected for cleanup");
+      alert("No directories selected for cleanup");
+      return;
+    }
+
+    // Check for critical paths
+    const criticalPaths = Array.from($selectedPaths).filter(isCriticalPath);
+    if (criticalPaths.length > 0) {
+      const extraConfirm = confirm(
+        `⚠️ CRITICAL WARNING: ${criticalPaths.length} directory(ies) may contain SOURCE CODE!\n\n` +
+          `Examples:\n${criticalPaths.slice(0, 3).join("\n")}\n\n` +
+          `This could delete your entire project source!\n\n` +
+          `Are you ABSOLUTELY SURE?`,
+      );
+
+      if (!extraConfirm) {
+        return;
+      }
+    }
+
+    if (
+      !confirm(
+        `Delete ${$selectedPaths.size} directories? This will remove all contents. Files will be moved to trash.`,
+      )
+    ) {
       return;
     }
 

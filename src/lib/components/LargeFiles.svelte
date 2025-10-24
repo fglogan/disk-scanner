@@ -93,18 +93,59 @@
     return { filename, parentDir, projectRoot, fullPath };
   }
 
-  async function deleteSelected() {
-    console.log(
-      "deleteSelected() called, selected count:",
-      $selectedPaths.size,
+  function isCriticalPath(path) {
+    // Check if path contains source code or important directories
+    return (
+      path.includes("/src/") ||
+      path.includes("/lib/") ||
+      path.includes("/.git/") ||
+      /\.(rs|js|ts|py|go|cpp|java|rb|php|swift|kt|h|c|hpp)$/.test(path)
     );
-    console.log("Selected paths:", Array.from($selectedPaths));
+  }
 
+  async function deleteSelected() {
     if ($selectedPaths.size === 0) {
       await ask("No files selected", {
         title: "Delete Files",
         kind: "warning",
       });
+      return;
+    }
+
+    // Check for critical paths
+    const criticalPaths = Array.from($selectedPaths).filter(isCriticalPath);
+    if (criticalPaths.length > 0) {
+      const extraConfirm = await ask(
+        `⚠️ DANGER: ${criticalPaths.length} SOURCE CODE FILE(S) SELECTED!\n\n` +
+          `These appear to be source code or critical system files:\n` +
+          `${criticalPaths.slice(0, 3).join("\n")}\n\n` +
+          `Deleting these could BREAK YOUR PROJECTS!\n\n` +
+          `Are you ABSOLUTELY CERTAIN?`,
+        {
+          title: "⚠️ CRITICAL FILE WARNING",
+          kind: "error",
+        },
+      );
+
+      if (!extraConfirm) {
+        return;
+      }
+    }
+
+    const totalSize = Array.from($selectedPaths).reduce((sum, path) => {
+      const file = $largeFiles.find((f) => f.path === path);
+      return sum + (file ? file.size_mb : 0);
+    }, 0);
+
+    const confirmed = await ask(
+      `Delete ${$selectedPaths.size} file(s)? Total size: ${totalSize.toFixed(1)} GB\n\nFiles will be moved to trash.`,
+      {
+        title: "Confirm Deletion",
+        kind: "warning",
+      },
+    );
+
+    if (!confirmed) {
       return;
     }
 
