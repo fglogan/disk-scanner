@@ -138,6 +138,7 @@
       updateSummaryStats();
 
       scanProgress.set("Scanning for junk files...");
+      console.log("🔍 Starting junk scan on:", $settings.directories[0]);
       const junkResults = await invoke("scan_junk_files", {
         opts: {
           root: $settings.directories[0],
@@ -145,7 +146,8 @@
           follow_symlinks: false,
         },
       });
-      console.log("Junk files found:", junkResults.reduce((sum, cat) => sum + cat.file_count, 0) + " files");
+      console.log("✅ Junk scan complete! Results:", junkResults);
+      console.log("📊 Total junk files found:", junkResults.reduce((sum, cat) => sum + cat.file_count, 0));
       junkFiles.set(junkResults);
       updateSummaryStats();
 
