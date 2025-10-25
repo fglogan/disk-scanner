@@ -2,8 +2,7 @@ use serde::{Deserialize, Serialize};
 
 
 
-mod utils;
-use utils::path::validate_scan_path;
+mod utils;\nuse utils::path::validate_scan_path;\nuse std::collections::HashMap;\nuse std::path::Path;
 
 // ============================================================================
 // Data Structures
