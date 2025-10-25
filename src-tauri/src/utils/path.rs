@@ -1,6 +1,6 @@
 //! Path validation utilities to prevent accessing system directories
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Validate a path for scanning operations
 /// 

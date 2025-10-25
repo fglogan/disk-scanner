@@ -1,6 +1,7 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
   import { junkFiles, selectedPaths } from "../stores.js";
+  import { formatSize, getSafetyBadge } from "../utils.js";
 
   let expandedCategories = new Set();
 
@@ -66,12 +67,7 @@
       return sum;
     }, 0);
 
-    const totalSizeMB = totalSizeKB / 1024;
-    const sizeDisplay = totalSizeMB < 1 
-      ? `${totalSizeKB.toFixed(1)} KB`
-      : totalSizeMB < 1024
-        ? `${totalSizeMB.toFixed(1)} MB`
-        : `${(totalSizeMB / 1024).toFixed(2)} GB`;
+    const sizeDisplay = formatSize(totalSizeKB);
 
     const confirmDelete = confirm(
       `Delete ${$selectedPaths.size} junk file(s)?\n\n` +
@@ -201,9 +197,7 @@
                 {category.display_name}
               </h3>
               <p class="text-sm text-slate-400">
-                {category.file_count} files • {category.total_size_kb.toFixed(
-                  1,
-                )} KB • {getSafetyBadge(category.safety)}
+                {category.file_count} files • {formatSize(category.total_size_kb)} • {getSafetyBadge(category.safety)}
               </p>
             </div>
           </div>

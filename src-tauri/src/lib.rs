@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::Path;
+
+
 
 mod utils;
 use utils::path::validate_scan_path;
@@ -106,6 +106,47 @@ pub struct JunkCategory {
     pub file_count: usize,
     pub safety: String,
     pub files: Vec<JunkFileEntry>,
+}
+
+// ============================================================================
+// Developer Caches & Git Scanner Data Structures
+// ============================================================================
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct CacheEntry {
+    pub path: String,
+    pub size_mb: f32,
+    pub cache_type: String,
+    pub safety: String, // "safe", "caution", "dangerous"
+    pub description: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct CacheCategory {
+    pub category_id: String,
+    pub display_name: String,
+    pub total_size_mb: f32,
+    pub entry_count: usize,
+    pub safety: String,
+    pub entries: Vec<CacheEntry>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct GitEntry {
+    pub path: String,
+    pub size_mb: f32,
+    pub entry_type: String, // "large_file", "loose_object", "pack_file", "reflog"
+    pub description: String,
+    pub safety: String,
+    pub actionable: bool, // Can this be safely cleaned up?
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct GitRepository {
+    pub repo_path: String,
+    pub total_size_mb: f32,
+    pub entry_count: usize,
+    pub entries: Vec<GitEntry>,
 }
 
 // ============================================================================
@@ -819,6 +860,333 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     })
 }
 
+// ============================================================================
+// Developer Caches Scanner Command
+// ============================================================================
+
+#[tauri::command]
+async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
+    
+    use walkdir::WalkDir;
+
+    // Validate the scan path to prevent system directory access
+    let validated_path = validate_scan_path(&opts.root)?;
+    log::info!("Scanning developer caches in: {}", validated_path.display());
+
+    // Define cache patterns with safety levels
+    let cache_patterns = [
+        // Node.js/npm/yarn
+        ("node_modules", "nodejs", "Node.js Dependencies", "caution", 
+         "Package dependencies - will be re-downloaded on next install"),
+        ("npm_cache", "nodejs", "npm Cache", "safe", 
+         "Downloaded package metadata and tarballs"),
+        ("yarn_cache", "nodejs", "Yarn Cache", "safe", 
+         "Yarn package cache"),
+        
+        // Python
+        ("__pycache__", "python", "Python Bytecode", "safe", 
+         "Compiled Python files - regenerated automatically"),
+        (".pytest_cache", "python", "pytest Cache", "safe", 
+         "Test execution cache"),
+        (".mypy_cache", "python", "MyPy Cache", "safe", 
+         "Type checking cache"),
+        ("pip_cache", "python", "pip Cache", "safe", 
+         "pip package cache"),
+        
+        // Rust/Cargo
+        ("target", "rust", "Cargo Target", "caution", 
+         "Build artifacts and dependencies - recompile on next build"),
+        ("cargo_registry_cache", "rust", "Cargo Registry Cache", "safe", 
+         "Downloaded crate registry data"),
+        
+        // Java/Maven/Gradle
+        (".gradle", "java", "Gradle Cache", "caution", 
+         "Gradle build cache and dependencies"),
+        ("maven_repo", "java", "Maven Repository", "caution", 
+         "Downloaded Maven dependencies"),
+        
+        // Docker
+        ("docker_cache", "docker", "Docker Cache", "caution", 
+         "Docker build cache and layers"),
+        
+        // System caches
+        ("Caches", "system", "System Cache", "safe", 
+         "macOS system application caches"),
+        
+        // IDE/editor caches
+        (".vscode", "editor", "VS Code Cache", "safe", 
+         "VS Code extensions and workspace cache"),
+        (".idea", "editor", "IntelliJ IDEA Cache", "caution", 
+         "IDEA indexes and caches"),
+    ];
+
+    let mut cache_map: HashMap<String, (String, String, String, Vec<CacheEntry>)> = HashMap::new();
+
+    // Walk the directory tree looking for cache directories
+    for entry in WalkDir::new(&validated_path)
+        .follow_links(opts.follow_symlinks)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_dir())
+    {
+        let path = entry.path();
+        let path_str = path.to_string_lossy();
+        
+        for (pattern, category_id, display_name, safety, description) in &cache_patterns {
+            if path_str.contains(pattern) || 
+               path.file_name().map_or(false, |name| name.to_string_lossy() == *pattern) {
+                
+                // Calculate directory size
+                let size_bytes = dir_size(path);
+                let size_mb = size_bytes as f32 / 1_048_576.0;
+                
+                let cache_entry = CacheEntry {
+                    path: path_str.to_string(),
+                    size_mb,
+                    cache_type: category_id.to_string(),
+                    safety: safety.to_string(),
+                    description: description.to_string(),
+                };
+                
+                let key = format!("{}:{}", category_id, display_name);
+                let (_, _, _, entries) = cache_map.entry(key).or_insert((
+                    category_id.to_string(),
+                    display_name.to_string(),
+                    safety.to_string(),
+                    Vec::new(),
+                ));
+                entries.push(cache_entry);
+                break;
+            }
+        }
+    }
+
+    // Convert to result format
+    let mut result: Vec<CacheCategory> = cache_map
+        .into_iter()
+        .map(|(key, (category_id, display_name, safety, entries))| {
+            let total_size_mb: f32 = entries.iter().map(|e| e.size_mb).sum();
+            CacheCategory {
+                category_id,
+                display_name,
+                total_size_mb,
+                entry_count: entries.len(),
+                safety,
+                entries,
+            }
+        })
+        .collect();
+
+    // Sort by total size (largest first)
+    result.sort_by(|a, b| b.total_size_mb.partial_cmp(&a.total_size_mb).unwrap());
+
+    Ok(result)
+}
+
+// ============================================================================
+// Git Repository Scanner Command
+// ============================================================================
+
+#[tauri::command]
+async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
+    
+    use walkdir::WalkDir;
+
+    // Validate the scan path to prevent system directory access
+    let validated_path = validate_scan_path(&opts.root)?;
+    log::info!("Scanning git repositories in: {}", validated_path.display());
+
+    let mut repositories = Vec::new();
+
+    // Find all .git directories
+    for entry in WalkDir::new(&validated_path)
+        .follow_links(opts.follow_symlinks)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_dir())
+        .filter(|e| e.file_name() == ".git")
+    {
+        let git_path = entry.path();
+        let repo_path = git_path.parent().unwrap_or(git_path);
+        
+        let mut git_entries = Vec::new();
+        let mut total_size = 0u64;
+
+        // Analyze .git directory structure
+        if let Ok(git_contents) = std::fs::read_dir(git_path) {
+            for git_entry in git_contents.flatten() {
+                let entry_path = git_entry.path();
+                let entry_name = git_entry.file_name().to_string_lossy();
+                
+                match entry_name.as_ref() {
+                    "objects" => {
+                        // Analyze git objects
+                        if let Ok(objects_size) = analyze_git_objects(&entry_path) {
+                            total_size += objects_size;
+                            git_entries.push(GitEntry {
+                                path: entry_path.to_string_lossy().to_string(),
+                                size_mb: objects_size as f32 / 1_048_576.0,
+                                entry_type: "objects".to_string(),
+                                description: format!("Git objects: {} files", count_git_objects(&entry_path)),
+                                safety: "safe".to_string(),
+                                actionable: false, // Don't delete git objects
+                            });
+                        }
+                    },
+"refs" => {
+    // Analyze refs
+    let refs_size = dir_size(&entry_path);
+    if refs_size > 0 {
+        total_size += refs_size;
+        git_entries.push(GitEntry {
+            path: entry_path.to_string_lossy().to_string(),
+            size_mb: refs_size as f32 / 1_048_576.0,
+            entry_type: "refs".to_string(),
+            description: "Git references and branches".to_string(),
+            safety: "safe".to_string(),
+            actionable: false,
+        });
+    }
+},
+"logs" => {
+    // Reflogs - can be cleaned up
+    let logs_size = dir_size(&entry_path);
+    if logs_size > 0 {
+        total_size += logs_size;
+        git_entries.push(GitEntry {
+            path: entry_path.to_string_lossy().to_string(),
+            size_mb: logs_size as f32 / 1_048_576.0,
+            entry_type: "reflog".to_string(),
+            description: "Git reflogs - tracks branch movements".to_string(),
+            safety: "caution".to_string(),
+            actionable: true,
+        });
+    }
+},
+"pack" => {
+    // Pack files
+    let pack_size = dir_size(&entry_path);
+    if pack_size > 0 {
+        total_size += pack_size;
+        git_entries.push(GitEntry {
+            path: entry_path.to_string_lossy().to_string(),
+            size_mb: pack_size as f32 / 1_048_576.0,
+            entry_type: "pack_file".to_string(),
+            description: "Git pack files - compressed object storage".to_string(),
+            safety: "safe".to_string(),
+            actionable: false,
+        });
+    }
+},
+                    _ => {
+                        // Other files/directories
+                        if let Ok(metadata) = entry_path.metadata() {
+                            if metadata.is_file() {
+                                let file_size = metadata.len();
+                                total_size += file_size;
+                                git_entries.push(GitEntry {
+                                    path: entry_path.to_string_lossy().to_string(),
+                                    size_mb: file_size as f32 / 1_048_576.0,
+                                    entry_type: "file".to_string(),
+                                    description: format!("Git file: {}", entry_name),
+                                    safety: "safe".to_string(),
+                                    actionable: false,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for large files in git history (using git command)
+        if let Ok(large_files) = find_large_git_files(repo_path) {
+            for (file_path, file_size) in large_files {
+                total_size += file_size;
+                git_entries.push(GitEntry {
+                    path: file_path,
+                    size_mb: file_size as f32 / 1_048_576.0,
+                    entry_type: "large_file".to_string(),
+                    description: "Large file in git history".to_string(),
+                    safety: "caution".to_string(),
+                    actionable: true, // Can be removed with git filter-branch or BFG
+                });
+            }
+        }
+
+        if !git_entries.is_empty() {
+            repositories.push(GitRepository {
+                repo_path: repo_path.to_string_lossy().to_string(),
+                total_size_mb: total_size as f32 / 1_048_576.0,
+                entry_count: git_entries.len(),
+                entries: git_entries,
+            });
+        }
+    }
+
+    // Sort by total size (largest first)
+    repositories.sort_by(|a, b| b.total_size_mb.partial_cmp(&a.total_size_mb).unwrap());
+
+    Ok(repositories)
+}
+
+// Helper functions for git analysis
+fn analyze_git_objects(objects_path: &std::path::Path) -> Result<u64, std::io::Error> {
+    Ok(dir_size(objects_path))
+}
+
+fn count_git_objects(objects_path: &std::path::Path) -> usize {
+    let mut count = 0;
+    if let Ok(entries) = std::fs::read_dir(objects_path) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                count += count_git_objects(&path);
+            } else {
+                count += 1;
+            }
+        }
+    }
+    count
+}
+
+fn find_large_git_files(repo_path: &std::path::Path) -> Result<Vec<(String, u64)>, std::io::Error> {
+    let mut large_files = Vec::new();
+    
+    // Use git command to find large files in history
+    if let Ok(output) = std::process::Command::new("git")
+        .arg("-C")
+        .arg(repo_path)
+        .args(&["rev-list", "--objects", "--all"])
+        .output()
+    {
+        if output.status.success() {
+            let output_str = String::from_utf8_lossy(&output.stdout);
+            for line in output_str.lines() {
+                if let Some((hash, path)) = line.split_once(' ') {
+                    // Get file size for this object
+                    if let Ok(size_output) = std::process::Command::new("git")
+                        .arg("-C")
+                        .arg(repo_path)
+                        .args(&["cat-file", "-s", hash])
+                        .output()
+                    {
+                        if size_output.status.success() {
+                            if let Ok(size_str) = String::from_utf8_lossy(&size_output.stdout).trim().parse::<u64>() {
+                                if size_str > 10 * 1024 * 1024 { // Files larger than 10MB
+                                    large_files.push((path.to_string(), size_str));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(large_files)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -831,6 +1199,8 @@ pub fn run() {
             scan_bloat,
             scan_duplicates,
             scan_junk_files,
+            scan_dev_caches,
+            scan_git_repos,
             cleanup_dirs
         ])
         .run(tauri::generate_context!())
