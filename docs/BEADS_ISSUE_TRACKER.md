@@ -10,11 +10,11 @@
 
 | Priority | Total | Completed | In Progress | Pending |
 |----------|-------|-----------|-------------|---------|
-| 🚨 Critical | 8 | 5 | 0 | 3 |
+| 🚨 Critical | 8 | 6 | 0 | 2 |
 | ⚠️ High | 12 | 1 | 0 | 11 |
 | 📝 Medium | 15 | 1 | 0 | 14 |
 | ✅ Low | 8 | 0 | 0 | 8 |
-| **TOTAL** | **43** | **7** | **0** | **36** |
+| **TOTAL** | **43** | **8** | **0** | **35** |
 
 ---
 
@@ -49,7 +49,7 @@
 ---
 
 ### BEAD-002: Implement Path Validation with Blacklist 🚨
-**Status:** PENDING  
+**Status:** ✅ COMPLETED (Oct 25, 2025)  
 **Priority:** CRITICAL  
 **Effort:** 2-3 hours  
 **Impact:** Prevents scanning/deleting system directories
@@ -92,9 +92,17 @@ pub fn validate_scan_path(path: &str) -> Result<PathBuf, String> {
 - `src-tauri/src/commands/mod.rs` (create module structure)
 - `src-tauri/src/utils/path.rs` (create new file)
 
-**Assignee:** TBD  
+**Assignee:** Complete  
 **Dependencies:** None  
 **Test:** Attempt to scan `/System` - should fail with error
+
+**Implementation Completed:**
+- ✅ Created `src-tauri/src/utils/path.rs` with comprehensive path validation
+- ✅ Added module imports to `src-tauri/src/lib.rs`
+- ✅ Integrated validation into all 4 scan commands: `scan_bloat()`, `scan_large_files()`, `scan_duplicates()`, `scan_junk_files()`
+- ✅ Blocks system directories: `/System`, `/bin`, `/sbin`, `/usr`, `/etc`, `/var`, and Windows equivalents
+- ✅ Tested: `/System` and `/usr` correctly return "Access denied" errors
+- ✅ Commit: `ad2baff` - "feat: integrate path validation into all scan commands (BEAD-002 complete)"
 
 ---
 
