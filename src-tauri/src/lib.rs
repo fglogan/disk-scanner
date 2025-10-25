@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 
+mod utils;
+use utils::path::validate_scan_path;
+
 // ============================================================================
 // Data Structures
 // ============================================================================
@@ -426,9 +429,13 @@ async fn scan_large_files(opts: ScanOpts) -> Result<Vec<LargeFileEntry>, String>
     use rayon::prelude::*;
     use walkdir::WalkDir;
 
+    // Validate the scan path to prevent system directory access
+    let validated_path = validate_scan_path(&opts.root)?;
+    log::info!("Scanning large files in: {}", validated_path.display());
+
     let min_size = opts.min_bytes.unwrap_or(1024 * 1024 * 1024); // Default 1GB
 
-    let entries: Vec<_> = WalkDir::new(&opts.root)
+    let entries: Vec<_> = WalkDir::new(&validated_path)
         .follow_links(opts.follow_symlinks)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -471,10 +478,14 @@ async fn scan_bloat(opts: ScanOpts) -> Result<Vec<BloatCategory>, String> {
     use std::sync::Mutex;
     use walkdir::WalkDir;
 
+    // Validate the scan path to prevent system directory access
+    let validated_path = validate_scan_path(&opts.root)?;
+    log::info!("Scanning bloat in: {}", validated_path.display());
+
     let categories: Mutex<HashMap<String, (String, Vec<BloatEntry>)>> = Mutex::new(HashMap::new());
 
     // Walk the directory tree
-    for entry in WalkDir::new(&opts.root)
+    for entry in WalkDir::new(&validated_path)
         .follow_links(opts.follow_symlinks)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -530,10 +541,14 @@ async fn scan_duplicates(opts: ScanOpts) -> Result<Vec<DuplicateSet>, String> {
     use std::sync::Mutex;
     use walkdir::WalkDir;
 
+    // Validate the scan path to prevent system directory access
+    let validated_path = validate_scan_path(&opts.root)?;
+    log::info!("Scanning duplicates in: {}", validated_path.display());
+
     const MAX_FILE_SIZE: u64 = 100 * 1024 * 1024; // 100MB limit for hashing
 
     // First pass: collect all files with their sizes
-    let files: Vec<_> = WalkDir::new(&opts.root)
+    let files: Vec<_> = WalkDir::new(&validated_path)
         .follow_links(opts.follow_symlinks)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -625,11 +640,15 @@ async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
     use std::sync::Mutex;
     use walkdir::WalkDir;
 
+    // Validate the scan path to prevent system directory access
+    let validated_path = validate_scan_path(&opts.root)?;
+    log::info!("Scanning junk files in: {}", validated_path.display());
+
     let junk_files: Mutex<HashMap<String, (String, String, Vec<JunkFileEntry>)>> =
         Mutex::new(HashMap::new());
 
     // Walk the directory tree and find junk files
-    for entry in WalkDir::new(&opts.root)
+    for entry in WalkDir::new(&validated_path)
         .follow_links(opts.follow_symlinks)
         .into_iter()
         .filter_map(|e| e.ok())
