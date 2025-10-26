@@ -56,3 +56,12 @@ TES-*.md
 AGENTS.md
 *_PLAYBOOK.md
 tempext_*.ko
+
+# Archived files and old code
+.archive/
+
+# Audit and internal governance
+.laio/
+docs/audit/
+*.audit.log
+*.deletion.log
