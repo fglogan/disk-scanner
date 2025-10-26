@@ -1,6 +1,6 @@
-use std::net::TcpListener;
 use anyhow::Result;
 use log::{info, warn};
+use std::net::TcpListener;
 
 /// Checks if a port is available on localhost; returns Ok(port) or finds alternative.
 pub fn check_or_find_port(base_port: u16, max_tries: u16) -> Result<u16, String> {
@@ -10,7 +10,7 @@ pub fn check_or_find_port(base_port: u16, max_tries: u16) -> Result<u16, String>
         match TcpListener::bind(&addr) {
             Ok(_) => {
                 info!("Port {} is available", port);
-                return Ok(port);  // Bind succeeds = available (drop listener immediately)
+                return Ok(port); // Bind succeeds = available (drop listener immediately)
             }
             Err(_) => {
                 warn!("Port {} in use; trying next", port);

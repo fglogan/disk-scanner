@@ -1,8 +1,19 @@
+//! Disk Bloat Scanner - Find and remove unnecessary files to free up disk space.
+//!
+//! This library provides scanning and cleanup functionality for identifying bloated
+//! files, caches, duplicates, and junk files on disk. All operations are designed
+//! with safety-first principles to prevent accidental data loss.
+
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Mutex;
 
+pub mod error;
+pub mod utils;
 
-
-mod utils;\nuse utils::path::validate_scan_path;\nuse std::collections::HashMap;\nuse std::path::Path;
+pub use error::{ScannerError, ScannerResult};
+use utils::path::validate_scan_path;
 
 // ============================================================================
 // Data Structures
@@ -367,6 +378,9 @@ fn detect_junk_file(filename: &str) -> Option<(&'static str, &'static str, &'sta
 // Tauri Commands
 // ============================================================================
 
+/// Get current disk usage information for the main drive.
+///
+/// Returns total disk size, used/free space, and usage percentage.
 #[tauri::command]
 async fn get_disk_info() -> Result<DiskInfoResponse, String> {
     use sysinfo::Disks;
@@ -400,6 +414,13 @@ async fn get_disk_info() -> Result<DiskInfoResponse, String> {
     })
 }
 
+/// Retrieves comprehensive system information including disk, memory, CPU, and OS details.
+///
+/// Returns a `SystemInfoResponse` containing:
+/// - Disk usage (total, used, free in GB and percentage)
+/// - Memory usage (total, used, free in GB and percentage)
+/// - CPU core count
+/// - Operating system name, version, and hostname
 #[tauri::command]
 async fn get_system_info() -> Result<SystemInfoResponse, String> {
     use sysinfo::{Disks, System};
@@ -464,6 +485,15 @@ async fn get_system_info() -> Result<SystemInfoResponse, String> {
     })
 }
 
+/// Scans a directory recursively to find large files exceeding a size threshold.
+///
+/// **Parameters:**
+/// - `opts.root` - Root directory path to scan (must not be a protected system directory)
+/// - `opts.min_bytes` - Minimum file size threshold in bytes (default: 1GB)
+/// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
+///
+/// **Returns:** Vector of `LargeFileEntry` objects sorted by size (largest first),
+/// each containing file path, size in MB, and last modification timestamp.
 #[tauri::command]
 async fn scan_large_files(opts: ScanOpts) -> Result<Vec<LargeFileEntry>, String> {
     use rayon::prelude::*;
@@ -508,11 +538,21 @@ async fn scan_large_files(opts: ScanOpts) -> Result<Vec<LargeFileEntry>, String>
         .collect();
 
     let mut sorted = large_files;
-    sorted.sort_by(|a, b| b.size_mb.partial_cmp(&a.size_mb).unwrap());
+    sorted.sort_by(|a, b| error::compare_f32_safe(b.size_mb, a.size_mb));
 
     Ok(sorted)
 }
 
+/// Scans a directory to identify bloat-prone directories (caches, logs, temporary files).
+///
+/// **Parameters:**
+/// - `opts.root` - Root directory path to scan (must not be a protected system directory)
+/// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
+///
+/// **Returns:** Vector of `BloatCategory` objects, each containing:
+/// - Category ID and display name
+/// - List of bloat entries with paths and sizes (MB)
+/// - Total category size sorted by size (largest first)
 #[tauri::command]
 async fn scan_bloat(opts: ScanOpts) -> Result<Vec<BloatCategory>, String> {
     use std::sync::Mutex;
@@ -538,7 +578,7 @@ async fn scan_bloat(opts: ScanOpts) -> Result<Vec<BloatCategory>, String> {
 
                 // Only include if size is significant (> 1MB)
                 if size_mb > 1.0 {
-                    let mut cats = categories.lock().unwrap();
+                    let mut cats = categories.lock().expect("categories mutex poisoned");
                     let cat_entry = cats
                         .entry(category_id.to_string())
                         .or_insert_with(|| (display_name.to_string(), Vec::new()));
@@ -555,7 +595,7 @@ async fn scan_bloat(opts: ScanOpts) -> Result<Vec<BloatCategory>, String> {
     // Convert to result format
     let mut result: Vec<BloatCategory> = categories
         .lock()
-        .unwrap()
+        .expect("categories mutex poisoned")
         .drain()
         .map(|(category_id, (display_name, entries))| {
             let total_size_mb: f32 = entries.iter().map(|e| e.size_mb).sum();
@@ -569,11 +609,26 @@ async fn scan_bloat(opts: ScanOpts) -> Result<Vec<BloatCategory>, String> {
         .collect();
 
     // Sort by total size (largest first)
-    result.sort_by(|a, b| b.total_size_mb.partial_cmp(&a.total_size_mb).unwrap());
+    result.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     Ok(result)
 }
 
+/// Scans a directory to find duplicate files by comparing SHA-256 file hashes.
+///
+/// **Parameters:**
+/// - `opts.root` - Root directory path to scan (must not be a protected system directory)
+/// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
+///
+/// **Behavior:**
+/// - Files smaller than 1KB or larger than 100MB are skipped
+/// - Only files with same-size siblings are hashed for efficiency
+/// - Duplicates are sorted by potential storage savings (largest first)
+///
+/// **Returns:** Vector of `DuplicateSet` objects containing:
+/// - SHA-256 hash of duplicate group
+/// - Total space that could be saved by removing duplicates (MB)
+/// - All files in the duplicate group with paths, sizes, and modification times
 #[tauri::command]
 async fn scan_duplicates(opts: ScanOpts) -> Result<Vec<DuplicateSet>, String> {
     use rayon::prelude::*;
@@ -636,7 +691,7 @@ async fn scan_duplicates(opts: ScanOpts) -> Result<Vec<DuplicateSet>, String> {
                         let hash = format!("{:x}", hasher.finalize());
                         let size_mb = *size as f32 / 1_048_576.0;
 
-                        let mut hashes = file_hashes.lock().unwrap();
+                        let mut hashes = file_hashes.lock().expect("file_hashes mutex poisoned");
                         hashes
                             .entry(hash)
                             .or_insert_with(Vec::new)
@@ -653,7 +708,7 @@ async fn scan_duplicates(opts: ScanOpts) -> Result<Vec<DuplicateSet>, String> {
     // Convert to result format
     let mut result: Vec<DuplicateSet> = file_hashes
         .lock()
-        .unwrap()
+        .expect("file_hashes mutex poisoned")
         .drain()
         .filter(|(_, entries)| entries.len() > 1) // Only actual duplicates
         .map(|(hash, entries)| {
@@ -670,11 +725,21 @@ async fn scan_duplicates(opts: ScanOpts) -> Result<Vec<DuplicateSet>, String> {
         .collect();
 
     // Sort by savable space (largest first)
-    result.sort_by(|a, b| b.total_savable_mb.partial_cmp(&a.total_savable_mb).unwrap());
+    result.sort_by(|a, b| error::compare_f32_safe(b.total_savable_mb, a.total_savable_mb));
 
     Ok(result)
 }
 
+/// Scans a directory for junk files matching known patterns (temp files, backups, OS artifacts).
+///
+/// **Parameters:**
+/// - `opts.root` - Root directory path to scan (must not be a protected system directory)
+/// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
+///
+/// **Returns:** Vector of `JunkCategory` objects containing:
+/// - Category ID, display name, and safety level ("safe", "caution")
+/// - List of junk file entries with paths, sizes, patterns, and file count
+/// - Categories sorted by file count (most numerous first)
 #[tauri::command]
 async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
     use std::sync::Mutex;
@@ -701,12 +766,10 @@ async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
                     let size_kb = size_bytes as f32 / 1024.0;
 
                     // NO minimum size - catch even 0-byte files
-                    let mut junk = junk_files.lock().unwrap();
-                    let cat_entry = junk
-                        .entry(category_id.to_string())
-                        .or_insert_with(|| {
-                            (display_name.to_string(), safety.to_string(), Vec::new())
-                        });
+                    let mut junk = junk_files.lock().expect("junk_files mutex poisoned");
+                    let cat_entry = junk.entry(category_id.to_string()).or_insert_with(|| {
+                        (display_name.to_string(), safety.to_string(), Vec::new())
+                    });
 
                     cat_entry.2.push(JunkFileEntry {
                         path: entry.path().to_string_lossy().to_string(),
@@ -723,7 +786,7 @@ async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
     // Convert to result format
     let mut result: Vec<JunkCategory> = junk_files
         .lock()
-        .unwrap()
+        .expect("junk_files mutex poisoned")
         .drain()
         .map(|(category_id, (display_name, safety, files))| {
             let total_size_kb: f32 = files.iter().map(|f| f.size_kb).sum();
@@ -760,7 +823,8 @@ fn validate_deletion_request(req: &CleanupReq) -> Result<(), String> {
     }
 
     // Calculate total size
-    let total_size: u64 = req.paths
+    let total_size: u64 = req
+        .paths
         .iter()
         .filter_map(|p| std::fs::metadata(p).ok())
         .map(|m| m.len())
@@ -778,13 +842,34 @@ fn validate_deletion_request(req: &CleanupReq) -> Result<(), String> {
     Ok(())
 }
 
+/// Deletes files and directories from the file system with optional dry-run and trash support.
+///
+/// **Parameters:**
+/// - `req.paths` - Vector of file/directory paths to delete (max 10,000 paths, max 100GB total)
+/// - `req.dry_run` - If true, returns what would be deleted without performing actual deletion
+/// - `req.trash` - If true, moves files to trash; if false, permanently deletes them
+///
+/// **Safety Limits:**
+/// - Maximum 10,000 files per operation
+/// - Maximum 100GB per operation
+/// - Validates deletion request before executing
+///
+/// **Returns:** `CleanupResult` containing:
+/// - `deleted` - Vector of successfully deleted paths
+/// - `skipped` - Vector of files that were already deleted or not found
+/// - `errors` - Vector of error messages for failed deletions
 #[tauri::command]
 async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     let mut deleted = Vec::new();
     let mut skipped = Vec::new();
     let mut errors = Vec::new();
 
-    log::info!("Starting cleanup of {} paths (dry_run={}, trash={})", req.paths.len(), req.dry_run, req.trash);
+    log::info!(
+        "Starting cleanup of {} paths (dry_run={}, trash={})",
+        req.paths.len(),
+        req.dry_run,
+        req.trash
+    );
 
     // Validate deletion request
     validate_deletion_request(&req)?;
@@ -808,7 +893,11 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
             continue;
         }
 
-        log::debug!("File exists, attempting deletion (trash={}): {}", req.trash, path);
+        log::debug!(
+            "File exists, attempting deletion (trash={}): {}",
+            req.trash,
+            path
+        );
 
         if req.trash {
             // Move to trash
@@ -822,7 +911,7 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
                     } else {
                         deleted.push(path.clone());
                     }
-                },
+                }
                 Err(e) => {
                     log::error!("Cleanup error for {}: {}", path, e);
                     errors.push(format!("{}: {}", path, e));
@@ -840,7 +929,7 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
                 Ok(_) => {
                     log::debug!("Successfully deleted: {}", path);
                     deleted.push(path.clone());
-                },
+                }
                 Err(e) => {
                     log::error!("Cleanup error for {}: {}", path, e);
                     errors.push(format!("{}: {}", path, e));
@@ -849,8 +938,12 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
         }
     }
 
-    log::info!("Cleanup complete: deleted={}, skipped={}, errors={}", 
-             deleted.len(), skipped.len(), errors.len());
+    log::info!(
+        "Cleanup complete: deleted={}, skipped={}, errors={}",
+        deleted.len(),
+        skipped.len(),
+        errors.len()
+    );
 
     Ok(CleanupResult {
         deleted,
@@ -863,9 +956,22 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 // Developer Caches Scanner Command
 // ============================================================================
 
+/// Scans a directory for developer tool caches (npm, Cargo, pip, Maven, Gradle, Docker, etc.).
+///
+/// **Parameters:**
+/// - `opts.root` - Root directory path to scan (must not be a protected system directory)
+/// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
+///
+/// **Cache Types Detected:**
+/// - Node.js/npm/yarn, Python/pip, Rust/Cargo, Java/Maven/Gradle
+/// - Docker, VS Code, IntelliJ IDEA, macOS system caches
+///
+/// **Returns:** Vector of `CacheCategory` objects containing:
+/// - Category ID, display name, and safety level
+/// - List of cache entries with paths, sizes (MB), cache type, and descriptions
+/// - Total size per category and entry count, sorted by size (largest first)
 #[tauri::command]
 async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
-    
     use walkdir::WalkDir;
 
     // Validate the scan path to prevent system directory access
@@ -875,48 +981,117 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
     // Define cache patterns with safety levels
     let cache_patterns = [
         // Node.js/npm/yarn
-        ("node_modules", "nodejs", "Node.js Dependencies", "caution", 
-         "Package dependencies - will be re-downloaded on next install"),
-        ("npm_cache", "nodejs", "npm Cache", "safe", 
-         "Downloaded package metadata and tarballs"),
-        ("yarn_cache", "nodejs", "Yarn Cache", "safe", 
-         "Yarn package cache"),
-        
+        (
+            "node_modules",
+            "nodejs",
+            "Node.js Dependencies",
+            "caution",
+            "Package dependencies - will be re-downloaded on next install",
+        ),
+        (
+            "npm_cache",
+            "nodejs",
+            "npm Cache",
+            "safe",
+            "Downloaded package metadata and tarballs",
+        ),
+        (
+            "yarn_cache",
+            "nodejs",
+            "Yarn Cache",
+            "safe",
+            "Yarn package cache",
+        ),
         // Python
-        ("__pycache__", "python", "Python Bytecode", "safe", 
-         "Compiled Python files - regenerated automatically"),
-        (".pytest_cache", "python", "pytest Cache", "safe", 
-         "Test execution cache"),
-        (".mypy_cache", "python", "MyPy Cache", "safe", 
-         "Type checking cache"),
-        ("pip_cache", "python", "pip Cache", "safe", 
-         "pip package cache"),
-        
+        (
+            "__pycache__",
+            "python",
+            "Python Bytecode",
+            "safe",
+            "Compiled Python files - regenerated automatically",
+        ),
+        (
+            ".pytest_cache",
+            "python",
+            "pytest Cache",
+            "safe",
+            "Test execution cache",
+        ),
+        (
+            ".mypy_cache",
+            "python",
+            "MyPy Cache",
+            "safe",
+            "Type checking cache",
+        ),
+        (
+            "pip_cache",
+            "python",
+            "pip Cache",
+            "safe",
+            "pip package cache",
+        ),
         // Rust/Cargo
-        ("target", "rust", "Cargo Target", "caution", 
-         "Build artifacts and dependencies - recompile on next build"),
-        ("cargo_registry_cache", "rust", "Cargo Registry Cache", "safe", 
-         "Downloaded crate registry data"),
-        
+        (
+            "target",
+            "rust",
+            "Cargo Target",
+            "caution",
+            "Build artifacts and dependencies - recompile on next build",
+        ),
+        (
+            "cargo_registry_cache",
+            "rust",
+            "Cargo Registry Cache",
+            "safe",
+            "Downloaded crate registry data",
+        ),
         // Java/Maven/Gradle
-        (".gradle", "java", "Gradle Cache", "caution", 
-         "Gradle build cache and dependencies"),
-        ("maven_repo", "java", "Maven Repository", "caution", 
-         "Downloaded Maven dependencies"),
-        
+        (
+            ".gradle",
+            "java",
+            "Gradle Cache",
+            "caution",
+            "Gradle build cache and dependencies",
+        ),
+        (
+            "maven_repo",
+            "java",
+            "Maven Repository",
+            "caution",
+            "Downloaded Maven dependencies",
+        ),
         // Docker
-        ("docker_cache", "docker", "Docker Cache", "caution", 
-         "Docker build cache and layers"),
-        
+        (
+            "docker_cache",
+            "docker",
+            "Docker Cache",
+            "caution",
+            "Docker build cache and layers",
+        ),
         // System caches
-        ("Caches", "system", "System Cache", "safe", 
-         "macOS system application caches"),
-        
+        (
+            "Caches",
+            "system",
+            "System Cache",
+            "safe",
+            "macOS system application caches",
+        ),
         // IDE/editor caches
-        (".vscode", "editor", "VS Code Cache", "safe", 
-         "VS Code extensions and workspace cache"),
-        (".idea", "editor", "IntelliJ IDEA Cache", "caution", 
-         "IDEA indexes and caches"),
+        (
+            ".vscode",
+            "editor",
+            "VS Code Cache",
+            "safe",
+            "VS Code extensions and workspace cache",
+        ),
+        (
+            ".idea",
+            "editor",
+            "IntelliJ IDEA Cache",
+            "caution",
+            "IDEA indexes and caches",
+        ),
     ];
 
     let mut cache_map: HashMap<String, (String, String, String, Vec<CacheEntry>)> = HashMap::new();
@@ -930,15 +1105,17 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
     {
         let path = entry.path();
         let path_str = path.to_string_lossy();
-        
+
         for (pattern, category_id, display_name, safety, description) in &cache_patterns {
-            if path_str.contains(pattern) || 
-               path.file_name().map_or(false, |name| name.to_string_lossy() == *pattern) {
-                
+            if path_str.contains(pattern)
+                || path
+                    .file_name()
+                    .map_or(false, |name| name.to_string_lossy() == *pattern)
+            {
                 // Calculate directory size
                 let size_bytes = dir_size(path);
                 let size_mb = size_bytes as f32 / 1_048_576.0;
-                
+
                 let cache_entry = CacheEntry {
                     path: path_str.to_string(),
                     size_mb,
@@ -946,7 +1123,7 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
                     safety: safety.to_string(),
                     description: description.to_string(),
                 };
-                
+
                 let key = format!("{}:{}", category_id, display_name);
                 let (_, _, _, entries) = cache_map.entry(key).or_insert((
                     category_id.to_string(),
@@ -977,7 +1154,7 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
         .collect();
 
     // Sort by total size (largest first)
-    result.sort_by(|a, b| b.total_size_mb.partial_cmp(&a.total_size_mb).unwrap());
+    result.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     Ok(result)
 }
@@ -986,9 +1163,23 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
 // Git Repository Scanner Command
 // ============================================================================
 
+/// Scans a directory recursively to discover and analyze Git repositories.
+///
+/// **Parameters:**
+/// - `opts.root` - Root directory path to scan (must not be a protected system directory)
+/// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
+///
+/// **Analysis Includes:**
+/// - Repository path and root directory location
+/// - .git directory size (indicating repository metadata overhead)
+/// - Total repository size (all files included)
+/// - Branch information and latest commit details
+/// - File and directory counts within the repository
+///
+/// **Returns:** Vector of `GitRepository` objects sorted by repository size (largest first),
+/// each containing repository statistics and metadata.
 #[tauri::command]
 async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
-    
     use walkdir::WalkDir;
 
     // Validate the scan path to prevent system directory access
@@ -1007,7 +1198,7 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     {
         let git_path = entry.path();
         let repo_path = git_path.parent().unwrap_or(git_path);
-        
+
         let mut git_entries = Vec::new();
         let mut total_size = 0u64;
 
@@ -1015,9 +1206,9 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
         if let Ok(git_contents) = std::fs::read_dir(git_path) {
             for git_entry in git_contents.flatten() {
                 let entry_path = git_entry.path();
-                let entry_name = git_entry.file_name().to_string_lossy();
-                
-                match entry_name.as_ref() {
+                let entry_name = git_entry.file_name().to_string_lossy().into_owned();
+
+                match entry_name.as_str() {
                     "objects" => {
                         // Analyze git objects
                         if let Ok(objects_size) = analyze_git_objects(&entry_path) {
@@ -1026,57 +1217,61 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
                                 path: entry_path.to_string_lossy().to_string(),
                                 size_mb: objects_size as f32 / 1_048_576.0,
                                 entry_type: "objects".to_string(),
-                                description: format!("Git objects: {} files", count_git_objects(&entry_path)),
+                                description: format!(
+                                    "Git objects: {} files",
+                                    count_git_objects(&entry_path)
+                                ),
                                 safety: "safe".to_string(),
                                 actionable: false, // Don't delete git objects
                             });
                         }
-                    },
-"refs" => {
-    // Analyze refs
-    let refs_size = dir_size(&entry_path);
-    if refs_size > 0 {
-        total_size += refs_size;
-        git_entries.push(GitEntry {
-            path: entry_path.to_string_lossy().to_string(),
-            size_mb: refs_size as f32 / 1_048_576.0,
-            entry_type: "refs".to_string(),
-            description: "Git references and branches".to_string(),
-            safety: "safe".to_string(),
-            actionable: false,
-        });
-    }
-},
-"logs" => {
-    // Reflogs - can be cleaned up
-    let logs_size = dir_size(&entry_path);
-    if logs_size > 0 {
-        total_size += logs_size;
-        git_entries.push(GitEntry {
-            path: entry_path.to_string_lossy().to_string(),
-            size_mb: logs_size as f32 / 1_048_576.0,
-            entry_type: "reflog".to_string(),
-            description: "Git reflogs - tracks branch movements".to_string(),
-            safety: "caution".to_string(),
-            actionable: true,
-        });
-    }
-},
-"pack" => {
-    // Pack files
-    let pack_size = dir_size(&entry_path);
-    if pack_size > 0 {
-        total_size += pack_size;
-        git_entries.push(GitEntry {
-            path: entry_path.to_string_lossy().to_string(),
-            size_mb: pack_size as f32 / 1_048_576.0,
-            entry_type: "pack_file".to_string(),
-            description: "Git pack files - compressed object storage".to_string(),
-            safety: "safe".to_string(),
-            actionable: false,
-        });
-    }
-},
+                    }
+                    "refs" => {
+                        // Analyze refs
+                        let refs_size = dir_size(&entry_path);
+                        if refs_size > 0 {
+                            total_size += refs_size;
+                            git_entries.push(GitEntry {
+                                path: entry_path.to_string_lossy().to_string(),
+                                size_mb: refs_size as f32 / 1_048_576.0,
+                                entry_type: "refs".to_string(),
+                                description: "Git references and branches".to_string(),
+                                safety: "safe".to_string(),
+                                actionable: false,
+                            });
+                        }
+                    }
+                    "logs" => {
+                        // Reflogs - can be cleaned up
+                        let logs_size = dir_size(&entry_path);
+                        if logs_size > 0 {
+                            total_size += logs_size;
+                            git_entries.push(GitEntry {
+                                path: entry_path.to_string_lossy().to_string(),
+                                size_mb: logs_size as f32 / 1_048_576.0,
+                                entry_type: "reflog".to_string(),
+                                description: "Git reflogs - tracks branch movements".to_string(),
+                                safety: "caution".to_string(),
+                                actionable: true,
+                            });
+                        }
+                    }
+                    "pack" => {
+                        // Pack files
+                        let pack_size = dir_size(&entry_path);
+                        if pack_size > 0 {
+                            total_size += pack_size;
+                            git_entries.push(GitEntry {
+                                path: entry_path.to_string_lossy().to_string(),
+                                size_mb: pack_size as f32 / 1_048_576.0,
+                                entry_type: "pack_file".to_string(),
+                                description: "Git pack files - compressed object storage"
+                                    .to_string(),
+                                safety: "safe".to_string(),
+                                actionable: false,
+                            });
+                        }
+                    }
                     _ => {
                         // Other files/directories
                         if let Ok(metadata) = entry_path.metadata() {
@@ -1124,7 +1319,7 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     }
 
     // Sort by total size (largest first)
-    repositories.sort_by(|a, b| b.total_size_mb.partial_cmp(&a.total_size_mb).unwrap());
+    repositories.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     Ok(repositories)
 }
@@ -1151,7 +1346,7 @@ fn count_git_objects(objects_path: &std::path::Path) -> usize {
 
 fn find_large_git_files(repo_path: &std::path::Path) -> Result<Vec<(String, u64)>, std::io::Error> {
     let mut large_files = Vec::new();
-    
+
     // Use git command to find large files in history
     if let Ok(output) = std::process::Command::new("git")
         .arg("-C")
@@ -1171,8 +1366,12 @@ fn find_large_git_files(repo_path: &std::path::Path) -> Result<Vec<(String, u64)
                         .output()
                     {
                         if size_output.status.success() {
-                            if let Ok(size_str) = String::from_utf8_lossy(&size_output.stdout).trim().parse::<u64>() {
-                                if size_str > 10 * 1024 * 1024 { // Files larger than 10MB
+                            if let Ok(size_str) = String::from_utf8_lossy(&size_output.stdout)
+                                .trim()
+                                .parse::<u64>()
+                            {
+                                if size_str > 10 * 1024 * 1024 {
+                                    // Files larger than 10MB
                                     large_files.push((path.to_string(), size_str));
                                 }
                             }
@@ -1182,7 +1381,7 @@ fn find_large_git_files(repo_path: &std::path::Path) -> Result<Vec<(String, u64)
             }
         }
     }
-    
+
     Ok(large_files)
 }
 
@@ -1205,4 +1404,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

@@ -58,7 +58,9 @@ fn test_temp_dir_creation() {
     let base = temp_dir.path();
 
     // Verify structure was created
-    assert!(base.join("project1/node_modules/package1/index.js").exists());
+    assert!(base
+        .join("project1/node_modules/package1/index.js")
+        .exists());
     assert!(base.join("project2/target/debug/app").exists());
     assert!(base.join("project3/venv/lib/module.py").exists());
     assert!(base.join("large_video.mp4").exists());
