@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 
-	let activeTab = 'learn';
-	let expandedSection = null;
-	let gitStatus = {
+	let activeTab: string = 'learn';
+	let expandedSection: string | null = null;
+	let gitStatus: any = {
 		branch: 'main',
 		commits_ahead: 0,
 		commits_behind: 0,
@@ -326,16 +326,16 @@
 		}
 	];
 
-	function toggleSection(id) {
+	function toggleSection(id: string): void {
 		expandedSection = expandedSection === id ? null : id;
 	}
 
-	function copyCommand(command) {
+	function copyCommand(command: string): void {
 		navigator.clipboard.writeText(command);
 		// Could add a toast notification here
 	}
 
-	function fetchGitStatus() {
+	function fetchGitStatus(): void {
 		// This would call a Tauri command to get real git status
 		// For now, showing placeholder
 		console.log('Fetching git status...');
