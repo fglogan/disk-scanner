@@ -10,8 +10,8 @@
   import ProjectBloat from "./lib/components/ProjectBloat.svelte";
   import SystemJunk from "./lib/components/SystemJunk.svelte";
   import Duplicates from "./lib/components/Duplicates.svelte";
-  import DevCaches from "./lib/components/DevCaches.svelte";
-  import GitScanner from "./lib/components/GitScanner.svelte";
+  // import DevCaches from "./lib/components/DevCaches.svelte"; // Disabled: uses non-existent selectedDirectory store
+  // import GitScanner from "./lib/components/GitScanner.svelte"; // Disabled: uses non-existent selectedDirectory store
   import GitAssistance from "./lib/components/GitAssistance.svelte";
   import Settings from "./lib/components/Settings.svelte";
 
@@ -37,17 +37,17 @@
       <ProjectBloat />
     {:else if $currentPage === "system-junk"}
       <SystemJunk />
-    {:else if $currentPage === "duplicates"}
-      <Duplicates />
-    {:else if $currentPage === "dev-caches"}
-      <DevCaches />
-     {:else if $currentPage === "git-scanner"}
-       <GitScanner />
-     {:else if $currentPage === "git-assistance"}
-       <GitAssistance />
-     {:else if $currentPage === "settings"}
-       <Settings />
-     {/if}
+     {:else if $currentPage === "duplicates"}
+       <Duplicates />
+     <!-- {:else if $currentPage === "dev-caches"}
+       <DevCaches /> -->
+      <!-- {:else if $currentPage === "git-scanner"}
+        <GitScanner /> -->
+      {:else if $currentPage === "git-assistance"}
+        <GitAssistance />
+      {:else if $currentPage === "settings"}
+        <Settings />
+      {/if}
   </main>
 </div>
 

@@ -140,15 +140,6 @@
     return colors[categoryId] || "indigo-400";
   }
 
-  function getSafetyBadge(safety) {
-    if (safety === "safe") {
-      return "🟢 Safe to Delete";
-    } else if (safety === "check") {
-      return "🟡 Review First";
-    } else {
-      return "🔴 Caution";
-    }
-  }
 </script>
 
 <div class="flex justify-between items-center mb-8">
