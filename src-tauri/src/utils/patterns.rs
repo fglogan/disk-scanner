@@ -257,18 +257,18 @@ pub fn detect_junk_file(filename: &str) -> Option<(&'static str, &'static str, &
 // ============================================================================
 
 /// Known cache directory patterns and their safety levels
-pub const CACHE_PATTERNS: &[(&str, &str, &str, &str)] = &[
-    // Format: (pattern, category_id, display_name, safety)
-    ("node_modules/.cache", "npm_cache", "npm Cache", "safe"),
-    (".npm", "npm_cache", "npm Cache", "safe"),
-    (".yarn/cache", "yarn_cache", "Yarn Cache", "safe"),
-    (".cache/pip", "pip_cache", "Python pip Cache", "safe"),
-    (".cache/pip-build", "pip_cache", "Python pip Cache", "safe"),
-    (".gradle", "gradle_cache", "Gradle Cache", "caution"),
-    (".m2/repository", "maven_cache", "Maven Cache", "caution"),
-    (".cache/go-build", "go_cache", "Go Build Cache", "safe"),
-    ("Library/Caches", "macos_cache", "macOS System Cache", "dangerous"),
-    ("AppData/Local/Cache", "windows_cache", "Windows System Cache", "dangerous"),
+pub const CACHE_PATTERNS: &[(&str, &str, &str, &str, &str)] = &[
+    // Format: (pattern, category_id, display_name, safety, description)
+    ("node_modules/.cache", "nodejs", "npm Cache", "safe", "Downloaded package metadata and tarballs"),
+    (".npm", "nodejs", "npm Cache", "safe", "npm package cache"),
+    (".yarn/cache", "nodejs", "Yarn Cache", "safe", "Yarn package cache"),
+    (".cache/pip", "python", "pip Cache", "safe", "pip package cache"),
+    (".cache/pip-build", "python", "pip Cache", "safe", "pip build cache"),
+    (".gradle", "java", "Gradle Cache", "caution", "Gradle build cache and dependencies"),
+    (".m2/repository", "java", "Maven Cache", "caution", "Downloaded Maven dependencies"),
+    (".cache/go-build", "go", "Go Build Cache", "safe", "Go build cache"),
+    ("Library/Caches", "system", "System Cache", "safe", "macOS system application caches"),
+    ("AppData/Local/Cache", "system", "System Cache", "safe", "Windows system application caches"),
 ];
 
 #[cfg(test)]

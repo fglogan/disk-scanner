@@ -1,8 +1,14 @@
-<script>
+<script lang="ts">
   import { currentPage } from "../stores.js";
   import tempextLogo from "../../assets/tempext-logo.png";
 
-  const navItems = [
+  interface NavItem {
+    id: string;
+    label: string;
+    icon: string;
+  }
+
+  const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "home" },
     { id: "large-files", label: "Large Files", icon: "file-stack" },
     { id: "project-bloat", label: "Project Bloat", icon: "package-x" },
@@ -10,9 +16,10 @@
     { id: "duplicates", label: "Duplicates", icon: "copy" },
     { id: "dev-caches", label: "Developer Caches", icon: "recycle" },
     { id: "git-scanner", label: ".git Scanner", icon: "git-branch" },
+    { id: "git-assistance", label: "Git Assistance", icon: "git-help" },
   ];
 
-  function navigateTo(pageId) {
+  function navigateTo(pageId: string): void {
     currentPage.set(pageId);
   }
 </script>
@@ -171,26 +178,41 @@
                 d="m13.5 10.5 3.5 3.5 4-4"
               /><path d="M14 7h4a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-4" /></svg
             >
-          {:else if item.icon === "git-branch"}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              ><line x1="6" x2="6" y1="3" y2="15" /><circle
-                cx="18"
-                cy="6"
-                r="3"
-              /><circle cx="6" cy="18" r="3" /><path
-                d="M18 9a9 9 0 0 1-9 9"
-              /></svg
-            >
-          {/if}
+           {:else if item.icon === "git-branch"}
+             <svg
+               xmlns="http://www.w3.org/2000/svg"
+               width="20"
+               height="20"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               ><line x1="6" x2="6" y1="3" y2="15" /><circle
+                 cx="18"
+                 cy="6"
+                 r="3"
+               /><circle cx="6" cy="18" r="3" /><path
+                 d="M18 9a9 9 0 0 1-9 9"
+               /></svg
+             >
+           {:else if item.icon === "git-help"}
+             <svg
+               xmlns="http://www.w3.org/2000/svg"
+               width="20"
+               height="20"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               ><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path
+                 d="M12 8h.01"
+               /></svg
+             >
+           {/if}
           <span>{item.label}</span>
         </button>
       </li>

@@ -12,6 +12,7 @@
   import Duplicates from "./lib/components/Duplicates.svelte";
   import DevCaches from "./lib/components/DevCaches.svelte";
   import GitScanner from "./lib/components/GitScanner.svelte";
+  import GitAssistance from "./lib/components/GitAssistance.svelte";
   import Settings from "./lib/components/Settings.svelte";
 
   // Load initial data on app startup
@@ -40,11 +41,13 @@
       <Duplicates />
     {:else if $currentPage === "dev-caches"}
       <DevCaches />
-    {:else if $currentPage === "git-scanner"}
-      <GitScanner />
-    {:else if $currentPage === "settings"}
-      <Settings />
-    {/if}
+     {:else if $currentPage === "git-scanner"}
+       <GitScanner />
+     {:else if $currentPage === "git-assistance"}
+       <GitAssistance />
+     {:else if $currentPage === "settings"}
+       <Settings />
+     {/if}
   </main>
 </div>
 
