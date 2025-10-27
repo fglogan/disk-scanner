@@ -1,22 +1,30 @@
-# 🤖 AGENTS.md - Project Scanner Crash Restart Guide
+# 🤖 AGENTS.md - Disk Bloat Scanner Development Guide
 
-**Last Updated:** October 25, 2025  
-**Project:** Project Scanner (Disk Bloat Scanner) v0.1.1  
-**Status:** Active Development - Phase 1 Critical Fixes In Progress
+**Last Updated:** October 27, 2025, 22:00 UTC  
+**Project:** Disk Bloat Scanner v0.1.1 + PACS v1.0 (Proposed)  
+**Current Phase:** Phase 2 (Architecture Refactoring) - 45% complete  
+**Status**: Active Development - EDGS Event-Driven Gated Scheduling
 
 ---
 
-## 🚨 CRASH RESTART INSTRUCTIONS
+## 📋 CURRENT SESSION STATE (Oct 27, 2025, Evening)
 
-### Current Session State (Oct 25, 2025)
+### Major Achievements This Session
 
-**Working On:** BEAD-002 - Path Validation Implementation (CRITICAL)  
-**Progress:** 7/43 BEADS complete (16.3%)  
-**Phase 1 Critical:** 5/8 complete (62.5%)
+**✅ Phase 2 Refactoring Progress**:
+- P2-T5: Documentation completion (zero warnings) ✅ COMPLETE
+- P2-T6: Cleanup module created (190 lines) ✅ COMPLETE
+- P2-T7: Lib.rs refactoring prepared (ready for integration) ⏳ PENDING
 
-### Immediate Context
+**✅ PACS Feature Specification (NEW)**:
+- Comprehensive OpenSpec proposal & tasks (4,127 lines)
+- 19 Beads issues across 3 features
+- Complete architecture and compliance framework
+- Ready for stakeholder review and Gate 0 approval
 
-We are implementing **BEAD-002: Path Validation** to prevent users from scanning/deleting system directories like `/System`, `/usr`, `/bin` which could brick macOS.
+### Current Blocker
+
+**None** - All systems green. Ready to proceed with lib.rs integration (P2-T7) next session.
 
 **Status:**
 - ✅ Created `src-tauri/src/utils/path.rs` module (118 lines)
@@ -363,3 +371,33 @@ To complete BEAD-002 and move to BEAD-003:
 **Remember:** The goal is v0.1.1 release with all Phase 1 (Critical) BEADS complete. We're at 62.5% - almost there! 🔥
 
 **Next Agent:** Pick up from RESTART PROCEDURE → Option 1, starting at step 1.
+
+---
+
+## 🚀 NEW FEATURE: Project Auditor & Compliance Scanner (PACS)
+
+### Overview
+
+PACS is a transformational organizational feature enabling:
+1. **Deep Project Analysis** - Examine all docs, validate compliance, generate specs
+2. **Organization Monitoring** - Scan all projects, detect drift, send alerts
+3. **Baseline Management** - Immutable snapshots, approval workflows, audit trails
+
+### Specifications Ready
+
+| Document | Lines | Purpose |
+|----------|-------|---------|
+| `proposal.md` | 2,084 | Complete architecture & design |
+| `tasks.md` | 1,543 | 19 Beads issues with dependencies |
+| `spec-summary.md` | 540 | Quick reference for stakeholders |
+
+All in: `openspec/changes/project-auditor-compliance-scanner/`
+
+### Next Steps for PACS
+
+1. **Stakeholder Review** (Gate 0 approval pending)
+2. **Sprint Planning** (Convert Beads to bd issues)
+3. **Feature 1: Deep Analyzer** (7 issues, BEAD-PACS-001-007)
+4. **Feature 2: Organization Monitor** (6 issues, BEAD-PACS-008-013)
+5. **Feature 3: Baseline & Drift** (6 issues, BEAD-PACS-014-019)
+
