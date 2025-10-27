@@ -402,7 +402,7 @@ pub fn scan_dev_caches(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCa
     // Convert to result format
     let mut result: Vec<CacheCategory> = cache_map
         .into_iter()
-        .map(|(key, (category_id, display_name, safety, entries))| {
+        .map(|(_key, (category_id, display_name, safety, entries))| {
             let total_size_mb: f32 = entries.iter().map(|e| e.size_mb).sum();
             CacheCategory {
                 category_id,

@@ -6,8 +6,11 @@
 
 use std::path::Path;
 
+/// Custom error types for scanner operations.
 pub mod error;
+/// Data models and structures for scan results.
 pub mod models;
+/// Utility modules for scanning, patterns, and path validation.
 pub mod utils;
 
 pub use error::{ScannerError, ScannerResult};
@@ -404,6 +407,21 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     scan::scan_git_repos(&validated_path, opts.follow_symlinks)
 }
 
+/// Initializes and runs the Tauri application with all scanning and cleanup commands.
+///
+/// This function sets up the Tauri runtime, registers plugins for logging and file dialogs,
+/// and registers all command handlers for disk scanning operations.
+/// 
+/// The application exposes the following commands to the frontend:
+/// - `get_disk_info` - Retrieve disk usage statistics
+/// - `get_system_info` - Retrieve system information
+/// - `scan_large_files` - Scan for large files exceeding size thresholds
+/// - `scan_bloat` - Detect bloated files and directories
+/// - `scan_duplicates` - Find duplicate files by hash
+/// - `scan_junk_files` - Detect junk files (cache, temp, etc.)
+/// - `scan_dev_caches` - Analyze developer tool caches
+/// - `scan_git_repos` - Find and analyze Git repositories
+/// - `cleanup_dirs` - Safely delete selected files and directories
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
