@@ -306,7 +306,7 @@ mod tests {
     fn test_junk_exact_match() {
         let result = detect_junk_file(".DS_Store");
         assert!(result.is_some());
-        let (id, name, safety) = result.unwrap();
+        let (id, _name, safety) = result.unwrap();
         assert_eq!(id, "system");
         assert_eq!(safety, "safe");
     }

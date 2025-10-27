@@ -191,11 +191,38 @@ pub fn delete_files(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    // ========================================================================
+    // validate_deletion_request Tests
+    // ========================================================================
 
     #[test]
     fn test_validate_deletion_request_valid() {
         let req = CleanupReq {
             paths: vec!["/tmp/test.txt".to_string()],
+            dry_run: false,
+            trash: true,
+        };
+        assert!(validate_deletion_request(&req).is_ok());
+    }
+
+    #[test]
+    fn test_validate_deletion_request_single_file() {
+        let req = CleanupReq {
+            paths: vec!["file.txt".to_string()],
+            dry_run: false,
+            trash: false,
+        };
+        assert!(validate_deletion_request(&req).is_ok());
+    }
+
+    #[test]
+    fn test_validate_deletion_request_many_files() {
+        let paths = vec!["file.txt".to_string(); 100];
+        let req = CleanupReq {
+            paths,
             dry_run: false,
             trash: true,
         };
@@ -210,8 +237,38 @@ mod tests {
             dry_run: false,
             trash: true,
         };
-        assert!(validate_deletion_request(&req).is_err());
+        let result = validate_deletion_request(&req);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("Cannot delete"));
+        assert!(err_msg.contains("files at once"));
     }
+
+    #[test]
+    fn test_validate_deletion_request_at_count_limit() {
+        let paths = vec!["test".to_string(); MAX_BATCH_DELETE_COUNT];
+        let req = CleanupReq {
+            paths,
+            dry_run: false,
+            trash: true,
+        };
+        assert!(validate_deletion_request(&req).is_ok());
+    }
+
+    #[test]
+    fn test_validate_deletion_request_empty_paths() {
+        let req = CleanupReq {
+            paths: vec![],
+            dry_run: false,
+            trash: true,
+        };
+        // Empty request should be valid (nothing to delete)
+        assert!(validate_deletion_request(&req).is_ok());
+    }
+
+    // ========================================================================
+    // delete_files Tests - Dry Run Mode
+    // ========================================================================
 
     #[test]
     fn test_delete_files_dry_run() {
@@ -225,6 +282,24 @@ mod tests {
     }
 
     #[test]
+    fn test_delete_files_dry_run_multiple() {
+        let paths = vec![
+            "/tmp/file1.txt".to_string(),
+            "/tmp/file2.txt".to_string(),
+            "/tmp/file3.txt".to_string(),
+        ];
+        let (deleted, skipped, errors) = delete_files(&paths, true, true).unwrap();
+
+        assert_eq!(deleted.len(), 3);
+        assert_eq!(skipped.len(), 0);
+        assert_eq!(errors.len(), 0);
+    }
+
+    // ========================================================================
+    // delete_files Tests - Nonexistent Files
+    // ========================================================================
+
+    #[test]
     fn test_delete_files_nonexistent() {
         let paths = vec!["/tmp/this_file_does_not_exist_xyz_12345.txt".to_string()];
         let (deleted, skipped, errors) = delete_files(&paths, false, true).unwrap();
@@ -233,5 +308,155 @@ mod tests {
         assert_eq!(deleted.len(), 0);
         assert_eq!(skipped.len(), 1);
         assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_delete_files_mixed_existent_nonexistent() {
+        let temp_dir = TempDir::new().unwrap();
+        let existing_file = temp_dir.path().join("existing.txt");
+        fs::write(&existing_file, b"test content").unwrap();
+
+        let paths = vec![
+            existing_file.to_string_lossy().to_string(),
+            "/tmp/does_not_exist_xyz_99999.txt".to_string(),
+        ];
+
+        let (deleted, skipped, errors) = delete_files(&paths, false, false).unwrap();
+
+        // One should be deleted, one skipped
+        assert_eq!(deleted.len(), 1);
+        assert_eq!(skipped.len(), 1);
+        assert_eq!(errors.len(), 0);
+    }
+
+    // ========================================================================
+    // delete_files Tests - Actual File Deletion
+    // ========================================================================
+
+    #[test]
+    fn test_delete_files_permanent_single_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("test.txt");
+        fs::write(&file_path, b"test content").unwrap();
+
+        assert!(file_path.exists());
+
+        let paths = vec![file_path.to_string_lossy().to_string()];
+        let (deleted, skipped, errors) = delete_files(&paths, false, false).unwrap();
+
+        assert_eq!(deleted.len(), 1);
+        assert_eq!(skipped.len(), 0);
+        assert_eq!(errors.len(), 0);
+        // Verify file is actually gone
+        assert!(!file_path.exists());
+    }
+
+    #[test]
+    fn test_delete_files_permanent_directory() {
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path().join("subdir");
+        fs::create_dir(&dir_path).unwrap();
+        fs::write(dir_path.join("file.txt"), b"content").unwrap();
+
+        assert!(dir_path.exists());
+
+        let paths = vec![dir_path.to_string_lossy().to_string()];
+        let (deleted, skipped, errors) = delete_files(&paths, false, false).unwrap();
+
+        assert_eq!(deleted.len(), 1);
+        assert_eq!(skipped.len(), 0);
+        assert_eq!(errors.len(), 0);
+        assert!(!dir_path.exists());
+    }
+
+    #[test]
+    fn test_delete_files_multiple_files() {
+        let temp_dir = TempDir::new().unwrap();
+        let file1 = temp_dir.path().join("file1.txt");
+        let file2 = temp_dir.path().join("file2.txt");
+        let file3 = temp_dir.path().join("file3.txt");
+
+        fs::write(&file1, b"content1").unwrap();
+        fs::write(&file2, b"content2").unwrap();
+        fs::write(&file3, b"content3").unwrap();
+
+        let paths = vec![
+            file1.to_string_lossy().to_string(),
+            file2.to_string_lossy().to_string(),
+            file3.to_string_lossy().to_string(),
+        ];
+
+        let (deleted, skipped, errors) = delete_files(&paths, false, false).unwrap();
+
+        assert_eq!(deleted.len(), 3);
+        assert_eq!(skipped.len(), 0);
+        assert_eq!(errors.len(), 0);
+        assert!(!file1.exists());
+        assert!(!file2.exists());
+        assert!(!file3.exists());
+    }
+
+    // ========================================================================
+    // delete_files Tests - Trash Mode
+    // ========================================================================
+
+    #[test]
+    fn test_delete_files_trash_single_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("test.txt");
+        fs::write(&file_path, b"test content").unwrap();
+
+        assert!(file_path.exists());
+
+        let paths = vec![file_path.to_string_lossy().to_string()];
+        let (deleted, skipped, errors) = delete_files(&paths, false, true).unwrap();
+
+        // File should be either deleted or moved to trash
+        assert_eq!(deleted.len() + skipped.len() + errors.len(), 1);
+    }
+
+    // ========================================================================
+    // Error Handling Tests
+    // ========================================================================
+
+    #[test]
+    fn test_delete_files_empty_list() {
+        let (deleted, skipped, errors) = delete_files(&[], false, false).unwrap();
+
+        assert_eq!(deleted.len(), 0);
+        assert_eq!(skipped.len(), 0);
+        assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_error_conversion_to_string() {
+        let req = CleanupReq {
+            paths: vec!["test".to_string(); MAX_BATCH_DELETE_COUNT + 1],
+            dry_run: false,
+            trash: true,
+        };
+
+        let result = validate_deletion_request(&req);
+        assert!(result.is_err());
+
+        // Ensure error can be converted to string
+        let err_string = result.unwrap_err().to_string();
+        assert!(!err_string.is_empty());
+    }
+
+    // ========================================================================
+    // Constants Verification Tests
+    // ========================================================================
+
+    #[test]
+    fn test_max_batch_delete_count_constant() {
+        // Verify the constant is set to a reasonable value
+        assert_eq!(MAX_BATCH_DELETE_COUNT, 10_000);
+    }
+
+    #[test]
+    fn test_max_batch_delete_size_constant() {
+        // Verify the constant is set to 100GB
+        assert_eq!(MAX_BATCH_DELETE_SIZE, 100 * 1024 * 1024 * 1024);
     }
 }
