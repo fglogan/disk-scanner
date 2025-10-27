@@ -4,8 +4,6 @@
 //! files, caches, duplicates, and junk files on disk. All operations are designed
 //! with safety-first principles to prevent accidental data loss.
 
-use std::path::Path;
-
 /// Custom error types for scanner operations.
 pub mod error;
 /// Data models and structures for scan results.
@@ -15,6 +13,7 @@ pub mod utils;
 
 pub use error::{ScannerError, ScannerResult};
 pub use models::*;
+use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
 
@@ -209,38 +208,7 @@ async fn scan_junk_files(opts: ScanOpts) -> Result<Vec<JunkCategory>, String> {
     scan::scan_junk_files(&validated_path, opts.follow_symlinks)
 }
 
-// Safety limits for batch deletion
-const MAX_BATCH_DELETE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
-const MAX_BATCH_DELETE_COUNT: usize = 10_000; // 10k files
 
-fn validate_deletion_request(req: &CleanupReq) -> Result<(), String> {
-    if req.paths.len() > MAX_BATCH_DELETE_COUNT {
-        return Err(format!(
-            "Cannot delete {} files at once (maximum: {})",
-            req.paths.len(),
-            MAX_BATCH_DELETE_COUNT
-        ));
-    }
-
-    // Calculate total size
-    let total_size: u64 = req
-        .paths
-        .iter()
-        .filter_map(|p| std::fs::metadata(p).ok())
-        .map(|m| m.len())
-        .sum();
-
-    if total_size > MAX_BATCH_DELETE_SIZE {
-        let total_gb = total_size as f64 / (1024.0 * 1024.0 * 1024.0);
-        let max_gb = MAX_BATCH_DELETE_SIZE as f64 / (1024.0 * 1024.0 * 1024.0);
-        return Err(format!(
-            "Cannot delete {:.1} GB at once (maximum: {:.0} GB)",
-            total_gb, max_gb
-        ));
-    }
-
-    Ok(())
-}
 
 /// Deletes files and directories from the file system with optional dry-run and trash support.
 ///
@@ -250,8 +218,8 @@ fn validate_deletion_request(req: &CleanupReq) -> Result<(), String> {
 /// - `req.trash` - If true, moves files to trash; if false, permanently deletes them
 ///
 /// **Safety Limits:**
-/// - Maximum 10,000 files per operation
-/// - Maximum 100GB per operation
+/// - Maximum 10,000 files per operation (enforced by cleanup module)
+/// - Maximum 100GB per operation (enforced by cleanup module)
 /// - Validates deletion request before executing
 ///
 /// **Returns:** `CleanupResult` containing:
@@ -260,90 +228,13 @@ fn validate_deletion_request(req: &CleanupReq) -> Result<(), String> {
 /// - `errors` - Vector of error messages for failed deletions
 #[tauri::command]
 async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
-    let mut deleted = Vec::new();
-    let mut skipped = Vec::new();
-    let mut errors = Vec::new();
+    // Validate deletion request using cleanup module
+    cleanup::validate_deletion_request(&req).map_err(|e| e.to_string())?;
 
-    log::info!(
-        "Starting cleanup of {} paths (dry_run={}, trash={})",
-        req.paths.len(),
-        req.dry_run,
-        req.trash
-    );
-
-    // Validate deletion request
-    validate_deletion_request(&req)?;
-
-    if req.dry_run {
-        // Dry run - just return what would be deleted
-        return Ok(CleanupResult {
-            deleted: req.paths.clone(),
-            skipped: vec![],
-            errors: vec![],
-        });
-    }
-
-    for path in &req.paths {
-        let p = Path::new(path);
-        log::debug!("Processing: {}", path);
-
-        if !p.exists() {
-            log::debug!("File does not exist, skipping: {}", path);
-            skipped.push(path.clone());
-            continue;
-        }
-
-        log::debug!(
-            "File exists, attempting deletion (trash={}): {}",
-            req.trash,
-            path
-        );
-
-        if req.trash {
-            // Move to trash
-            match trash::delete(p) {
-                Ok(_) => {
-                    log::debug!("Successfully moved to trash: {}", path);
-                    // Verify it's actually gone
-                    if p.exists() {
-                        log::warn!("File still exists after trash: {}", path);
-                        errors.push(format!("{}: Moved to trash but file still exists", path));
-                    } else {
-                        deleted.push(path.clone());
-                    }
-                }
-                Err(e) => {
-                    log::error!("Cleanup error for {}: {}", path, e);
-                    errors.push(format!("{}: {}", path, e));
-                }
-            }
-        } else {
-            // Permanent deletion
-            let result = if p.is_dir() {
-                std::fs::remove_dir_all(p)
-            } else {
-                std::fs::remove_file(p)
-            };
-
-            match result {
-                Ok(_) => {
-                    log::debug!("Successfully deleted: {}", path);
-                    deleted.push(path.clone());
-                }
-                Err(e) => {
-                    log::error!("Cleanup error for {}: {}", path, e);
-                    errors.push(format!("{}: {}", path, e));
-                }
-            }
-        }
-    }
-
-    log::info!(
-        "Cleanup complete: deleted={}, skipped={}, errors={}",
-        deleted.len(),
-        skipped.len(),
-        errors.len()
-    );
+    // Execute deletion using cleanup module
+    let (deleted, skipped, errors) =
+        cleanup::delete_files(&req.paths, req.dry_run, req.trash)
+            .map_err(|e| e.to_string())?;
 
     Ok(CleanupResult {
         deleted,
