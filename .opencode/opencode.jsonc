@@ -1,0 +1,123 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "small_model": "anthropic/claude-3-5-haiku-20241022",
+  "theme": "opencode",
+  "autoupdate": true,
+
+  // =========================================================================
+  // TUI Configuration
+  // =========================================================================
+  "tui": {
+    "scroll_speed": 3
+  },
+
+  // =========================================================================
+  // Tools Configuration - Safety-first defaults
+  // =========================================================================
+  "tools": {
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "read": true
+  },
+
+  // =========================================================================
+  // Permissions - Ask before destructive operations
+  // =========================================================================
+  "permission": {
+    "bash": "ask",
+    "write": "ask",
+    "edit": "ask"
+  },
+
+  // =========================================================================
+  // Instructions - Load compliance and project docs
+  // =========================================================================
+  "instructions": [
+    "openspec/AGENTS.md",
+    "docs/compliance/**/*.md",
+    "docs/design/**/*.md",
+    "CONTRIBUTING.md"
+  ],
+
+  // =========================================================================
+  // MCP Servers - Git, OpenSpec, Beads integrations
+  // =========================================================================
+  "mcp": {
+    "git": {
+      "command": "git",
+      "env": {}
+    },
+    "openspec": {
+      "command": "openspec",
+      "env": {
+        "OPENSPEC_FORMAT": "json"
+      }
+    },
+    "beads": {
+      "command": "bd",
+      "env": {}
+    }
+  },
+
+  // =========================================================================
+  // Agents - Specialized roles with guardrails
+  // =========================================================================
+  "agent": {
+    "vos-architect": {
+      "description": "VOS architecture specialist - read-only design authority",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "core-coder": {
+      "description": "Rust/Svelte implementation specialist - implementation only after approved specs",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "auditor": {
+      "description": "Compliance and specification auditor",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    }
+  },
+
+  // =========================================================================
+  // Commands - Project-specific workflows
+  // =========================================================================
+  "command": {
+    "validate": {
+      "description": "Validate OpenSpec specifications and Beads linkage",
+      "template": "Run: openspec validate --strict && bd list && echo 'All validations passed'"
+    },
+    "pr-check": {
+      "description": "Pre-PR checks: specs, tests, coverage",
+      "template": "Run: openspec validate --strict && cargo test --lib && cargo check && echo 'PR ready'"
+    },
+    "beads": {
+      "description": "List current Beads issues",
+      "template": "Run: bd list"
+    },
+    "specs": {
+      "description": "List all OpenSpec specifications",
+      "template": "Run: openspec list --specs"
+    }
+  },
+
+  // =========================================================================
+  // Disabled Providers - Enforce specific auth only
+  // =========================================================================
+  "disabled_providers": []
+}
