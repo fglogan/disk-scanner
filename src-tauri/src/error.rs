@@ -70,6 +70,12 @@ impl From<ScannerError> for String {
     }
 }
 
+impl From<String> for ScannerError {
+    fn from(msg: String) -> Self {
+        ScannerError::Other(msg)
+    }
+}
+
 /// Specialized result type for scanner operations
 pub type ScannerResult<T> = Result<T, ScannerError>;
 
