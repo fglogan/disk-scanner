@@ -1,0 +1,235 @@
+# Project Constitution: Disk Bloat Scanner
+# Per LAIO v3.3 and TES-2025 v6.9
+# Created: October 26, 2025
+
+# ============================================================================
+# PROJECT IDENTITY
+# ============================================================================
+
+name: "Disk Bloat Scanner"
+
+purpose: |
+  Cross-platform desktop application for identifying, analyzing, and safely
+  removing disk space wasters. Serves developers managing large codebases,
+  system administrators, and general users concerned with storage management.
+
+laio_class: "LAIO_Project"
+
+# ============================================================================
+# MATURITY & CLASSIFICATION
+# ============================================================================
+
+maturity_level: "L2"
+maturity_description: |
+  Integration phase - Feature complete, internal consistency in progress.
+  Target: L4 (Release) after 8 EDGS phases.
+
+domain: "Domain 5: Non-VOS Applications"
+domain_rationale: |
+  Standalone cross-platform desktop application. Not part of VOS 3.x 
+  microkernel architecture. Independent project with local-only operations.
+
+# ============================================================================
+# GOVERNANCE & STANDARDS
+# ============================================================================
+
+governance:
+  approval_authority: "Project Sponsor"
+  decision_model: "Consensus with human-in-the-loop gates"
+  standards_compliance:
+    - "TES-2025 v6.9 (Tempext Engineering Standard)"
+    - "LAIO v3.3 (Logan AI Ontology)"
+    - "EDGS v1.0 (Event-Driven Gated Scheduling)"
+
+# ============================================================================
+# MAINTAINERS & CONTACTS
+# ============================================================================
+
+maintainers:
+  - email: "frank@tempext.io"
+    role: "Primary Developer"
+    responsibilities:
+      - Code implementation
+      - Architecture decisions
+      - Testing & validation
+
+# ============================================================================
+# PROJECT STRUCTURE
+# ============================================================================
+
+capabilities:
+  - disk-scanning
+  - duplicate-detection
+  - cleanup-operations
+  - settings-management
+  - progress-monitoring
+
+core_technologies:
+  backend:
+    - name: "Rust"
+      version: "2024 edition (v1.89.0+)"
+      rationale: "Performance, safety, cross-platform"
+    - name: "Tauri"
+      version: "v2.8.5 (stable)"
+      rationale: "Lightweight desktop framework, native APIs"
+  frontend:
+    - name: "Svelte"
+      version: "4.x"
+      rationale: "Reactive, performant, minimal overhead"
+    - name: "TypeScript"
+      version: "5.x"
+      rationale: "Type safety, IDE support"
+    - name: "TailwindCSS"
+      version: "3.x"
+      rationale: "Utility-first styling"
+    - name: "Vite"
+      version: "5.x"
+      rationale: "Fast builds, HMR"
+  runtime:
+    - name: "Node.js"
+      version: "20+"
+      rationale: "Frontend build & dev server"
+
+# ============================================================================
+# CONSTRAINTS & REQUIREMENTS
+# ============================================================================
+
+constraints:
+  technical:
+    - "Tauri v2.8.5 (no version drift)"
+    - "Rust 2024 edition (no legacy code)"
+    - "Node.js v20+ (LTS minimum)"
+    - "Cross-platform: macOS, Windows, Linux"
+    - "No external services (fully local)"
+    - "Safe deletion only (use system trash)"
+
+  safety:
+    - "Path validation: prevent system directory access"
+    - "Batch limits: max 10K files, 100GB per operation"
+    - "Deletion warnings: user confirmation required"
+    - "Trash recovery: enable file recovery"
+
+  regulatory:
+    - "Privacy: No telemetry, no external tracking"
+    - "Data: All operations local, no cloud sync"
+    - "Security: Minimal external dependencies"
+
+  performance:
+    - "Handle 1M+ files efficiently"
+    - "30-second timeout per scan operation"
+    - "Incremental progress updates"
+    - "Memory-efficient duplicate detection"
+
+# ============================================================================
+# EXTERNAL DEPENDENCIES
+# ============================================================================
+
+external_dependencies:
+  crates:
+    - "ignore (directory traversal with .gitignore support)"
+    - "serde/serde_json (serialization)"
+    - "tokio (async runtime)"
+    - "regex (pattern matching)"
+    - "sha2 (hashing)"
+    - "chrono (date/time)"
+    - "log (structured logging)"
+
+  system_apis:
+    - "macOS: FSEvents, trash API"
+    - "Windows: Windows API, recycle bin"
+    - "Linux: inotify, trash API"
+
+# ============================================================================
+# DEVELOPMENT & OPERATIONS
+# ============================================================================
+
+development:
+  language: "English"
+  timezone: "UTC"
+  versioning: "Semantic Versioning (MAJOR.MINOR.PATCH)"
+  current_version: "0.1.1"
+  target_version: "0.2.0"
+
+git_workflow:
+  main_branch: "main"
+  branching_strategy: "Feature branches with PR review"
+  commit_style: "Conventional Commits with EDGS phase references"
+  release_process: "Tag on main, publish to GitHub Releases"
+
+ci_cd:
+  provider: "GitHub Actions"
+  test_gates: "All tests must pass before merge"
+  lint_gates: "Zero clippy warnings, cargo fmt check"
+  coverage: "Target >40% backend, >30% frontend"
+
+# ============================================================================
+# PROJECT PHASES (EDGS)
+# ============================================================================
+
+edgs_phases:
+  p0:
+    name: "Constitutional Foundation"
+    tasks: 4
+    gate_authority: "Project Sponsor"
+    focus: "Project identity, documentation, PoE infrastructure"
+  
+  p1:
+    name: "Critical Stability"
+    tasks: 7
+    gate_authority: "Tech Lead"
+    focus: "Code quality, zero warnings, 100% test pass"
+  
+  p2:
+    name: "Architecture Refactoring"
+    tasks: 11
+    gate_authority: "Architect"
+    focus: "Modularization, custom error types, 40%+ coverage"
+  
+  p3:
+    name: "Frontend Modernization"
+    tasks: 8
+    gate_authority: "QA Lead"
+    focus: "TypeScript migration, prop validation"
+  
+  p4:
+    name: "Documentation Organization"
+    tasks: 9
+    gate_authority: "Documentation Owner"
+    focus: "Docs restructuring, API reference, guides"
+  
+  p5:
+    name: "Testing Expansion"
+    tasks: 8
+    gate_authority: "QA Manager"
+    focus: "50%+ test coverage, comprehensive test suites"
+  
+  p6:
+    name: "Code Cleanup & Finalization"
+    tasks: 8
+    gate_authority: "Release Manager"
+    focus: "Dead code removal, final polish"
+  
+  release:
+    name: "L4 Production Readiness"
+    tasks: 6
+    gate_authority: "Executive Sponsor"
+    focus: "IP review, security audit, cross-platform build"
+
+# ============================================================================
+# SUCCESS CRITERIA
+# ============================================================================
+
+success_criteria:
+  phase_0_gate: "All 4 constitutional tasks complete + approved"
+  phase_1_gate: "Zero clippy warnings + 100% test pass + approved"
+  project_release: "v0.2.0 published, L4 maturity achieved"
+
+# ============================================================================
+# METADATA
+# ============================================================================
+
+created_at: "2025-10-26T21:35:00Z"
+created_by: "AI Assistant (OpenSpec Phase 0)"
+version: "1.0"
+status: "Active"
+last_updated: "2025-10-26T21:35:00Z"
