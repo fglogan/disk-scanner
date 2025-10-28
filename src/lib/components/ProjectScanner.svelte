@@ -35,9 +35,20 @@
     repos = [];
     try {
       const roots = $settings.directories || [];
+      console.log('ProjectScanner: scanning roots:', roots);
+      
+      if (roots.length === 0) {
+        error = 'No directories configured. Go to Settings and add directories to scan.';
+        loading = false;
+        return;
+      }
+      
       const seen = new Set();
       for (const root of roots) {
+        console.log('ProjectScanner: scanning root:', root);
         const found = await invoke('scan_git_repos', { opts: { root, follow_symlinks: false, min_bytes: 0 } });
+        console.log('ProjectScanner: found', found.length, 'repos in', root);
+        
         for (const repo of found) {
           if (!seen.has(repo.repo_path)) {
             seen.add(repo.repo_path);
@@ -45,13 +56,15 @@
             try {
               status = await invoke('get_git_repo_status', { path: repo.repo_path });
             } catch (e) {
-              // ignore
+              console.warn('Failed to get status for', repo.repo_path, e);
             }
             repos = [...repos, { path: repo.repo_path, size_mb: repo.total_size_mb, entries: repo.entries, status }];
           }
         }
       }
+      console.log('ProjectScanner: total repos found:', repos.length);
     } catch (e) {
+      console.error('ProjectScanner error:', e);
       error = String(e);
     } finally {
       loading = false;
@@ -63,10 +76,15 @@
 
 <div class="flex justify-between items-center mb-6">
   <h1 class="text-3xl font-bold text-white">Project Scanner</h1>
-  <button on:click={scanProjects} disabled={loading || !($settings.directories && $settings.directories.length)}
-    class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg">
-    {#if loading}Scanning...{:else}Scan Projects{/if}
-  </button>
+  <div class="flex items-center gap-4">
+    <span class="text-sm text-slate-400">
+      {$settings.directories?.length || 0} director{($settings.directories?.length || 0) === 1 ? 'y' : 'ies'} configured
+    </span>
+    <button on:click={scanProjects} disabled={loading || !($settings.directories && $settings.directories.length)}
+      class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg">
+      {#if loading}Scanning...{:else}Scan Projects{/if}
+    </button>
+  </div>
 </div>
 
 {#if error}
