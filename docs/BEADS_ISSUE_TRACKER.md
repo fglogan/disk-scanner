@@ -810,3 +810,416 @@ src-tauri/src/
 
 **Last Updated:** October 24, 2025  
 **Next Review:** After Phase 1 completion
+
+---
+
+## 🚀 FUTURE FEATURES (Roadmap Capture)
+
+### Phase: CTO Dashboard - Organizational Intelligence Platform
+
+**Status:** ROADMAP CAPTURE  
+**OpenSpec:** `openspec/changes/cto-dashboard/`  
+**Target Phase:** v0.3.0+ or Standalone v1.0  
+**Total Effort:** 6-8 weeks (Phase 1 MVP), 6-9 months (Full)
+
+---
+
+### BEAD-CTOD-001: CTO Dashboard Feasibility Study 📝
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 1 week  
+**Impact:** Validates technical feasibility for organizational overview platform
+
+**Description:**
+Conduct technical spike to validate CTO Dashboard architecture and performance with 50+ repos.
+
+**Tasks:**
+- Test GitHub API rate limits with 50+ repositories
+- Benchmark local Git scanning performance
+- Evaluate data storage options (SQLite, IndexedDB)
+- Prototype OpenSpec compliance checker
+- Generate feasibility report with recommendations
+
+**Deliverables:**
+- Technical feasibility report
+- Performance benchmarks
+- Risk assessment
+- Recommended tech stack
+
+**Files:** New module `src-tauri/src/cto_dashboard/`  
+**Dependencies:** None  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-002: CTO Dashboard UI/UX Design 🎨
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 3-5 days  
+**Impact:** Defines executive dashboard user experience
+
+**Description:**
+Design executive-focused dashboard UI optimized for glanceable organizational intelligence.
+
+**Tasks:**
+- Create wireframes for main dashboard view
+- Design drill-down flow (org → repo → details)
+- Define color schemes and visual language
+- Create responsive layouts (desktop, tablet)
+- Design data visualizations (charts, treemaps, timelines)
+- Stakeholder review and iteration
+
+**Deliverables:**
+- Figma/Excalidraw mockups
+- Component library designs
+- Interaction flows
+- Approved final designs
+
+**Files:** Design assets in `/docs/design/cto-dashboard/`  
+**Dependencies:** None  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-003: Architecture Decision - Extension vs Standalone 🔀
+**Status:** PENDING  
+**Priority:** CRITICAL  
+**Effort:** 1 day (meeting + analysis)  
+**Impact:** Determines project structure and scope
+
+**Description:**
+Decide whether CTO Dashboard should be built as Disk Bloat Scanner extension or standalone application.
+
+**Decision Criteria:**
+- Target user persona overlap (devs vs CTOs)
+- Code sharing opportunities
+- Deployment and distribution model
+- Future SaaS potential
+- UI/UX complexity management
+
+**Deliverables:**
+- Architecture Decision Record (ADR)
+- Shared library extraction plan (if standalone)
+- Updated project structure document
+
+**Files:** `docs/design/ADR-CTO-DASHBOARD-ARCHITECTURE.md`  
+**Dependencies:** Stakeholder input  
+**Assignee:** Product Owner + Tech Lead
+
+---
+
+### BEAD-CTOD-004: Local Repository Scanner 🔍
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 1 week  
+**Impact:** Core scanning engine for discovering and analyzing Git repositories
+
+**Description:**
+Build repository discovery and analysis engine to scan local filesystem for Git repos.
+
+**Implementation:**
+- Filesystem walker to find .git directories
+- Extract Git metadata (commits, contributors, remotes)
+- Calculate repository health scores
+- Handle large repositories efficiently
+- Progress reporting for UI
+
+**Deliverables:**
+- `src-tauri/src/cto_dashboard/scanner.rs`
+- Unit tests (>80% coverage)
+- Performance benchmarks (1, 10, 50, 100 repos)
+
+**Files:** `src-tauri/src/cto_dashboard/scanner.rs`  
+**Dependencies:** BEAD-CTOD-003 (scope decision)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-005: GitHub API Integration ⚡
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 1 week  
+**Impact:** Organization-wide repository insights from GitHub
+
+**Description:**
+Integrate GitHub REST API for fetching organization repositories, PRs, issues, and activity.
+
+**Implementation:**
+- OAuth or token-based authentication
+- Fetch organization repositories
+- Get commit history, PRs, issues per repo
+- Handle rate limiting (5000 req/hour)
+- Cache responses locally (SQLite)
+- Incremental update mechanism
+
+**Deliverables:**
+- `src-tauri/src/cto_dashboard/github.rs`
+- Token storage in OS keychain
+- Rate limit monitoring
+
+**Files:** `src-tauri/src/cto_dashboard/github.rs`  
+**Dependencies:** GitHub CLI integration (exists)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-006: OpenSpec Compliance Checker ✅
+**Status:** PENDING  
+**Priority:** MEDIUM  
+**Effort:** 4-5 days  
+**Impact:** Tracks OpenSpec/BEADS adoption across organization
+
+**Description:**
+Analyze repositories for OpenSpec directory structure, BEADS issues, and compliance scoring.
+
+**Implementation:**
+- Check for `/openspec/` directory presence
+- Count proposals, completed changes, pending tasks
+- Parse BEADS issues from markdown
+- Calculate health score (activity + compliance + freshness)
+- Generate compliance reports per repo
+
+**Scoring Algorithm:**
+```
+Health Score = 
+  40% * Activity (commits last 30d)
+  30% * Compliance (OpenSpec/BEADS)
+  20% * Freshness (last commit date)
+  10% * Quality (tests, CI/CD)
+```
+
+**Deliverables:**
+- `src-tauri/src/cto_dashboard/compliance.rs`
+- Health scoring algorithm
+- Compliance report generator
+
+**Files:** `src-tauri/src/cto_dashboard/compliance.rs`  
+**Dependencies:** BEAD-CTOD-004 (scanner)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-007: Dashboard UI Implementation 🎨
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 2 weeks  
+**Impact:** Primary user interface for organizational overview
+
+**Description:**
+Build Svelte-based executive dashboard with org overview, repo grid, and drill-down views.
+
+**Components:**
+- `DashboardLayout.svelte` - Top-level navigation
+- `OrgOverview.svelte` - Metrics summary cards
+- `RepoGrid.svelte` - Sortable/filterable repo list
+- `RepoDetails.svelte` - Detailed repo view
+- `ComplianceView.svelte` - Org-wide compliance
+- `SettingsPanel.svelte` - Configuration
+
+**Features:**
+- Responsive design (desktop + tablet)
+- Dark mode support
+- Loading states and error handling
+- Keyboard navigation
+- Data visualizations (Chart.js/D3.js)
+
+**Deliverables:**
+- 6+ Svelte components
+- Responsive dashboard UI
+- Visual design implementation
+
+**Files:** `src/lib/components/CTODashboard/`  
+**Dependencies:** BEAD-CTOD-002 (UI design), BEAD-CTOD-004/005/006 (data)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-008: Data Aggregation & Caching Layer 💾
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 1 week  
+**Impact:** Efficient data storage and retrieval for dashboard
+
+**Description:**
+Build SQLite-based caching layer to aggregate multi-source data (local Git, GitHub, compliance).
+
+**Database Schema:**
+- `repos` table: repo metadata and health scores
+- `commits` table: commit history per repo
+- `compliance` table: OpenSpec/BEADS status
+
+**Implementation:**
+- SQLite database setup
+- Data ingestion pipeline
+- Incremental update logic
+- Query API for UI
+- Data expiration/cleanup
+
+**Deliverables:**
+- `src-tauri/src/cto_dashboard/aggregator.rs`
+- SQLite schema migrations
+- Data refresh pipeline
+
+**Files:** `src-tauri/src/cto_dashboard/aggregator.rs`  
+**Dependencies:** BEAD-CTOD-004, 005, 006 (data sources)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-009: Settings & Configuration 🛠️
+**Status:** PENDING  
+**Priority:** MEDIUM  
+**Effort:** 3-4 days  
+**Impact:** User-configurable scan directories, GitHub integration, preferences
+
+**Description:**
+Build configuration system for scan paths, GitHub token, and display preferences.
+
+**Features:**
+- Scan directory management (add/remove/exclude)
+- GitHub token storage (OS keychain)
+- Organization name configuration
+- Theme preferences (light/dark/auto)
+- Refresh interval settings
+- Performance tuning options
+
+**Deliverables:**
+- `src-tauri/src/cto_dashboard/config.rs`
+- Settings UI panel
+- Config persistence
+
+**Files:** `src-tauri/src/cto_dashboard/config.rs`, `src/lib/components/CTODashboard/Settings.svelte`  
+**Dependencies:** BEAD-CTOD-007 (UI)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-010: Export & Reporting 📊
+**Status:** PENDING  
+**Priority:** LOW  
+**Effort:** 2-3 days  
+**Impact:** Export organizational data for analysis and reporting
+
+**Description:**
+Export dashboard data to CSV, JSON, and Markdown for external analysis or reporting.
+
+**Export Formats:**
+- CSV: Repo list with metrics (Excel/Sheets compatible)
+- JSON: Full data dump for custom tooling
+- Markdown: Human-readable summary with charts
+
+**Deliverables:**
+- Export functionality (CSV, JSON, MD)
+- Export format templates
+- UI export button
+
+**Files:** `src-tauri/src/cto_dashboard/export.rs`  
+**Dependencies:** BEAD-CTOD-008 (data layer)  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-011: Testing & Polish 🧪
+**Status:** PENDING  
+**Priority:** HIGH  
+**Effort:** 1 week  
+**Impact:** Ensures quality and usability for MVP release
+
+**Description:**
+Comprehensive testing (unit, integration, performance) and UI polish for Phase 1 MVP.
+
+**Testing Scope:**
+- Unit tests for scanner, compliance, GitHub client
+- Integration tests for data pipeline
+- Performance tests (100+ repos, memory profiling)
+- User acceptance testing (2-3 CTOs/VPs)
+
+**Polish Tasks:**
+- Loading states and spinners
+- User-friendly error messages
+- Empty states
+- Keyboard shortcuts
+- Accessibility audit
+
+**Deliverables:**
+- Test suite (>70% coverage)
+- Performance benchmarks
+- User feedback report
+- Polished UI
+
+**Files:** `src-tauri/tests/cto_dashboard_tests.rs`  
+**Dependencies:** All Phase 1 tasks complete  
+**Assignee:** TBD
+
+---
+
+### BEAD-CTOD-012: Documentation & Deployment 📚
+**Status:** PENDING  
+**Priority:** MEDIUM  
+**Effort:** 2-3 days  
+**Impact:** Enables users to install and use CTO Dashboard
+
+**Description:**
+Create user documentation and build deployment artifacts for MVP release.
+
+**Documentation:**
+- User guide (installation, configuration, features)
+- Administrator guide (GitHub setup, performance tuning)
+- API documentation (Tauri commands, data models)
+
+**Deployment:**
+- Build installers (macOS, Windows, Linux)
+- Code signing certificates
+- Auto-update mechanism (optional)
+- Release notes
+
+**Deliverables:**
+- User documentation
+- Installers for 3 platforms
+- Release notes
+
+**Files:** `docs/CTO_DASHBOARD_USER_GUIDE.md`  
+**Dependencies:** BEAD-CTOD-011 (testing complete)  
+**Assignee:** TBD
+
+---
+
+## 📊 CTO Dashboard Summary
+
+**Total Phase 1 Issues:** 12  
+**Estimated Effort:** 6-8 weeks (1-2 engineers)  
+**Target Release:** v0.3.0 or Standalone v1.0  
+**OpenSpec:** Complete (`openspec/changes/cto-dashboard/`)
+
+**Phase 1 MVP Features:**
+- ✅ Local Git repository discovery and analysis
+- ✅ GitHub organization integration (basic)
+- ✅ OpenSpec/BEADS compliance tracking
+- ✅ Organizational health dashboard
+- ✅ Drill-down to repo details
+- ✅ Export to CSV/JSON/Markdown
+
+**Success Criteria:**
+- Scan 50+ repos in < 30 seconds
+- Display org overview in < 5 seconds
+- OpenSpec compliance accuracy > 90%
+- Intuitive UI (validated by 3+ CTOs)
+
+**Future Phases:**
+- Phase 2: Trend analysis, risk scoring, team velocity
+- Phase 3: CI/CD integration, LAN scanning, predictive models
+- Phase 4: Due diligence room, compliance library, audit tools
+
+---
+
+**Status:** ROADMAP CAPTURED - Awaiting stakeholder review and Phase 1 approval
+
+**Related Proposals:**
+- PACS (Project Auditor) - Data source integration
+- Tauri Tray Menu + Agents - Background data collection
+- OpenSpec/BD/EDGS - Compliance standards
+
+---
+
+**CTO Dashboard Issues Added:** October 28, 2025  
+**Next Review:** Upon stakeholder approval
