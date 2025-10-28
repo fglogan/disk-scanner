@@ -128,7 +128,7 @@
     }, 100);
 
     try {
-      console.log("Starting scan on directory:", $settings.directories[0]);
+      console.log("Starting scan on directories:", $settings.directories);
 
       // Get fresh system info
       systemInfo = await invoke("get_system_info");
@@ -141,72 +141,87 @@
         usage_pct: systemInfo.disk_usage_pct,
       });
 
-      console.log("Running scans with params:", {
-        root: $settings.directories[0],
-        large_file_min_mb: $settings.min_large_file_size,
-        dup_min_mb: $settings.min_dup_size,
-      });
+      // Merge helpers
+      function mergeBloat(a, b) {
+        const m = new Map();
+        [...a, ...b].forEach((c) => {
+          const key = c.category_id;
+          const v = m.get(key);
+          if (v) {
+            v.entries = (v.entries || []).concat(c.entries || []);
+            v.total_size_mb = (v.total_size_mb || 0) + (c.total_size_mb || 0);
+          } else {
+            m.set(key, { ...c, entries: (c.entries || []).slice() });
+          }
+        });
+        return Array.from(m.values());
+      }
 
-      // Run scans sequentially so UI updates progressively
-      scanProgress.set(`Scanning for bloat in ${$settings.directories[0]}...`);
-      const bloatResults = await invoke("scan_bloat", {
-        opts: {
-          root: $settings.directories[0],
-          min_bytes: 10 * 1024 * 1024,
-          follow_symlinks: false,
-        },
-      });
-      console.log("Bloat found:", bloatResults.length + " categories");
-      bloatCategories.set(bloatResults);
-      updateSummaryStats();
+      function mergeJunk(a, b) {
+        const m = new Map();
+        [...a, ...b].forEach((c) => {
+          const key = c.category_id;
+          const v = m.get(key);
+          if (v) {
+            v.files = (v.files || []).concat(c.files || []);
+            v.total_size_kb = (v.total_size_kb || 0) + (c.total_size_kb || 0);
+            v.file_count = (v.file_count || 0) + (c.file_count || 0);
+          } else {
+            m.set(key, { ...c, files: (c.files || []).slice() });
+          }
+        });
+        return Array.from(m.values());
+      }
 
-      scanProgress.set("Scanning for large files...");
-      const largeFileResults = await invoke("scan_large_files", {
-        opts: {
-          root: $settings.directories[0],
-          min_bytes: $settings.min_large_file_size * 1024 * 1024,
-          follow_symlinks: false,
-        },
-      });
-      console.log("Large files found:", largeFileResults.length + " files");
-      largeFiles.set(largeFileResults);
-      updateSummaryStats();
+      // Accumulators
+      let allBloat = [];
+      let allLarge = [];
+      let allDup = [];
+      let allJunk = [];
 
-      scanProgress.set("Scanning for duplicates...");
-      const dupResults = await invoke("scan_duplicates", {
-        opts: {
-          root: $settings.directories[0],
-          min_bytes: $settings.min_dup_size * 1024 * 1024,
-          follow_symlinks: false,
-        },
-      });
-      console.log("Duplicates found:", dupResults.length + " sets");
-      duplicates.set(dupResults);
-      updateSummaryStats();
+      for (const root of $settings.directories) {
+        scanProgress.set(`Scanning for bloat in ${root}...`);
+        const bloatResults = await invoke("scan_bloat", {
+          opts: { root, min_bytes: 10 * 1024 * 1024, follow_symlinks: false },
+        });
+        allBloat = mergeBloat(allBloat, bloatResults);
+        bloatCategories.set(allBloat);
+        updateSummaryStats();
 
-      scanProgress.set("Scanning for junk files...");
-      console.log("🔍 Starting junk scan on:", $settings.directories[0]);
-      const junkResults = await invoke("scan_junk_files", {
-        opts: {
-          root: $settings.directories[0],
-          min_bytes: 0,
-          follow_symlinks: false,
-        },
-      });
-      console.log("✅ Junk scan complete! Results:", junkResults);
-      console.log("📊 Total junk files found:", junkResults.reduce((sum, cat) => sum + cat.file_count, 0));
-      junkFiles.set(junkResults);
-      updateSummaryStats();
+        scanProgress.set("Scanning for large files...");
+        const largeFileResults = await invoke("scan_large_files", {
+          opts: {
+            root,
+            min_bytes: $settings.min_large_file_size * 1024 * 1024,
+            follow_symlinks: false,
+          },
+        });
+        allLarge = allLarge.concat(largeFileResults);
+        largeFiles.set(allLarge);
+        updateSummaryStats();
 
-      // Update summary stats
-      const bloatTotal =
-        bloatResults.reduce((sum, cat) => sum + cat.total_size_mb, 0) / 1024;
-      const largeFilesTotal =
-        largeFileResults.reduce((sum, file) => sum + file.size_mb, 0) / 1024;
-      const dupTotal =
-        dupResults.reduce((sum, set) => sum + set.total_savable_mb, 0) / 1024;
+        scanProgress.set("Scanning for duplicates...");
+        const dupResults = await invoke("scan_duplicates", {
+          opts: {
+            root,
+            min_bytes: $settings.min_dup_size * 1024 * 1024,
+            follow_symlinks: false,
+          },
+        });
+        allDup = allDup.concat(dupResults);
+        duplicates.set(allDup);
+        updateSummaryStats();
 
-      console.log("✅ Scan completed successfully!");
+        scanProgress.set("Scanning for junk files...");
+        const junkResults = await invoke("scan_junk_files", {
+          opts: { root, min_bytes: 0, follow_symlinks: false },
+        });
+        allJunk = mergeJunk(allJunk, junkResults);
+        junkFiles.set(allJunk);
+        updateSummaryStats();
+      }
+
+      console.log("✅ Scan completed across all directories");
       scanProgress.set("");
       currentScanDir = "";
     } catch (e) {
@@ -331,9 +346,8 @@
     {:else}
       {#if $settings.directories && $settings.directories.length > 0}
         <p class="text-sm text-slate-400">
-          Scan directory: <span class="font-mono text-white"
-            >{$settings.directories[0]}</span
-          >
+          Scan directories:
+          <span class="font-mono text-white">{$settings.directories.join(', ')}</span>
         </p>
       {:else}
         <p class="text-sm text-amber-400">
@@ -433,7 +447,11 @@
     <div class="text-center">
       <p class="text-sm text-emerald-400 font-medium">System Junk</p>
       <p class="text-3xl font-bold text-white mt-1">
-        {$summaryStats.junk_files_mb.toFixed(1)} MB
+        {#if $summaryStats.junk_files_mb >= 1024}
+          {($summaryStats.junk_files_mb / 1024).toFixed(1)} GB
+        {:else}
+          {$summaryStats.junk_files_mb.toFixed(1)} MB
+        {/if}
       </p>
       <p class="text-lg font-semibold text-emerald-300 mt-1">
         {$summaryStats.junk_files_count} files

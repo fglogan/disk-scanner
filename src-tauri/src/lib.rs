@@ -298,6 +298,124 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     scan::scan_git_repos(&validated_path, opts.follow_symlinks)
 }
 
+/// Get lightweight git status for a repository path
+#[tauri::command]
+async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
+    use std::process::Command;
+    use std::path::Path;
+
+    // Ensure path exists
+    let repo_path = Path::new(&path);
+    if !repo_path.exists() {
+        return Err(format!("Path does not exist: {}", path));
+    }
+
+    // Normalize to the working tree root if a .git directory was provided
+    let work_dir_path = if repo_path.file_name().map_or(false, |n| n == ".git") {
+        repo_path.parent().unwrap_or(repo_path).to_path_buf()
+    } else {
+        repo_path.to_path_buf()
+    };
+    let work_dir = work_dir_path.to_string_lossy().to_string();
+
+    // Branch name
+    let branch = match Command::new("git")
+        .arg("-C")
+        .arg(&work_dir)
+        .args(["rev-parse", "--abbrev-ref", "HEAD"])
+        .output()
+    {
+        Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout)
+            .trim()
+            .to_string(),
+        Ok(out) => {
+            let err = String::from_utf8_lossy(&out.stderr);
+            log::warn!("git rev-parse failed: {}", err);
+            "unknown".to_string()
+        }
+        Err(e) => {
+            log::warn!("git not available: {}", e);
+            "unknown".to_string()
+        }
+    };
+
+    // Detect upstream presence
+    let has_upstream = match Command::new("git")
+        .arg("-C")
+        .arg(&work_dir)
+        .args(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
+        .output()
+    {
+        Ok(out) => out.status.success(),
+        Err(_) => false,
+    };
+
+    // Ahead/behind relative to upstream
+    let (ahead, behind) = if has_upstream {
+        match Command::new("git")
+            .arg("-C")
+            .arg(&work_dir)
+            .args(["rev-list", "--left-right", "--count", "HEAD...@{upstream}"])
+            .output()
+        {
+            Ok(out) if out.status.success() => {
+                let txt = String::from_utf8_lossy(&out.stdout);
+                let mut parts = txt.split_whitespace();
+                let left = parts.next().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+                let right = parts.next().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+                (left, right)
+            }
+            _ => (0, 0),
+        }
+    } else {
+        (0, 0)
+    };
+
+    // Uncommitted/untracked counts via porcelain
+    let (mut uncommitted, mut untracked) = (0u32, 0u32);
+    if let Ok(out) = Command::new("git")
+        .arg("-C")
+        .arg(&work_dir)
+        .args(["status", "--porcelain"]) // simpler to parse
+        .output()
+    {
+        if out.status.success() {
+            let txt = String::from_utf8_lossy(&out.stdout);
+            for line in txt.lines() {
+                if line.starts_with("??") {
+                    untracked += 1;
+                } else if !line.trim().is_empty() {
+                    uncommitted += 1;
+                }
+            }
+        }
+    }
+
+    // Last commit timestamp
+    let last_commit_ts: u64 = match Command::new("git")
+        .arg("-C")
+        .arg(&work_dir)
+        .args(["log", "-1", "--format=%ct"]) // unix timestamp
+        .output()
+    {
+        Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout)
+            .trim()
+            .parse::<u64>()
+            .unwrap_or(0),
+        _ => 0,
+    };
+
+    Ok(GitRepoStatus {
+        branch,
+        ahead,
+        behind,
+        uncommitted,
+        untracked,
+        last_commit_ts,
+        has_upstream,
+    })
+}
+
 /// Initializes and runs the Tauri application with all scanning and cleanup commands.
 ///
 /// This function sets up the Tauri runtime, registers plugins for logging and file dialogs,
@@ -313,6 +431,7 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
 /// - `scan_dev_caches` - Analyze developer tool caches
 /// - `scan_git_repos` - Find and analyze Git repositories
 /// - `cleanup_dirs` - Safely delete selected files and directories
+/// - `get_git_repo_status` - Get lightweight git status for a repository
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -327,8 +446,10 @@ pub fn run() {
             scan_junk_files,
             scan_dev_caches,
             scan_git_repos,
-            cleanup_dirs
+            cleanup_dirs,
+            get_git_repo_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

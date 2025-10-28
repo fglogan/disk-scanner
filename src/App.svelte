@@ -13,6 +13,7 @@
   // import DevCaches from "./lib/components/DevCaches.svelte"; // Disabled: uses non-existent selectedDirectory store
   // import GitScanner from "./lib/components/GitScanner.svelte"; // Disabled: uses non-existent selectedDirectory store
   import GitAssistance from "./lib/components/GitAssistance.svelte";
+  import ProjectScanner from "./lib/components/ProjectScanner.svelte";
   import Settings from "./lib/components/Settings.svelte";
 
   // Load initial data on app startup
@@ -39,10 +40,12 @@
       <SystemJunk />
      {:else if $currentPage === "duplicates"}
        <Duplicates />
-     <!-- {:else if $currentPage === "dev-caches"}
-       <DevCaches /> -->
+      <!-- {:else if $currentPage === "dev-caches"}
+        <DevCaches /> -->
       <!-- {:else if $currentPage === "git-scanner"}
         <GitScanner /> -->
+      {:else if $currentPage === "project-scanner"}
+        <ProjectScanner />
       {:else if $currentPage === "git-assistance"}
         <GitAssistance />
       {:else if $currentPage === "settings"}

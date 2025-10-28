@@ -261,6 +261,25 @@ pub struct GitRepository {
     pub entries: Vec<GitEntry>,
 }
 
+/// Lightweight repository status for UI
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct GitRepoStatus {
+    /// Current branch name ("unknown" if unavailable)
+    pub branch: String,
+    /// Commits ahead of upstream
+    pub ahead: u32,
+    /// Commits behind upstream
+    pub behind: u32,
+    /// Count of staged/unstaged changes (excluding untracked)
+    pub uncommitted: u32,
+    /// Count of untracked files
+    pub untracked: u32,
+    /// Last commit UNIX timestamp (0 if unavailable)
+    pub last_commit_ts: u64,
+    /// Whether an upstream is configured
+    pub has_upstream: bool,
+}
+
 // ============================================================================
 // Pattern Detection Structures (Internal)
 // ============================================================================

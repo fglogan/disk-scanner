@@ -14,12 +14,12 @@
   }
 
   function toggleSelection(path) {
-    if ($selectedPaths.has(path)) {
-      $selectedPaths.delete(path);
-    } else {
-      $selectedPaths.add(path);
-    }
-    selectedPaths.set($selectedPaths); // Trigger reactivity
+    selectedPaths.update((s) => {
+      const next = new Set(s);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
   }
 
   function isCriticalPath(path) {
@@ -57,10 +57,10 @@
     // Calculate total size from selected directories
     const totalSizeMB = Array.from($selectedPaths).reduce((sum, path) => {
       const category = $bloatCategories.find((cat) =>
-        cat.examples.some((ex) => ex.path === path),
+        cat.entries.some((ex) => ex.path === path),
       );
       if (category) {
-        const example = category.examples.find((ex) => ex.path === path);
+        const example = category.entries.find((ex) => ex.path === path);
         return sum + (example ? example.size_mb : 0);
       }
       return sum;
@@ -102,20 +102,24 @@
       if (result.errors.length > 0) {
         message += `\n❌ Errors: ${result.errors.length}`;
       }
-      
       alert(message);
 
-      // Clear selection
+      // Prune deleted entries from categories and clear selection
+      bloatCategories.update((cats) =>
+        cats
+          .map((c) => {
+            const newEntries = c.entries.filter(
+              (e) => !result.deleted.includes(e.path),
+            );
+            return {
+              ...c,
+              entries: newEntries,
+              total_size_mb: newEntries.reduce((sum, e) => sum + e.size_mb, 0),
+            };
+          })
+          .filter((c) => c.entries.length > 0),
+      );
       selectedPaths.set(new Set());
-
-      // Refresh page to update results
-      if (result.deleted.length > 0) {
-        setTimeout(() => {
-          if (confirm("Files deleted! Refresh to update the list?")) {
-            window.location.reload();
-          }
-        }, 500);
-      }
     } catch (e) {
       alert("Cleanup failed: " + e);
     }
