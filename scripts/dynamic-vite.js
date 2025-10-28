@@ -18,7 +18,7 @@ function findAvailablePort(startPort) {
   throw new Error('No available port found');
 }
 
-const port = findAvailablePort(3002);
+const port = findAvailablePort(3001);
 console.log(`Starting Vite on available port ${port}`);
 
 // Start Vite with dynamic port

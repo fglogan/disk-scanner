@@ -29,6 +29,26 @@
     return { label: 'OK', color: 'text-emerald-400' };
   }
 
+  async function testScan() {
+    console.log('=== TEST SCAN ===');
+    console.log('Settings:', $settings);
+    console.log('Directories:', $settings.directories);
+    
+    const testPath = '/Volumes/Tempext-Projects/Users/tempext/Projects';
+    console.log('Testing with hardcoded path:', testPath);
+    
+    try {
+      const result = await invoke('scan_git_repos', { 
+        opts: { root: testPath, follow_symlinks: false, min_bytes: 0 } 
+      });
+      console.log('Test scan result:', result);
+      alert(`Test scan found ${result.length} repositories!`);
+    } catch (e) {
+      console.error('Test scan failed:', e);
+      alert('Test scan failed: ' + e);
+    }
+  }
+
   async function scanProjects() {
     error = '';
     loading = true;
@@ -36,6 +56,8 @@
     try {
       const roots = $settings.directories || [];
       console.log('ProjectScanner: scanning roots:', roots);
+      console.log('ProjectScanner: roots type:', typeof roots, Array.isArray(roots));
+      console.log('ProjectScanner: roots length:', roots.length);
       
       if (roots.length === 0) {
         error = 'No directories configured. Go to Settings and add directories to scan.';
@@ -80,6 +102,14 @@
     <span class="text-sm text-slate-400">
       {$settings.directories?.length || 0} director{($settings.directories?.length || 0) === 1 ? 'y' : 'ies'} configured
     </span>
+    <button on:click={() => console.log('Settings state:', $settings)}
+      class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm">
+      Debug
+    </button>
+    <button on:click={testScan}
+      class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded text-sm">
+      Test
+    </button>
     <button on:click={scanProjects} disabled={loading || !($settings.directories && $settings.directories.length)}
       class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg">
       {#if loading}Scanning...{:else}Scan Projects{/if}
