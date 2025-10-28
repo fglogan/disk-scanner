@@ -1,0 +1,750 @@
+{
+  "generated": "2025-10-28T04:21:38.549Z",
+  "summary": {
+    "total": 45,
+    "byStatus": {
+      "completed": 6,
+      "pending": 39
+    },
+    "byPriority": {
+      "critical": 8,
+      "high": 12,
+      "medium": 15,
+      "low": 10
+    }
+  },
+  "issues": [
+    {
+      "id": "BEAD-001",
+      "title": "Enable Content Security Policy 🚨",
+      "priority": "critical",
+      "status": "completed",
+      "effort": "15 minutes",
+      "impact": "Prevents XSS attacks, code injection",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```",
+      "files": [
+        "** `src-tauri/tauri.conf.json`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 23
+    },
+    {
+      "id": "BEAD-002",
+      "title": "Implement Path Validation with Blacklist 🚨",
+      "priority": "critical",
+      "status": "completed",
+      "effort": "2-3 hours",
+      "impact": "Prevents scanning/deleting system directories",
+      "assignee": "Complete",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```\n✅ Created `src-tauri/src/utils/path.rs` with comprehensive path validation\n✅ Added module imports to `src-tauri/src/lib.rs`\n✅ Integrated validation into all 4 scan commands: `scan_bloat()`, `scan_large_files()`, `scan_duplicates()`, `scan_junk_files()`\n✅ Blocks system directories: `/System`, `/bin`, `/sbin`, `/usr`, `/etc`, `/var`, and Windows equivalents\n✅ Tested: `/System` and `/usr` correctly return \"Access denied\" errors\n✅ Commit: `ad2baff` - \"feat: integrate path validation into all scan commands (BEAD-002 complete)\"",
+      "files": [],
+      "githubIssue": null,
+      "lineNumber": 51
+    },
+    {
+      "id": "BEAD-003",
+      "title": "Fix TOCTOU Race Condition in Deletion 🚨",
+      "priority": "critical",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "Prevents deleting wrong files due to race conditions",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```",
+      "files": [
+        "** `src-tauri/src/lib.rs` (cleanup_dirs function)"
+      ],
+      "githubIssue": null,
+      "lineNumber": 109
+    },
+    {
+      "id": "BEAD-004",
+      "title": "Add Deletion History Logging 🚨",
+      "priority": "critical",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "Audit trail for all file deletions",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```\nCreate: `src-tauri/src/models/deletion_log.rs`\nModify: `src-tauri/src/lib.rs` (cleanup_dirs)\nAdd dependency: `chrono = \"0.4\"`",
+      "files": [
+        "**"
+      ],
+      "githubIssue": null,
+      "lineNumber": 156
+    },
+    {
+      "id": "BEAD-005",
+      "title": "Replace All `.unwrap()` with Proper Error Handling 🚨",
+      "priority": "critical",
+      "status": "pending",
+      "effort": "4-6 hours",
+      "impact": "Prevents crashes, improves error reporting",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "- `lib.rs:177` - dir_size function (multiple .ok())\nThroughout codebase (grep shows ~50 instances)",
+      "files": [
+        "** `src-tauri/src/lib.rs` (all functions)"
+      ],
+      "githubIssue": null,
+      "lineNumber": 200
+    },
+    {
+      "id": "BEAD-006",
+      "title": "Implement Proper Error Types with `thiserror` 🚨",
+      "priority": "critical",
+      "status": "pending",
+      "effort": "3-4 hours",
+      "impact": "Type-safe errors, better debugging",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```\nCreate: `src-tauri/src/utils/error.rs`\nModify: All command functions in `src-tauri/src/lib.rs`\nAdd dependency: `thiserror = \"1.0\"`",
+      "files": [
+        "**"
+      ],
+      "githubIssue": null,
+      "lineNumber": 228
+    },
+    {
+      "id": "BEAD-007",
+      "title": "Add Batch Deletion Size Limits 🚨",
+      "priority": "critical",
+      "status": "completed",
+      "effort": "2 hours",
+      "impact": "Prevents accidental mass deletion",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```",
+      "files": [
+        "** `src-tauri/src/lib.rs` (cleanup_dirs function)"
+      ],
+      "githubIssue": null,
+      "lineNumber": 273
+    },
+    {
+      "id": "BEAD-008",
+      "title": "Add Warning for Critical Path Deletion 🚨",
+      "priority": "critical",
+      "status": "completed",
+      "effort": "1 hour",
+      "impact": "Prevents accidental source code deletion",
+      "assignee": "TBD",
+      "dependencies": [
+        "** None"
+      ],
+      "description": "```",
+      "files": [
+        "**"
+      ],
+      "githubIssue": null,
+      "lineNumber": 311
+    },
+    {
+      "id": "BEAD-009",
+      "title": "Make `dir_size()` Async ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "Prevents UI freezing during large directory scans",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 349
+    },
+    {
+      "id": "BEAD-010",
+      "title": "Implement Scan Cancellation ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "User can stop long-running scans",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`, `src/lib/components/Dashboard.svelte`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 362
+    },
+    {
+      "id": "BEAD-011",
+      "title": "Add Real Progress Tracking ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "Replace fake progress counter with real data",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`, `src/lib/components/Dashboard.svelte`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 375
+    },
+    {
+      "id": "BEAD-012",
+      "title": "Fix Memory Leak in Dashboard ⚠️",
+      "priority": "high",
+      "status": "completed",
+      "effort": "30 minutes",
+      "impact": "Prevents memory accumulation",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src/lib/components/Dashboard.svelte`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 390
+    },
+    {
+      "id": "BEAD-013",
+      "title": "Add Error Boundaries ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "Prevents full app crash on component errors",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create `src/lib/components/common/ErrorBoundary.svelte`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 403
+    },
+    {
+      "id": "BEAD-014",
+      "title": "Implement Retry Logic for Transient Failures ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "Resilience against network/disk issues",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 414
+    },
+    {
+      "id": "BEAD-015",
+      "title": "Add Symlink Protection ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "Prevent symlink attacks and infinite loops",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 425
+    },
+    {
+      "id": "BEAD-016",
+      "title": "Define Tauri v2 Permissions ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "1 hour",
+      "impact": "Proper security model compliance",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/capabilities/default.json`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 436
+    },
+    {
+      "id": "BEAD-017",
+      "title": "Add In-App Error UI ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "Better error UX than alert() boxes",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create error display component"
+      ],
+      "githubIssue": null,
+      "lineNumber": 451
+    },
+    {
+      "id": "BEAD-018",
+      "title": "Implement Logging Throughout ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "Debugging and audit trails",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** All Rust files"
+      ],
+      "githubIssue": null,
+      "lineNumber": 462
+    },
+    {
+      "id": "BEAD-019",
+      "title": "Optimize Mutex Usage in scan_bloat ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "Better performance on large scans",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 473
+    },
+    {
+      "id": "BEAD-020",
+      "title": "Chunked File Hashing ⚠️",
+      "priority": "high",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "Prevents memory spikes on large files",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "## 📝 PHASE 3: MEDIUM PRIORITY (Architecture & Maintainability)\n",
+      "files": [
+        "** `src-tauri/src/lib.rs`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 486
+    },
+    {
+      "id": "BEAD-021",
+      "title": "Split lib.rs into Modules 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "6-8 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "```",
+      "files": [
+        "** Refactor `src-tauri/src/lib.rs` (787 lines → modular)"
+      ],
+      "githubIssue": null,
+      "lineNumber": 501
+    },
+    {
+      "id": "BEAD-022",
+      "title": "Add Comprehensive Unit Tests 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "8-12 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create test files for each module"
+      ],
+      "githubIssue": null,
+      "lineNumber": 524
+    },
+    {
+      "id": "BEAD-023",
+      "title": "Migrate to TypeScript 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "4-6 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Rename all .js to .ts, add type annotations"
+      ],
+      "githubIssue": null,
+      "lineNumber": 535
+    },
+    {
+      "id": "BEAD-024",
+      "title": "Add API Documentation 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create `docs/api/TAURI_COMMANDS.md`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 545
+    },
+    {
+      "id": "BEAD-025",
+      "title": "Implement FileScanner Trait 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "6 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create abstraction layer for scanners"
+      ],
+      "githubIssue": null,
+      "lineNumber": 555
+    },
+    {
+      "id": "BEAD-026",
+      "title": "Make Bloat Patterns Configurable 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`, create config file"
+      ],
+      "githubIssue": null,
+      "lineNumber": 565
+    },
+    {
+      "id": "BEAD-027",
+      "title": "Add Deletion Size Warning to UI 📝",
+      "priority": "medium",
+      "status": "completed",
+      "effort": "1 hour",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** All deletion components"
+      ],
+      "githubIssue": null,
+      "lineNumber": 577
+    },
+    {
+      "id": "BEAD-028",
+      "title": "Fix Page Reload After Deletion 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src/lib/components/ProjectBloat.svelte`, `SystemJunk.svelte`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 587
+    },
+    {
+      "id": "BEAD-029",
+      "title": "Add Keyboard Shortcuts 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "Cmd/Ctrl+S: Start scan\nCmd/Ctrl+D: Delete selected\nEscape: Cancel scan",
+      "files": [
+        "** Create keyboard handler"
+      ],
+      "githubIssue": null,
+      "lineNumber": 600
+    },
+    {
+      "id": "BEAD-030",
+      "title": "Implement Virtual Scrolling 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "Better performance for large file lists",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** All list components"
+      ],
+      "githubIssue": null,
+      "lineNumber": 615
+    },
+    {
+      "id": "BEAD-031",
+      "title": "Add Search/Filter Functionality 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** All list components"
+      ],
+      "githubIssue": null,
+      "lineNumber": 627
+    },
+    {
+      "id": "BEAD-032",
+      "title": "Add Accessibility Features 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "6 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "ARIA labels\nScreen reader support\nKeyboard navigation\nWCAG AA compliance",
+      "files": [
+        "** All components"
+      ],
+      "githubIssue": null,
+      "lineNumber": 637
+    },
+    {
+      "id": "BEAD-033",
+      "title": "Add Tooltips 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "2 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** All components with safety indicators"
+      ],
+      "githubIssue": null,
+      "lineNumber": 652
+    },
+    {
+      "id": "BEAD-034",
+      "title": "Implement Scan Result Caching 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** `src-tauri/src/lib.rs`, add cache layer"
+      ],
+      "githubIssue": null,
+      "lineNumber": 662
+    },
+    {
+      "id": "BEAD-035",
+      "title": "Add \"Restore from Trash\" UI 📝",
+      "priority": "medium",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "## ✅ PHASE 4: LOW PRIORITY (Polish & Nice-to-Have)\n",
+      "files": [
+        "** Create new component"
+      ],
+      "githubIssue": null,
+      "lineNumber": 672
+    },
+    {
+      "id": "BEAD-036",
+      "title": "Add Telemetry/Crash Reporting",
+      "priority": "low",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Add Sentry or similar"
+      ],
+      "githubIssue": null,
+      "lineNumber": 684
+    },
+    {
+      "id": "BEAD-037",
+      "title": "Performance Benchmarking",
+      "priority": "low",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create benchmark suite"
+      ],
+      "githubIssue": null,
+      "lineNumber": 694
+    },
+    {
+      "id": "BEAD-038",
+      "title": "Cross-Platform Testing",
+      "priority": "low",
+      "status": "pending",
+      "effort": "8+ hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** CI/CD setup"
+      ],
+      "githubIssue": null,
+      "lineNumber": 704
+    },
+    {
+      "id": "BEAD-039",
+      "title": "Add User Guide",
+      "priority": "low",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Create `docs/USER_GUIDE.md`"
+      ],
+      "githubIssue": null,
+      "lineNumber": 716
+    },
+    {
+      "id": "BEAD-040",
+      "title": "Implement Scheduled Scans",
+      "priority": "low",
+      "status": "pending",
+      "effort": "6 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Background task scheduler"
+      ],
+      "githubIssue": null,
+      "lineNumber": 726
+    },
+    {
+      "id": "BEAD-041",
+      "title": "Add Export to CSV/JSON",
+      "priority": "low",
+      "status": "pending",
+      "effort": "3 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Export functionality in components"
+      ],
+      "githubIssue": null,
+      "lineNumber": 736
+    },
+    {
+      "id": "BEAD-042",
+      "title": "Dark/Light Theme Toggle",
+      "priority": "low",
+      "status": "pending",
+      "effort": "4 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "",
+      "files": [
+        "** Theme system"
+      ],
+      "githubIssue": null,
+      "lineNumber": 746
+    },
+    {
+      "id": "BEAD-043",
+      "title": "Add Custom Bloat Patterns UI",
+      "priority": "low",
+      "status": "pending",
+      "effort": "6 hours",
+      "impact": "",
+      "assignee": "TBD",
+      "dependencies": [],
+      "description": "## ✅ COMPLETED QUICK WINS\n",
+      "files": [
+        "** Settings page enhancement"
+      ],
+      "githubIssue": null,
+      "lineNumber": 756
+    },
+    {
+      "id": "BEAD-QW-001",
+      "title": "Remove Hardcoded User Path",
+      "priority": "low",
+      "status": "pending",
+      "effort": "5 minutes",
+      "impact": "",
+      "assignee": "",
+      "dependencies": [],
+      "description": "",
+      "files": [],
+      "githubIssue": null,
+      "lineNumber": 768
+    },
+    {
+      "id": "BEAD-QW-002",
+      "title": "Replace println! with log::",
+      "priority": "low",
+      "status": "pending",
+      "effort": "30 minutes",
+      "impact": "",
+      "assignee": "",
+      "dependencies": [],
+      "description": "## 📈 Progress Metrics",
+      "files": [
+        "** `src-tauri/src/lib.rs` - All debug prints now use proper logging"
+      ],
+      "githubIssue": null,
+      "lineNumber": 777
+    }
+  ]
+}
