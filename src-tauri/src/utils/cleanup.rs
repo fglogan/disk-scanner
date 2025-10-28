@@ -15,6 +15,18 @@ pub const MAX_BATCH_DELETE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
 /// Maximum number of files that can be deleted in a single operation
 pub const MAX_BATCH_DELETE_COUNT: usize = 10_000; // 10k files
 
+/// Detects if a path is in iCloud Drive
+fn is_icloud_path(path: &str) -> bool {
+    path.contains("Library/Mobile Documents/com~apple~CloudDocs")
+        || path.contains("/iCloud Drive/")
+        || path.contains("/Mobile Documents/")
+}
+
+/// Counts how many paths are in iCloud Drive
+pub fn count_icloud_paths(paths: &[String]) -> usize {
+    paths.iter().filter(|p| is_icloud_path(p)).count()
+}
+
 /// Validates a deletion request against safety limits.
 ///
 /// Ensures that:
@@ -111,12 +123,22 @@ pub fn delete_files(
     let mut skipped = Vec::new();
     let mut errors = Vec::new();
 
+    let icloud_count = count_icloud_paths(paths);
+    
     log::info!(
-        "Starting cleanup of {} paths (dry_run={}, trash={})",
+        "Starting cleanup of {} paths (dry_run={}, trash={}, iCloud={})",
         paths.len(),
         dry_run,
-        use_trash
+        use_trash,
+        icloud_count
     );
+    
+    if icloud_count > 0 {
+        log::warn!(
+            "⚠️  {} iCloud Drive files detected - these may fail due to macOS permissions",
+            icloud_count
+        );
+    }
 
     if dry_run {
         // Dry run - just return what would be deleted
@@ -140,22 +162,58 @@ pub fn delete_files(
         );
 
         if use_trash {
-            // Move to trash
-            match trash::delete(p) {
-                Ok(_) => {
-                    log::debug!("Successfully moved to trash: {}", path);
-                    // Verify it's actually gone
-                    if p.exists() {
-                        log::warn!("File still exists after trash: {}", path);
-                        errors.push(format!("{}: Moved to trash but file still exists", path));
-                    } else {
-                        deleted.push(path.clone());
+            // Check if this is an iCloud Drive path
+            let is_icloud = is_icloud_path(path);
+            
+            if is_icloud {
+                log::warn!("iCloud Drive file detected: {}", path);
+                log::warn!("Attempting deletion with retry logic...");
+            }
+            
+            // Move to trash with retry logic for iCloud Drive
+            let mut attempts = if is_icloud { 3 } else { 1 };
+            let mut last_error = None;
+            
+            while attempts > 0 {
+                match trash::delete(p) {
+                    Ok(_) => {
+                        log::debug!("Successfully moved to trash: {}", path);
+                        // Verify it's actually gone
+                        if p.exists() {
+                            log::warn!("File still exists after trash: {}", path);
+                            errors.push(format!("{}: Moved to trash but file still exists", path));
+                        } else {
+                            deleted.push(path.clone());
+                        }
+                        break;
+                    }
+                    Err(e) => {
+                        last_error = Some(e);
+                        attempts -= 1;
+                        
+                        if attempts > 0 && is_icloud {
+                            log::warn!("Retry attempt for iCloud file (attempts left: {})", attempts);
+                            std::thread::sleep(std::time::Duration::from_millis(500));
+                        }
                     }
                 }
-                Err(e) => {
-                    log::error!("Cleanup error for {}: {}", path, e);
-                    errors.push(format!("{}: {}", path, e));
-                }
+            }
+            
+            // If all attempts failed, log the error
+            if let Some(e) = last_error {
+                let error_msg = format!("{}", e);
+                
+                // Provide helpful error messages for common issues
+                let helpful_msg = if error_msg.contains("permission") || error_msg.contains("-5000") {
+                    format!("{}: Permission denied. iCloud Drive files may require manual deletion.", path)
+                } else if error_msg.contains("timed out") || error_msg.contains("-1712") {
+                    format!("{}: Operation timed out. Try deleting this file manually from Finder.", path)
+                } else {
+                    format!("{}: {}", path, error_msg)
+                };
+                
+                log::error!("Cleanup error for {}: {}", path, helpful_msg);
+                errors.push(helpful_msg);
             }
         } else {
             // Permanent deletion
