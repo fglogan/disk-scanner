@@ -1,0 +1,181 @@
+name: BEADS GitHub Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  sync-beads-to-github:
+    name: Sync BEADS to GitHub Issues
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+      
+      - name: Parse BEADS issues
+        run: |
+          node scripts/beads-parser.js
+      
+      - name: Create GitHub issues for pending BEADS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          export PATH="/usr/bin:$PATH"
+          
+          BEADS_JSON="docs/beads-export.json"
+          CREATED=0
+          
+          while IFS= read -r issue; do
+            ID=$(echo "$issue" | jq -r '.id')
+            TITLE=$(echo "$issue" | jq -r '.title')
+            STATUS=$(echo "$issue" | jq -r '.status')
+            PRIORITY=$(echo "$issue" | jq -r '.priority')
+            GITHUB_ISSUE=$(echo "$issue" | jq -r '.githubIssue')
+            
+            if [ "$STATUS" = "completed" ] || [ "$GITHUB_ISSUE" != "null" ]; then
+              continue
+            fi
+            
+            LABELS=""
+            case "$PRIORITY" in
+              critical) LABELS="priority: critical,type: bug" ;;
+              high) LABELS="priority: high" ;;
+              medium) LABELS="priority: medium" ;;
+              low) LABELS="priority: low" ;;
+            esac
+            
+            EFFORT=$(echo "$issue" | jq -r '.effort')
+            IMPACT=$(echo "$issue" | jq -r '.impact')
+            DESCRIPTION=$(echo "$issue" | jq -r '.description')
+            FILES=$(echo "$issue" | jq -r '.files | join(", ")')
+            
+            BODY="## BEADS ID: $ID
+
+$DESCRIPTION
+
+### Details
+- **Effort:** $EFFORT
+- **Impact:** $IMPACT
+- **Files:** $FILES
+
+### Tracking
+This issue is tracked in \`docs/BEADS_ISSUE_TRACKER.md\`
+"
+            
+            if OUTPUT=$(gh issue create \
+              --title "[$ID] $TITLE" \
+              --body "$BODY" \
+              --label "$LABELS" 2>&1); then
+              
+              ISSUE_NUM=$(echo "$OUTPUT" | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+              echo "✅ Created GitHub issue #$ISSUE_NUM for $ID"
+              
+              jq --arg id "$ID" --argjson num "$ISSUE_NUM" \
+                '(.issues[] | select(.id == $id) | .githubIssue) = $num' \
+                "$BEADS_JSON" > "${BEADS_JSON}.tmp"
+              mv "${BEADS_JSON}.tmp" "$BEADS_JSON"
+              
+              ((CREATED++))
+            fi
+            
+            sleep 2
+            
+          done < <(jq -c '.issues[]' "$BEADS_JSON")
+          
+          echo "CREATED_COUNT=$CREATED" >> $GITHUB_ENV
+      
+      - name: Update BEADS with GitHub links
+        if: env.CREATED_COUNT > 0
+        run: |
+          node scripts/update-beads-links.js
+      
+      - name: Commit updated BEADS
+        if: env.CREATED_COUNT > 0
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/BEADS_ISSUE_TRACKER.md docs/beads-export.json
+          git commit -m "chore: sync BEADS with GitHub issues (created ${{ env.CREATED_COUNT }})"
+          git push
+
+  sync-github-to-beads:
+    name: Sync GitHub Issues to BEADS
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Install GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+      
+      - name: Sync GitHub issue statuses to BEADS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ISSUES_JSON=$(gh issue list --limit 200 --json number,title,state,body --jq '.')
+          BEADS_FILE="docs/BEADS_ISSUE_TRACKER.md"
+          UPDATED=0
+          
+          while IFS= read -r issue; do
+            ISSUE_NUM=$(echo "$issue" | jq -r '.number')
+            STATE=$(echo "$issue" | jq -r '.state')
+            TITLE=$(echo "$issue" | jq -r '.title')
+            BODY=$(echo "$issue" | jq -r '.body')
+            
+            BEAD_ID=$(echo "$TITLE" | grep -oE '\[BEAD-[A-Z0-9-]+\]' | tr -d '[]' || echo "")
+            
+            if [ -z "$BEAD_ID" ]; then
+              BEAD_ID=$(echo "$BODY" | grep -oE 'BEADS ID: BEAD-[A-Z0-9-]+' | cut -d' ' -f3 || echo "")
+            fi
+            
+            if [ -n "$BEAD_ID" ] && grep -q "### $BEAD_ID:" "$BEADS_FILE"; then
+              if [ "$STATE" = "CLOSED" ]; then
+                sed -i "s/\*\*Status:\*\* PENDING/\*\*Status:\*\* ✅ COMPLETED (GitHub #$ISSUE_NUM)/" "$BEADS_FILE"
+                sed -i "s/\*\*Status:\*\* IN PROGRESS/\*\*Status:\*\* ✅ COMPLETED (GitHub #$ISSUE_NUM)/" "$BEADS_FILE"
+                echo "✅ Marked $BEAD_ID as completed (GitHub #$ISSUE_NUM closed)"
+                ((UPDATED++))
+              fi
+            fi
+          done < <(echo "$ISSUES_JSON" | jq -c '.[]')
+          
+          echo "UPDATED_COUNT=$UPDATED" >> $GITHUB_ENV
+      
+      - name: Commit BEADS updates
+        if: env.UPDATED_COUNT > 0
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/BEADS_ISSUE_TRACKER.md
+          git commit -m "chore: sync GitHub issue statuses to BEADS (updated ${{ env.UPDATED_COUNT }})"
+          git push
