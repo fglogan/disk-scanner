@@ -440,15 +440,31 @@ pub fn scan_dev_caches(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCa
 /// **Returns:** Vector of Git repositories sorted by total size (largest first)
 pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepository>, String> {
     let mut repositories = Vec::new();
+    let mut error_count = 0;
+    
+    log::info!("Starting git repository scan in: {:?} (follow_symlinks={})", root, follow_symlinks);
 
-    // Find all .git directories
-    for entry in WalkDir::new(root)
+    // Find all .git directories - with explicit error logging
+    for entry_result in WalkDir::new(root)
         .follow_links(follow_symlinks)
         .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_dir())
-        .filter(|e| e.file_name() == ".git")
     {
+        let entry = match entry_result {
+            Ok(e) => e,
+            Err(err) => {
+                error_count += 1;
+                log::warn!("Error walking directory (#{} errors total): {}", error_count, err);
+                continue; // Skip this entry but continue scanning
+            }
+        };
+        
+        // Only process directories named ".git"
+        if !entry.file_type().is_dir() || entry.file_name() != ".git" {
+            continue;
+        }
+        
+        log::debug!("Found .git directory: {:?}", entry.path());
+        
         let git_path = entry.path();
         let repo_path = git_path.parent().unwrap_or(git_path);
 
@@ -547,19 +563,22 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
         }
 
         // Check for large files in git history (using git command)
-        if let Ok(large_files) = find_large_git_files(repo_path) {
-            for (file_path, file_size) in large_files {
-                total_size += file_size;
-                git_entries.push(GitEntry {
-                    path: file_path,
-                    size_mb: file_size as f32 / 1_048_576.0,
-                    entry_type: "large_file".to_string(),
-                    description: "Large file in git history".to_string(),
-                    safety: "caution".to_string(),
-                    actionable: true, // Can be removed with git filter-branch or BFG
-                });
-            }
-        }
+        // TODO: This is VERY slow - temporarily disabled for testing
+        log::debug!("Skipping large file check (temporarily disabled): {:?}", repo_path);
+        // if let Ok(large_files) = find_large_git_files(repo_path) {
+        //     log::debug!("Found {} large files in history", large_files.len());
+        //     for (file_path, file_size) in large_files {
+        //         total_size += file_size;
+        //         git_entries.push(GitEntry {
+        //             path: file_path,
+        //             size_mb: file_size as f32 / 1_048_576.0,
+        //             entry_type: "large_file".to_string(),
+        //             description: "Large file in git history".to_string(),
+        //             safety: "caution".to_string(),
+        //             actionable: true, // Can be removed with git filter-branch or BFG
+        //         });
+        //     }
+        // }
 
         if !git_entries.is_empty() {
             repositories.push(GitRepository {
@@ -574,6 +593,12 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
     // Sort by total size (largest first)
     repositories.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
+    log::info!(
+        "Git repository scan complete: {} repositories found, {} errors encountered", 
+        repositories.len(), 
+        error_count
+    );
+    
     Ok(repositories)
 }
 

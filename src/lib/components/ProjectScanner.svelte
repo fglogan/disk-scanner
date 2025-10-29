@@ -68,20 +68,27 @@
       const seen = new Set();
       for (const root of roots) {
         console.log('ProjectScanner: scanning root:', root);
-        const found = await invoke('scan_git_repos', { opts: { root, follow_symlinks: false, min_bytes: 0 } });
-        console.log('ProjectScanner: found', found.length, 'repos in', root);
+        console.log('ProjectScanner: invoking scan_git_repos with opts:', { root, follow_symlinks: false, min_bytes: 0 });
+        try {
+          const found = await invoke('scan_git_repos', { opts: { root, follow_symlinks: false, min_bytes: 0 } });
+          console.log('ProjectScanner: SUCCESS - found', found.length, 'repos in', root);
+          console.log('ProjectScanner: found repos:', found);
         
-        for (const repo of found) {
-          if (!seen.has(repo.repo_path)) {
-            seen.add(repo.repo_path);
-            let status = null;
-            try {
-              status = await invoke('get_git_repo_status', { path: repo.repo_path });
-            } catch (e) {
-              console.warn('Failed to get status for', repo.repo_path, e);
+          for (const repo of found) {
+            if (!seen.has(repo.repo_path)) {
+              seen.add(repo.repo_path);
+              let status = null;
+              try {
+                status = await invoke('get_git_repo_status', { path: repo.repo_path });
+              } catch (e) {
+                console.warn('Failed to get status for', repo.repo_path, e);
+              }
+              repos = [...repos, { path: repo.repo_path, size_mb: repo.total_size_mb, entries: repo.entries, status }];
             }
-            repos = [...repos, { path: repo.repo_path, size_mb: repo.total_size_mb, entries: repo.entries, status }];
           }
+        } catch (err) {
+          console.error('ProjectScanner: ERROR scanning root:', root, err);
+          error = `Failed to scan ${root}: ${err}`;
         }
       }
       console.log('ProjectScanner: total repos found:', repos.length);
