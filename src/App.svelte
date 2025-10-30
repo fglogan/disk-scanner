@@ -36,11 +36,13 @@
     setupKeyboardShortcuts();
   });
 
-  // Reactive theme updates
-  $: if (typeof window !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', $darkMode ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark', $darkMode);
-  }
+  // Reactive theme updates using $effect
+  $effect(() => {
+    if (typeof window !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', $darkMode ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', $darkMode);
+    }
+  });
 
   function setupKeyboardShortcuts() {
     function handleKeydown(event: KeyboardEvent) {
