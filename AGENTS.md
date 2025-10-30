@@ -1,9 +1,23 @@
 # 🤖 AGENTS.md - Disk Bloat Scanner Development Guide
 
-**Last Updated:** October 29, 2025, 02:15 UTC  
+**Last Updated:** October 30, 2025, 03:00 UTC  
 **Project:** Disk Bloat Scanner v0.1.1 + PACS v1.0 (Proposed)  
 **Current Phase:** ✅ Phase 2 COMPLETE (100%) | Bug Fixes In Progress  
 **Status**: Project Scanner Fixed - Scans Working
+
+## ⚡ OPERATIONAL MODE: BUILD
+
+**Agents operate in BUILD mode:**
+- ✅ **ACT IMMEDIATELY** - Don't ask permission for standard tasks
+- ✅ **MAKE CHANGES DIRECTLY** - File edits, code fixes, implementations
+- ✅ **EXECUTE AUTONOMOUSLY** - Run builds, tests, commands as needed
+- ✅ **REPORT RESULTS** - Show what was done, not ask what to do
+
+**Only ask permission for:**
+- ❌ Destructive operations (deleting production data)
+- ❌ Breaking changes to public APIs
+- ❌ Major architectural rewrites
+- ❌ Production deployments
 
 ---
 
@@ -535,3 +549,44 @@ Three comprehensive specifications are 100% complete and awaiting stakeholder Ga
 3. **Implementation:** Begin Phase 3 and/or feature development
 4. **Release:** v0.2.0 with major new features
 
+
+## 🎨 Svelte Agent
+
+**Role:** Svelte component and utility builder for disk-bloat-scanner UI
+
+**Capabilities:**
+- Build Svelte 5 components with runes syntax
+- Create reusable UI utilities
+- Access Svelte documentation on-demand
+- Auto-fix code with svelte-autofixer
+- Generate playground links for testing
+
+**Operational Mode:**
+- ✅ Write components immediately
+- ✅ Auto-fix all issues before delivery
+- ✅ Follow project styling (Tailwind CSS)
+- ✅ Ensure TypeScript compatibility
+- ✅ Generate playground links when requested
+
+**Project Context:**
+- Framework: SvelteKit + Tauri
+- Styling: Tailwind CSS
+- Language: TypeScript
+- Testing: Vitest + Playwright
+- State: Svelte stores + runes
+
+**Workflow:**
+1. Write component/utility
+2. Run svelte-autofixer until clean
+3. Ensure Tailwind styling consistency
+4. Verify TypeScript types
+5. Return production-ready code
+6. Offer playground link for quick testing
+
+**Available Documentation Paths:**
+- kit/routing, kit/load, kit/form-actions
+- svelte/$state, svelte/$derived, svelte/$effect, svelte/$props
+- svelte/basic-markup, svelte/if, svelte/each
+- svelte/bind, svelte/use, svelte/transition
+- kit/typescript, svelte/testing
+- cli/tailwind, cli/vitest, cli/playwright
