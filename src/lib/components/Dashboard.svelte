@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { open } from "@tauri-apps/plugin-dialog";
   import {
@@ -12,6 +12,7 @@
     scanProgress,
     settings,
   } from "../stores.js";
+  import UIQuickWinsDemo from "./ui/UIQuickWinsDemo.svelte";
 
   let systemInfo = {
     disk_total_gb: 0,
@@ -29,9 +30,9 @@
   };
 
   let currentScanDir = "";
-  let statsInterval = null;
+  let statsInterval: number | null = null;
   let filesScanned = 0;
-  let scanningTimer = null;
+  let scanningTimer: number | null = null;
 
   async function loadSystemInfo() {
     try {
@@ -93,7 +94,7 @@
       });
 
       if (selected) {
-        const newDir = typeof selected === "string" ? selected : selected.path;
+        const newDir = typeof selected === "string" ? selected : (selected as any)?.path || selected;
         console.log("Selected directory:", newDir);
 
         settings.update((s) => {
@@ -142,7 +143,7 @@
       });
 
       // Merge helpers
-      function mergeBloat(a, b) {
+      function mergeBloat(a: any[], b: any[]) {
         const m = new Map();
         [...a, ...b].forEach((c) => {
           const key = c.category_id;
@@ -157,7 +158,7 @@
         return Array.from(m.values());
       }
 
-      function mergeJunk(a, b) {
+      function mergeJunk(a: any[], b: any[]) {
         const m = new Map();
         [...a, ...b].forEach((c) => {
           const key = c.category_id;
@@ -174,17 +175,17 @@
       }
 
       // Accumulators
-      let allBloat = [];
-      let allLarge = [];
-      let allDup = [];
-      let allJunk = [];
+      let allBloat: any[] = [];
+      let allLarge: any[] = [];
+      let allDup: any[] = [];
+      let allJunk: any[] = [];
 
       for (const root of $settings.directories) {
         scanProgress.set(`Scanning for bloat in ${root}...`);
         const bloatResults = await invoke("scan_bloat", {
           opts: { root, min_bytes: 10 * 1024 * 1024, follow_symlinks: false },
         });
-        allBloat = mergeBloat(allBloat, bloatResults);
+        allBloat = mergeBloat(allBloat, bloatResults as any[]);
         bloatCategories.set(allBloat);
         updateSummaryStats();
 
@@ -216,7 +217,7 @@
         const junkResults = await invoke("scan_junk_files", {
           opts: { root, min_bytes: 0, follow_symlinks: false },
         });
-        allJunk = mergeJunk(allJunk, junkResults);
+        allJunk = mergeJunk(allJunk, junkResults as any[]);
         junkFiles.set(allJunk);
         updateSummaryStats();
       }
@@ -466,4 +467,9 @@
       <p class="text-xs text-slate-400">Last scan: {formatLastScanTime()}</p>
     </div>
   </div>
+</div>
+
+<!-- UI Quick Wins Demo Section -->
+<div class="mt-8">
+  <UIQuickWinsDemo />
 </div>

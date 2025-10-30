@@ -1,21 +1,46 @@
-# Disk Bloat Scanner v0.1.1 → v0.2.0 Refactoring
+# EDGS Event Scheduling System - Multi-Agent Coordination
+**Event-Driven Goal-Seeking Multi-Agent Coordination**
 
-**Event-Driven Gate Scheduling (EDGS) – TES-2025 v6.9**
+**Active Session:** October 30, 2025, 16:47 UTC  
+**Resource Management:** 2 concurrent agent teams maximum  
+**Audit Frequency:** Every 300 source code lines  
+**Stalemate Resolution:** 2 rounds → escalate to tasking agent  
+**No Human Time Elements:** Fully automated coordination
 
-**Document KO_ID:** `schedule-disk-bloat-scanner-edgs-v0.2.0`  
-**Status:** Gold  
-**Date:** October 26, 2025  
+**Document KO_ID:** `schedule-disk-bloat-scanner-edgs-multi-agent`  
+**Status:** ACTIVE  
+**Date:** October 30, 2025  
 **Project Level:** L2 (Integration) → L3 (Hardening) after refactoring  
 **Maturity at Start:** L2 (Feature-complete, internal consistency needed)  
 **Target Maturity:** L3 (Performance, security, reliability hardened)  
 
 ---
 
-## Overview
+## Multi-Agent System Overview
 
-This document defines the **Event-Driven Gate Scheduling (EDGS)** workflow for refactoring Disk Bloat Scanner from its current functional state to a production-hardened release. It replaces traditional time-based estimates with **dependency-driven task sequencing**, **gated progression**, and **human-in-the-loop (HIL) oversight** per TES-2025 v6.9 Section 3.4.
+This document defines the **Event-Driven Goal-Seeking (EDGS)** multi-agent coordination system for concurrent development. It implements **2 concurrent agent teams** with **resource management**, **audit checkpoints every 300 source code lines**, and **automated stalemate resolution**.
 
-**Key Constraint:** This schedule contains **NO human effort quantifiers** (hours, days, weeks, months). Progression is event-driven, dependent on task completion and gate validation.
+**Key Constraints:** 
+- **NO human time elements** - Fully automated coordination
+- **Maximum 2 concurrent teams** - Resource management enforced
+- **Audit every 300 lines** - Automated code quality checkpoints
+- **2-round stalemate resolution** - Escalate to tasking agent after failed rounds
+
+## Agent Team Configuration
+
+### Team 1: Code Implementation Agent
+- **Role:** Frontend/Backend code development
+- **Current Task:** Complete UI Quick Wins implementation
+- **Resource Allocation:** 50% system capacity
+- **Audit Trigger:** Every 300 lines of code changes
+- **Specialization:** Svelte 5, TypeScript, Rust, Tauri
+
+### Team 2: Security Auditor Agent  
+- **Role:** Security analysis and BEADS issue resolution
+- **Current Task:** Implement BEAD-002 path validation
+- **Resource Allocation:** 50% system capacity
+- **Audit Trigger:** Every security-critical change
+- **Specialization:** Security analysis, code review, compliance
 
 ---
 

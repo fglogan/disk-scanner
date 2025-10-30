@@ -10,12 +10,15 @@ pub mod error;
 pub mod models;
 /// Utility modules for scanning, patterns, and path validation.
 pub mod utils;
+/// Database module for persistent project monitoring.
+pub mod database;
 
 pub use error::{ScannerError, ScannerResult};
 pub use models::*;
 use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
+use database::{ProjectDatabase, ProjectScanResult, ProjectMonitorConfig};
 
 // ============================================================================
 // Tauri Commands
@@ -302,10 +305,13 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
 #[tauri::command]
 async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
     use std::process::Command;
-    use std::path::Path;
 
-    // Ensure path exists
-    let repo_path = Path::new(&path);
+    // Validate the path to prevent system directory access
+    let validated_path = validate_scan_path(&path)?;
+    log::info!("Getting git status for: {}", validated_path.display());
+
+    // Ensure path exists (redundant check but kept for clarity)
+    let repo_path = &validated_path;
     if !repo_path.exists() {
         return Err(format!("Path does not exist: {}", path));
     }
@@ -432,6 +438,106 @@ async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
 /// - `scan_git_repos` - Find and analyze Git repositories
 /// - `cleanup_dirs` - Safely delete selected files and directories
 /// - `get_git_repo_status` - Get lightweight git status for a repository
+/// - `store_project_scan` - Store project scan result in database
+/// - `get_project_history` - Get project scan history
+/// - `configure_project_monitoring` - Configure project monitoring
+/// - `get_monitored_projects` - Get monitored projects
+/// - `prepare_osm_migration` - Prepare OSM-lite migration plan
+
+// ============================================================================
+// Database Commands for Project Monitoring
+// ============================================================================
+
+/// Store project scan result in database
+#[tauri::command]
+async fn store_project_scan(
+    project_path: String,
+    total_size_mb: f64,
+    bloat_size_mb: f64,
+    large_files_count: i32,
+    duplicates_count: i32,
+    junk_files_count: i32,
+    git_repo_status: Option<String>,
+    project_type: Option<String>,
+    compliance_score: Option<f64>,
+) -> Result<i64, String> {
+    use chrono::Utc;
+    
+    let db_path = "./data/project_monitor.db";
+    std::fs::create_dir_all("./data").map_err(|e| format!("Failed to create data directory: {}", e))?;
+    
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
+    
+    let scan_result = ProjectScanResult {
+        id: None,
+        project_path,
+        scan_timestamp: Utc::now(),
+        total_size_mb,
+        bloat_size_mb,
+        large_files_count,
+        duplicates_count,
+        junk_files_count,
+        git_repo_status,
+        project_type,
+        compliance_score,
+    };
+    
+    db.store_scan_result(&scan_result).map_err(|e| format!("Failed to store scan result: {}", e))
+}
+
+/// Get project scan history
+#[tauri::command]
+async fn get_project_history(project_path: String, limit: i32) -> Result<Vec<ProjectScanResult>, String> {
+    let db_path = "./data/project_monitor.db";
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
+    
+    db.get_project_history(&project_path, limit).map_err(|e| format!("Failed to get project history: {}", e))
+}
+
+/// Configure project monitoring
+#[tauri::command]
+async fn configure_project_monitoring(
+    project_path: String,
+    monitor_enabled: bool,
+    scan_interval_hours: i32,
+    alert_thresholds: String,
+) -> Result<i64, String> {
+    use chrono::Utc;
+    
+    let db_path = "./data/project_monitor.db";
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
+    
+    let config = ProjectMonitorConfig {
+        id: None,
+        project_path,
+        monitor_enabled,
+        scan_interval_hours,
+        alert_thresholds,
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+    };
+    
+    db.configure_monitoring(&config).map_err(|e| format!("Failed to configure monitoring: {}", e))
+}
+
+/// Get monitored projects
+#[tauri::command]
+async fn get_monitored_projects() -> Result<Vec<ProjectMonitorConfig>, String> {
+    let db_path = "./data/project_monitor.db";
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
+    
+    db.get_monitored_projects().map_err(|e| format!("Failed to get monitored projects: {}", e))
+}
+
+/// Prepare OSM-lite migration plan
+#[tauri::command]
+async fn prepare_osm_migration() -> Result<database::OSMMigrationPlan, String> {
+    let db_path = "./data/project_monitor.db";
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
+    
+    db.prepare_osm_migration().map_err(|e| format!("Failed to prepare OSM migration: {}", e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -447,7 +553,12 @@ pub fn run() {
             scan_dev_caches,
             scan_git_repos,
             cleanup_dirs,
-            get_git_repo_status
+            get_git_repo_status,
+            store_project_scan,
+            get_project_history,
+            configure_project_monitoring,
+            get_monitored_projects,
+            prepare_osm_migration
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

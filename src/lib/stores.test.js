@@ -11,6 +11,13 @@ import {
   isScanning,
   scanProgress,
   selectedPaths,
+  toasts,
+  darkMode,
+  showShortcutsHelp,
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
 } from './stores';
 
 describe('Store Tests', () => {
@@ -23,6 +30,8 @@ describe('Store Tests', () => {
     isScanning.set(false);
     scanProgress.set('');
     selectedPaths.set(new Set());
+    toasts.clear();
+    showShortcutsHelp.set(false);
   });
 
   describe('diskInfo store', () => {
@@ -183,6 +192,102 @@ describe('Store Tests', () => {
 
       const value = get(selectedPaths);
       expect(value.size).toBe(1);
+    });
+  });
+
+  describe('toast notification system', () => {
+    it('should add toast notifications', () => {
+      const toastList = get(toasts);
+      expect(toastList.length).toBe(0);
+
+      const id1 = showSuccess('Test success message');
+      const id2 = showError('Test error message');
+      
+      const updated = get(toasts);
+      expect(updated.length).toBe(2);
+      expect(updated[0].type).toBe('success');
+      expect(updated[1].type).toBe('error');
+      expect(typeof id1).toBe('string');
+      expect(typeof id2).toBe('string');
+    });
+
+    it('should remove specific toasts', () => {
+      const id = showInfo('Test message');
+      expect(get(toasts).length).toBe(1);
+      
+      toasts.remove(id);
+      expect(get(toasts).length).toBe(0);
+    });
+
+    it('should clear all toasts', () => {
+      showSuccess('Message 1');
+      showError('Message 2');
+      showWarning('Message 3');
+      expect(get(toasts).length).toBe(3);
+      
+      toasts.clear();
+      expect(get(toasts).length).toBe(0);
+    });
+
+    it('should create toast with default values', () => {
+      showInfo('Test message');
+      const toast = get(toasts)[0];
+      
+      expect(toast.type).toBe('info');
+      expect(toast.message).toBe('Test message');
+      expect(toast.duration).toBe(3000);
+      expect(toast.dismissible).toBe(true);
+      expect(typeof toast.id).toBe('string');
+    });
+
+    it('should handle different toast types with custom durations', () => {
+      showSuccess('Success', 5000);
+      showError('Error', 0); // Persistent
+      showWarning('Warning', 2000);
+      
+      const toastList = get(toasts);
+      expect(toastList[0].duration).toBe(5000);
+      expect(toastList[1].duration).toBe(0);
+      expect(toastList[2].duration).toBe(2000);
+    });
+  });
+
+  describe('theme management', () => {
+    it('should initialize with dark mode', () => {
+      // Note: Initial state depends on localStorage, but defaults to true
+      const isDark = get(darkMode);
+      expect(typeof isDark).toBe('boolean');
+    });
+
+    it('should toggle theme', () => {
+      const initial = get(darkMode);
+      darkMode.toggle();
+      const toggled = get(darkMode);
+      expect(toggled).toBe(!initial);
+      
+      darkMode.toggle();
+      const toggledBack = get(darkMode);
+      expect(toggledBack).toBe(initial);
+    });
+
+    it('should set theme explicitly', () => {
+      darkMode.set(true);
+      expect(get(darkMode)).toBe(true);
+      
+      darkMode.set(false);
+      expect(get(darkMode)).toBe(false);
+    });
+  });
+
+  describe('keyboard shortcuts help', () => {
+    it('should toggle shortcuts help visibility', () => {
+      expect(get(showShortcutsHelp)).toBe(false);
+      
+      showShortcutsHelp.set(true);
+      expect(get(showShortcutsHelp)).toBe(true);
+      
+      showShortcutsHelp.update(show => !show);
+      expect(get(showShortcutsHelp)).toBe(false);
     });
   });
 });

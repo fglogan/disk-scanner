@@ -4,6 +4,9 @@
   
   let { projectPath }: { projectPath: string } = $props();
   
+  // Use projectPath in analysis (placeholder for future implementation)
+  console.log('Architecture analysis for:', projectPath);
+  
   let selectedDiagramType = $state('system');
   let isAnalyzing = $state(false);
   let architectureData = $state<Record<string, string> | null>(null);

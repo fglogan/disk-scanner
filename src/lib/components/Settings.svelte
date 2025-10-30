@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { settings } from "../stores.js";
   import { open } from "@tauri-apps/plugin-dialog";
 
@@ -21,7 +21,7 @@
       });
 
       if (selected) {
-        const newDir = typeof selected === "string" ? selected : selected.path;
+        const newDir = typeof selected === "string" ? selected : (selected as any)?.path || selected;
         console.log("Selected directory:", newDir);
 
         settings.update((s) => {
@@ -39,7 +39,7 @@
     }
   }
 
-  function removeDirectory(dir) {
+  function removeDirectory(dir: string) {
     settings.update((s) => ({
       ...s,
       directories: s.directories.filter((d) => d !== dir),

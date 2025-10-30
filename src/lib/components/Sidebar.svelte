@@ -1,6 +1,11 @@
 <script lang="ts">
-  import { currentPage } from "../stores.js";
+  import { currentPage, darkMode, showSuccess } from "../stores.js";
   import tempextLogo from "../../assets/tempext-logo.png";
+
+  function toggleTheme() {
+    darkMode.toggle();
+    showSuccess(`Switched to ${$darkMode ? 'dark' : 'light'} mode`);
+  }
 
   interface NavItem {
     id: string;
@@ -25,7 +30,8 @@
 </script>
 
 <nav
-  class="sidebar-vibrant w-64 h-full flex-shrink-0 p-4 space-y-2 overflow-y-auto"
+  class="sidebar-vibrant w-64 h-full flex-shrink-0 p-4 space-y-2 overflow-y-auto transition-colors duration-200"
+  class:dark={$darkMode}
 >
   <div class="px-4 py-2 mb-6">
     <!-- Tempext Branding -->
@@ -222,6 +228,45 @@
   <ul class="pt-4 mt-4 space-y-1 border-t border-slate-700">
     <li>
       <button
+        on:click={toggleTheme}
+        class="nav-link w-full text-left flex items-center space-x-3 px-4 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+        title="Toggle theme (Ctrl/Cmd + T)"
+      >
+        {#if $darkMode}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        {:else}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        {/if}
+        <span>{$darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+      </button>
+    </li>
+    <li>
+      <button
         on:click={() => navigateTo("settings")}
         class="nav-link w-full text-left {$currentPage === 'settings'
           ? 'active'
@@ -255,8 +300,35 @@
     border-right: 1px solid rgba(71, 85, 105, 0.5);
   }
 
+  .sidebar-vibrant:not(.dark) {
+    background-color: rgba(248, 250, 252, 0.8);
+    border-right: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  .sidebar-vibrant:not(.dark) :global(.text-white) {
+    color: #1e293b !important;
+  }
+
+  .sidebar-vibrant:not(.dark) :global(.text-slate-300) {
+    color: #64748b !important;
+  }
+
+  .sidebar-vibrant:not(.dark) :global(.text-slate-400) {
+    color: #94a3b8 !important;
+  }
+
   .nav-link.active {
     background-color: #334155;
     color: #ffffff;
+  }
+
+  .sidebar-vibrant:not(.dark) .nav-link.active {
+    background-color: #e2e8f0;
+    color: #1e293b;
+  }
+
+  .sidebar-vibrant:not(.dark) .nav-link:hover {
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
   }
 </style>
