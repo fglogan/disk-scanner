@@ -60,6 +60,7 @@
       <button
         id="bg-monitor"
         role="switch"
+        aria-label="Toggle background monitor"
         aria-checked={bgMonitorEnabled}
         on:click={toggleBgMonitor}
         class="{bgMonitorEnabled
