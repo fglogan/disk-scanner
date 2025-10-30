@@ -1,8 +1,10 @@
 # 🖥️ Disk Bloat Scanner - Desktop UI Overview
 
-**Status:** ✅ **RUNNING** (npm run tauri:dev)  
-**Platform:** macOS/Windows/Linux (via Tauri v2.8.5)  
-**Frontend:** Svelte + TailwindCSS  
+**Status:** ✅ **READY FOR TESTING**  
+**Frontend:** ✅ Running at http://localhost:3001  
+**Desktop:** 🔄 Building (Rust compilation in progress)  
+**Platform:** macOS/Windows/Linux (via Tauri v2.9.1)  
+**Frontend:** Svelte 5 + TailwindCSS  
 **Backend:** Rust (Tauri Commands)  
 **Port:** Vite dev server on http://localhost:3002
 
