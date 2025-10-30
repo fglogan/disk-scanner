@@ -83,6 +83,111 @@ export const scanProgress = writable<string>("");
 export const scanError = writable<string | null>(null);
 
 // ============================================================================
+// THEME & UI PREFERENCES
+// ============================================================================
+
+// Theme management with localStorage persistence
+function createThemeStore() {
+  const { subscribe, set, update } = writable<boolean>(true); // Default to dark mode
+  
+  // Load theme from localStorage on initialization
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      set(saved === 'dark');
+    }
+  }
+  
+  return {
+    subscribe,
+    toggle: () => update(dark => {
+      const newTheme = !dark;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', newTheme ? 'dark' : 'light');
+      }
+      return newTheme;
+    }),
+    set: (dark: boolean) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      }
+      set(dark);
+    }
+  };
+}
+
+export const darkMode = createThemeStore();
+
+// ============================================================================
+// TOAST NOTIFICATIONS
+// ============================================================================
+
+export interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  message: string;
+  duration?: number;
+  dismissible?: boolean;
+}
+
+function createToastStore() {
+  const { subscribe, update } = writable<Toast[]>([]);
+  
+  return {
+    subscribe,
+    add: (toast: Omit<Toast, 'id'>) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      const newToast: Toast = {
+        id,
+        duration: 3000,
+        dismissible: true,
+        ...toast
+      };
+      
+      update(toasts => [...toasts, newToast]);
+      
+      // Auto-dismiss if duration is set
+      if (newToast.duration && newToast.duration > 0) {
+        setTimeout(() => {
+          update(toasts => toasts.filter(t => t.id !== id));
+        }, newToast.duration);
+      }
+      
+      return id;
+    },
+    remove: (id: string) => {
+      update(toasts => toasts.filter(t => t.id !== id));
+    },
+    clear: () => {
+      update(() => []);
+    }
+  };
+}
+
+export const toasts = createToastStore();
+
+// Convenience functions for common toast types
+export const showSuccess = (message: string, duration = 3000) => 
+  toasts.add({ type: 'success', message, duration });
+
+export const showError = (message: string, duration = 0) => 
+  toasts.add({ type: 'error', message, duration });
+
+export const showWarning = (message: string, duration = 5000) => 
+  toasts.add({ type: 'warning', message, duration });
+
+export const showInfo = (message: string, duration = 3000) => 
+  toasts.add({ type: 'info', message, duration });
+
+// ============================================================================
+// KEYBOARD SHORTCUTS
+// ============================================================================
+
+export const showShortcutsHelp = writable<boolean>(false);
+
+// ============================================================================
 // SCAN RESULTS
 // ============================================================================
 
