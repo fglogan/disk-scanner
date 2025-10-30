@@ -12,6 +12,8 @@ pub mod models;
 pub mod utils;
 /// Database module for persistent project monitoring.
 pub mod database;
+/// Project Auditor & Compliance Scanner (PACS) module.
+pub mod pacs;
 
 pub use error::{ScannerError, ScannerResult};
 pub use models::*;
@@ -19,6 +21,7 @@ use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
 use database::{ProjectDatabase, ProjectScanResult, ProjectMonitorConfig};
+use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport};
 
 // ============================================================================
 // Tauri Commands
@@ -538,6 +541,47 @@ async fn prepare_osm_migration() -> Result<database::OSMMigrationPlan, String> {
     db.prepare_osm_migration().map_err(|e| format!("Failed to prepare OSM migration: {}", e))
 }
 
+// ============================================================================
+// PACS Commands
+// ============================================================================
+
+/// Run deep project compliance scan
+#[tauri::command]
+async fn run_pacs_scan(project_path: String, config: Option<PACSConfig>) -> Result<ProjectAuditReport, String> {
+    log::info!("Starting PACS scan for: {}", project_path);
+    
+    let config = config.unwrap_or_default();
+    let mut scanner = DeepProjectScanner::new(&project_path, config);
+    
+    // Load existing baseline if available
+    scanner.load_baseline().map_err(|e| format!("Failed to load baseline: {}", e))?;
+    
+    // Perform the scan
+    let report = scanner.scan().await.map_err(|e| format!("Scan failed: {}", e))?;
+    
+    // Save the report
+    scanner.save_report(&report).await.map_err(|e| format!("Failed to save report: {}", e))?;
+    
+    log::info!("PACS scan completed. Compliance score: {:.1}/100", report.compliance_score);
+    
+    Ok(report)
+}
+
+/// Get PACS configuration with defaults
+#[tauri::command]
+async fn get_pacs_config() -> Result<PACSConfig, String> {
+    Ok(PACSConfig::default())
+}
+
+/// Update PACS configuration
+#[tauri::command]
+async fn update_pacs_config(config: PACSConfig) -> Result<(), String> {
+    // For now, just validate the config
+    log::info!("PACS config updated: auto_generate_specs={}, standards={:?}", 
+               config.auto_generate_specs, config.standards);
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -558,7 +602,10 @@ pub fn run() {
             get_project_history,
             configure_project_monitoring,
             get_monitored_projects,
-            prepare_osm_migration
+            prepare_osm_migration,
+            run_pacs_scan,
+            get_pacs_config,
+            update_pacs_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

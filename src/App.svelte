@@ -14,6 +14,7 @@
   // import GitScanner from "./lib/components/GitScanner.svelte"; // Disabled: uses non-existent selectedDirectory store
   import GitAssistance from "./lib/components/GitAssistance.svelte";
   import ProjectScanner from "./lib/components/ProjectScanner.svelte";
+  import PACSCompliance from "./lib/components/PACSCompliance.svelte";
   import Settings from "./lib/components/Settings.svelte";
   import Toast from "./lib/components/ui/Toast.svelte";
   import KeyboardShortcuts from "./lib/components/ui/KeyboardShortcuts.svelte";
@@ -115,6 +116,11 @@
           currentPage.set('git-assistance');
           showSuccess('🔧 Git Assistance');
           break;
+        case 'a':
+          event.preventDefault();
+          currentPage.set('pacs-compliance');
+          showSuccess('🔍 PACS Compliance');
+          break;
         case '?':
           event.preventDefault();
           showShortcutsHelp.update(show => !show);
@@ -159,6 +165,8 @@
         <ProjectScanner />
       {:else if $currentPage === "git-assistance"}
         <GitAssistance />
+      {:else if $currentPage === "pacs-compliance"}
+        <PACSCompliance />
       {:else if $currentPage === "settings"}
         <Settings />
       {/if}

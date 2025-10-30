@@ -37,6 +37,7 @@ tauri-plugin-dialog = "2.4.0"
 anyhow = "1.0.100"
 rusqlite = { version = "0.31", features = ["bundled", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
+md5 = "0.7"
 
 [dev-dependencies]
 tempfile = "3"

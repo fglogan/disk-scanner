@@ -16,6 +16,7 @@
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "home" },
     { id: "project-scanner", label: "Project Scanner", icon: "git-branch" },
+    { id: "pacs-compliance", label: "PACS Compliance", icon: "shield-check" },
     { id: "large-files", label: "Large Files", icon: "file-stack" },
     { id: "project-bloat", label: "Project Bloat", icon: "package-x" },
     { id: "system-junk", label: "System Junk", icon: "trash" },
