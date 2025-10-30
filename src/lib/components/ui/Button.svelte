@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { ComponentProps } from 'svelte';
   
   // ✅ Comprehensive props interface
   interface Props {
