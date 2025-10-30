@@ -14,6 +14,8 @@ pub mod utils;
 pub mod database;
 /// Project Auditor & Compliance Scanner (PACS) module.
 pub mod pacs;
+/// Architecture Visualization module for code analysis and diagram generation.
+pub mod arch_viz;
 
 pub use error::{ScannerError, ScannerResult};
 pub use models::*;
@@ -22,6 +24,7 @@ use utils::path::validate_scan_path;
 use utils::scan;
 use database::{ProjectDatabase, ProjectScanResult, ProjectMonitorConfig};
 use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport};
+use arch_viz::{ArchVizEngine, ArchVizConfig, ArchitectureAnalysis};
 
 // ============================================================================
 // Tauri Commands
@@ -582,6 +585,64 @@ async fn update_pacs_config(config: PACSConfig) -> Result<(), String> {
     Ok(())
 }
 
+// ============================================================================
+// Architecture Visualization Commands
+// ============================================================================
+
+/// Run architecture analysis and generate diagrams
+#[tauri::command]
+async fn run_architecture_analysis(project_path: String, config: Option<ArchVizConfig>) -> Result<ArchitectureAnalysis, String> {
+    log::info!("Starting architecture analysis for: {}", project_path);
+    
+    let config = config.unwrap_or_default();
+    let mut engine = ArchVizEngine::new(&project_path, config)
+        .map_err(|e| format!("Failed to create ArchViz engine: {}", e))?;
+    
+    // Perform the analysis
+    let analysis = engine.analyze().await
+        .map_err(|e| format!("Architecture analysis failed: {}", e))?;
+    
+    log::info!("Architecture analysis completed. {} modules analyzed", analysis.file_count);
+    
+    Ok(analysis)
+}
+
+/// Get default architecture visualization configuration
+#[tauri::command]
+async fn get_archviz_config() -> Result<ArchVizConfig, String> {
+    Ok(ArchVizConfig::default())
+}
+
+/// Update architecture visualization configuration
+#[tauri::command]
+async fn update_archviz_config(config: ArchVizConfig) -> Result<(), String> {
+    log::info!("ArchViz config updated: languages={:?}, max_depth={}", 
+               config.languages, config.max_depth);
+    Ok(())
+}
+
+/// Generate specific diagram format from existing analysis
+#[tauri::command]
+async fn generate_diagram(project_path: String, format: String) -> Result<String, String> {
+    log::info!("Generating {} diagram for: {}", format, project_path);
+    
+    // For now, return a sample Mermaid diagram
+    let sample_diagram = r#"graph TD
+    A[Main Module] --> B[Utils Module]
+    A --> C[Components Module]
+    B --> D[File Operations]
+    C --> E[UI Components]
+    C --> F[Data Visualization]
+    
+    classDef rust fill:#dea584,stroke:#8b4513,stroke-width:2px
+    classDef javascript fill:#f7df1e,stroke:#323330,stroke-width:2px
+    
+    class A,B,D rust
+    class C,E,F javascript"#;
+    
+    Ok(sample_diagram.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -605,7 +666,11 @@ pub fn run() {
             prepare_osm_migration,
             run_pacs_scan,
             get_pacs_config,
-            update_pacs_config
+            update_pacs_config,
+            run_architecture_analysis,
+            get_archviz_config,
+            update_archviz_config,
+            generate_diagram
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

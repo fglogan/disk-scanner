@@ -15,6 +15,7 @@
   import GitAssistance from "./lib/components/GitAssistance.svelte";
   import ProjectScanner from "./lib/components/ProjectScanner.svelte";
   import PACSCompliance from "./lib/components/PACSCompliance.svelte";
+  import ArchitectureVisualization from "./lib/components/ArchitectureVisualization.svelte";
   import Settings from "./lib/components/Settings.svelte";
   import Toast from "./lib/components/ui/Toast.svelte";
   import KeyboardShortcuts from "./lib/components/ui/KeyboardShortcuts.svelte";
@@ -121,6 +122,11 @@
           currentPage.set('pacs-compliance');
           showSuccess('🔍 PACS Compliance');
           break;
+        case 'v':
+          event.preventDefault();
+          currentPage.set('architecture-viz');
+          showSuccess('🏗️ Architecture Visualization');
+          break;
         case '?':
           event.preventDefault();
           showShortcutsHelp.update(show => !show);
@@ -167,6 +173,8 @@
         <GitAssistance />
       {:else if $currentPage === "pacs-compliance"}
         <PACSCompliance />
+      {:else if $currentPage === "architecture-viz"}
+        <ArchitectureVisualization />
       {:else if $currentPage === "settings"}
         <Settings />
       {/if}

@@ -38,6 +38,12 @@ anyhow = "1.0.100"
 rusqlite = { version = "0.31", features = ["bundled", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 md5 = "0.7"
+tree-sitter = "0.20"
+tree-sitter-rust = "0.20"
+tree-sitter-javascript = "0.20"
+tree-sitter-typescript = "0.20"
+tree-sitter-python = "0.20"
+tree-sitter-json = "0.20"
 
 [dev-dependencies]
 tempfile = "3"
