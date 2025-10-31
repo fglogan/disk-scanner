@@ -44,7 +44,7 @@ export function createEnhancedStore<T>(
     validate?: (value: T) => boolean;
   } = {}
 ) {
-  const { persistence, cache, undoRedo, validate } = options;
+  const { persistence, cache: cacheConfig, undoRedo, validate } = options;
   
   // Load persisted value
   let initial = initialValue;
@@ -84,10 +84,10 @@ export function createEnhancedStore<T>(
   const cache = new Map<string, { value: T; timestamp: number }>();
   
   function evictCache() {
-    if (!options.cache) return;
+    if (!cacheConfig) return;
     
     const now = Date.now();
-    const { ttl, maxSize, strategy } = options.cache;
+    const { ttl, maxSize, strategy } = cacheConfig;
     
     // Remove expired entries
     for (const [key, entry] of cache.entries()) {
@@ -201,19 +201,19 @@ export function createEnhancedStore<T>(
     
     // Cache methods
     cache(key: string, value: T) {
-      if (options.cache) {
+      if (cacheConfig) {
         cache.set(key, { value, timestamp: Date.now() });
         evictCache();
       }
     },
     
     getCached(key: string): T | null {
-      if (!options.cache) return null;
+      if (!cacheConfig) return null;
       
       const entry = cache.get(key);
       if (!entry) return null;
       
-      const { ttl } = options.cache;
+      const { ttl } = cacheConfig;
       if (Date.now() - entry.timestamp > ttl) {
         cache.delete(key);
         return null;

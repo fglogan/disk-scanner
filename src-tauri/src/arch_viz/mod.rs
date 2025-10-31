@@ -871,7 +871,7 @@ impl ArchVizEngine {
                 diagram.push_str(&format!("    class {} {{\n", class_name));
                 
                 // Add properties (limit to first 5)
-                for (i, property) in class.properties.iter().take(5).enumerate() {
+                for (_i, property) in class.properties.iter().take(5).enumerate() {
                     let prop_name = sanitize_name(property);
                     if !prop_name.is_empty() {
                         diagram.push_str(&format!("        +{} : Property\n", prop_name));
@@ -879,7 +879,7 @@ impl ArchVizEngine {
                 }
                 
                 // Add methods (limit to first 5)
-                for (i, method) in class.methods.iter().take(5).enumerate() {
+                for (_i, method) in class.methods.iter().take(5).enumerate() {
                     let method_name = sanitize_name(&method.name);
                     if !method_name.is_empty() {
                         let visibility = if method.is_public { "+" } else { "-" };

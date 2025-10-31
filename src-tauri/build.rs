@@ -3,5 +3,5 @@
 //! Runs Tauri's build system to prepare native bindings and resources.
 
 fn main() {
-    tauri_build::build()
+    tauri_build::build();
 }

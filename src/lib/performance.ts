@@ -44,9 +44,10 @@ class PerformanceMonitor {
         const entries = list.getEntries();
         for (const entry of entries) {
           if (entry.entryType === 'navigation') {
+            const navEntry = entry as PerformanceNavigationTiming;
             this.recordMetric({
-              loadTime: entry.loadEventEnd - entry.loadEventStart,
-              renderTime: entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart,
+              loadTime: navEntry.loadEventEnd - navEntry.loadEventStart,
+              renderTime: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
               componentMountTime: 0,
               memoryUsage: this.getMemoryUsage(),
               bundleSize: 0,

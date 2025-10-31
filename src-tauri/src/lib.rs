@@ -26,6 +26,8 @@ use database::{ProjectDatabase, ProjectScanResult, ProjectMonitorConfig};
 use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport, ProjectBaseline};
 use arch_viz::{ArchVizEngine, ArchVizConfig, ArchitectureAnalysis};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::Path;
 
 // Baseline comparison types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -636,7 +638,7 @@ async fn get_project_baselines(project_path: String) -> Result<Vec<ProjectBaseli
 
 /// Create a new baseline for a project
 #[tauri::command]
-async fn create_project_baseline(project_path: String, version: String, description: Option<String>) -> Result<(), String> {
+async fn create_project_baseline(project_path: String, version: String, _description: Option<String>) -> Result<(), String> {
     log::info!("Creating baseline '{}' for project: {}", version, project_path);
     
     let config = PACSConfig::default();
@@ -740,12 +742,12 @@ async fn compare_with_baseline(project_path: String, baseline_version: String, c
     }
     
     // Compare compliance changes
-    let mut compliance_changes = std::collections::HashMap::new();
+    let mut compliance_changes: HashMap<String, ComplianceChange> = HashMap::new();
     if let Some(current_baseline) = &current_report.baseline {
         for (standard, current_compliant) in &current_baseline.standards_compliance {
             if let Some(baseline_compliant) = baseline.standards_compliance.get(standard) {
                 if current_compliant != baseline_compliant {
-                    compliance_changes.insert(standard.clone(), ComplianceChange {
+                    compliance_changes.insert(standard.to_string(), ComplianceChange {
                         old: *baseline_compliant,
                         new: *current_compliant,
                     });

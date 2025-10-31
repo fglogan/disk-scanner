@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::fmt;
 use chrono::{DateTime, Utc};
 // Note: Database integration will be added when needed
 
@@ -38,6 +39,18 @@ pub enum ComplianceStandard {
     LAIO,
     BloomPlaybook,
     OpenSpec,
+}
+
+impl fmt::Display for ComplianceStandard {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ComplianceStandard::TES2025 => write!(f, "TES-2025"),
+            ComplianceStandard::EDGS => write!(f, "EDGS"),
+            ComplianceStandard::LAIO => write!(f, "LAIO"),
+            ComplianceStandard::BloomPlaybook => write!(f, "Bloom Playbook"),
+            ComplianceStandard::OpenSpec => write!(f, "OpenSpec"),
+        }
+    }
 }
 
 /// Project compliance finding

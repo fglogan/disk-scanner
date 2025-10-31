@@ -1,10 +1,9 @@
 // Database module for disk bloat scanner
 // SQLite foundation with OSM-lite migration planning
 
-use rusqlite::{Connection, Result, Row};
+use rusqlite::{Connection, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 
 /// Project monitoring database with OSM-lite migration support
 pub struct ProjectDatabase {
@@ -183,7 +182,7 @@ impl ProjectDatabase {
                 id: Some(row.get(0)?),
                 project_path: row.get(1)?,
                 scan_timestamp: DateTime::parse_from_rfc3339(&row.get::<_, String>(2)?)
-                    .map_err(|e| rusqlite::Error::InvalidColumnType(2, "timestamp".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| rusqlite::Error::InvalidColumnType(2, "timestamp".to_string(), rusqlite::types::Type::Text))?
                     .with_timezone(&Utc),
                 total_size_mb: row.get(3)?,
                 bloat_size_mb: row.get(4)?,
@@ -243,10 +242,10 @@ impl ProjectDatabase {
                 scan_interval_hours: row.get(3)?,
                 alert_thresholds: row.get(4)?,
                 created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
-                    .map_err(|e| rusqlite::Error::InvalidColumnType(5, "created_at".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| rusqlite::Error::InvalidColumnType(5, "created_at".to_string(), rusqlite::types::Type::Text))?
                     .with_timezone(&Utc),
                 updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
-                    .map_err(|e| rusqlite::Error::InvalidColumnType(6, "updated_at".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| rusqlite::Error::InvalidColumnType(6, "updated_at".to_string(), rusqlite::types::Type::Text))?
                     .with_timezone(&Utc),
             })
         })?;
@@ -350,7 +349,7 @@ impl ProjectDatabase {
                 id: Some(row.get(0)?),
                 project_path: row.get(1)?,
                 scan_timestamp: DateTime::parse_from_rfc3339(&row.get::<_, String>(2)?)
-                    .map_err(|e| rusqlite::Error::InvalidColumnType(2, "timestamp".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| rusqlite::Error::InvalidColumnType(2, "timestamp".to_string(), rusqlite::types::Type::Text))?
                     .with_timezone(&Utc),
                 total_size_mb: row.get(3)?,
                 bloat_size_mb: row.get(4)?,

@@ -226,6 +226,7 @@ pub fn scan_duplicates(root: &Path, follow_symlinks: bool) -> Result<Vec<Duplica
                         let hash = format!("{:x}", hasher.finalize());
                         let size_mb = *size as f32 / 1_048_576.0;
 
+                        #[allow(clippy::similar_names)]
                         let mut hashes = file_hashes.lock().expect("file_hashes mutex poisoned");
                         hashes
                             .entry(hash)
