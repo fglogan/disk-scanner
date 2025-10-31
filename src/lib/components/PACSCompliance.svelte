@@ -116,43 +116,63 @@
     
     isScanning = true;
     error = null;
+    report = null; // Clear previous report
     scanProgress = 'Initializing scan...';
     
+    let progressInterval: number | undefined;
+    
     try {
-      // Simulate progress updates (in real implementation, these would come from backend)
+      // Enhanced progress updates with more realistic timing
       const progressSteps = [
-        'Inventorying project files...',
-        'Analyzing documentation structure...',
-        'Validating compliance standards...',
-        'Checking specification gaps...',
-        'Detecting architectural drift...',
-        'Generating recommendations...',
-        'Calculating compliance score...',
-        'Finalizing report...'
+        { message: 'Initializing PACS scanner...', duration: 500 },
+        { message: 'Inventorying project files...', duration: 1200 },
+        { message: 'Analyzing documentation structure...', duration: 800 },
+        { message: 'Validating TES-2025 compliance...', duration: 1000 },
+        { message: 'Checking EDGS requirements...', duration: 600 },
+        { message: 'Validating OpenSpec standards...', duration: 700 },
+        { message: 'Detecting specification gaps...', duration: 900 },
+        { message: 'Analyzing architectural patterns...', duration: 800 },
+        { message: 'Generating compliance recommendations...', duration: 600 },
+        { message: 'Calculating compliance score...', duration: 400 },
+        { message: 'Finalizing audit report...', duration: 300 }
       ];
       
       let stepIndex = 0;
-      const progressInterval = setInterval(() => {
-        if (stepIndex < progressSteps.length) {
-          scanProgress = progressSteps[stepIndex];
-          stepIndex++;
-        }
-      }, 800);
       
-      report = await invoke<ProjectAuditReport>('run_pacs_scan', {
+      const updateProgress = () => {
+        if (stepIndex < progressSteps.length) {
+          const step = progressSteps[stepIndex];
+          scanProgress = step.message;
+          stepIndex++;
+          progressInterval = setTimeout(updateProgress, step.duration);
+        }
+      };
+      
+      updateProgress();
+      
+      // Start the actual scan
+      const scanPromise = invoke<ProjectAuditReport>('run_pacs_scan', {
         projectPath: selectedProjectPath,
         config: config
       });
       
-      clearInterval(progressInterval);
-      scanProgress = 'Scan completed successfully!';
+      report = await scanPromise;
+      
+      if (progressInterval) clearTimeout(progressInterval);
+      scanProgress = `✅ Scan completed! Found ${report.findings.length} findings with ${report.compliance_score.toFixed(1)}/100 compliance score.`;
+      
+      // Show success message briefly
+      setTimeout(() => { 
+        if (!isScanning) scanProgress = ''; 
+      }, 3000);
       
     } catch (e) {
+      if (progressInterval) clearTimeout(progressInterval);
       error = `Scan failed: ${e}`;
       scanProgress = '';
+      console.error('PACS scan error:', e);
     } finally {
       isScanning = false;
-      setTimeout(() => { scanProgress = ''; }, 2000);
     }
   }
   
@@ -325,8 +345,9 @@
             </label>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Max Scan Depth</label>
+            <label for="max-depth" class="block text-sm font-medium text-gray-700 mb-1">Max Scan Depth</label>
             <input
+              id="max-depth"
               type="number"
               bind:value={config.max_depth}
               min="1"
@@ -336,8 +357,9 @@
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Output Directory</label>
+          <label for="output-dir" class="block text-sm font-medium text-gray-700 mb-2">Output Directory</label>
           <input
+            id="output-dir"
             type="text"
             bind:value={config.output_dir}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
