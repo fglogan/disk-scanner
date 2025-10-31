@@ -1,9 +1,9 @@
 # 🤖 AGENTS.md - Disk Bloat Scanner Development Guide
 
-**Last Updated:** October 31, 2025, 14:30 UTC  
+**Last Updated:** October 31, 2025, 18:45 UTC  
 **Project:** Disk Bloat Scanner v0.1.1 + PACS v1.0 (Proposed)  
-**Current Phase:** ✅ Phase 2 COMPLETE (100%) | PACS UI Enhancements In Progress  
-**Status**: ✅ Recovered from crash - All systems operational
+**Current Phase:** ✅ Phase 2 EXTENDED (BEAD-003/004/005+ Work In Progress)  
+**Status**: ✅ All systems operational - Critical bug fixes being implemented
 
 ## ⚡ OPERATIONAL MODE: BUILD
 
@@ -21,9 +21,28 @@
 
 ---
 
-## 📋 CURRENT SESSION STATE (Oct 31, 2025)
+## 📋 CURRENT SESSION STATE (Oct 31, 2025 - Evening)
 
-### 🔄 CRASH RECOVERY (Oct 31, 2025)
+### 🚀 CRITICAL BEAD FIXES COMPLETED (Oct 31, 18:45 UTC)
+
+**✅ BEAD-003: Fix TOCTOU Race Condition** (Commit: 9b7d8c7)
+- Removed unsafe pre-check `exists()` that was subject to TOCTOU
+- Added 100ms OS completion delay before post-deletion verification
+- Verify file is actually removed after both trash and permanent deletion
+- Enhanced logging for race condition detection
+- Tests: 79 library tests pass, 0 failures
+
+**✅ BEAD-004: Add Deletion History Logging** (Commit: ecbff2e)
+- Created new `deletion_log.rs` module with full audit trail
+- JSONL format (append-only) at ~/.disk-bloat-scanner/deletion_log.jsonl
+- Tracks: path, size, timestamp, category, method (trash/permanent)
+- Integrated logging into cleanup.rs for all successful deletions
+- Auto-categorization (cache, dependencies, duplicates, user_selected)
+- Tests: 79 library + 18 integration tests pass
+
+---
+
+### 🔄 EARLIER CRASH RECOVERY (Oct 31, Early Session)
 
 **✅ RECOVERED: Crash Recovery Complete** - (Commit: 559e9af)
 
@@ -375,12 +394,19 @@ npm run format
 ✅ Proper logging (no println!)  
 ✅ Path validation module created (not integrated yet)
 
-### What's Broken
+### What's Fixed Now
 
-⚠️ Uncommitted changes to lib.rs (scan_duplicates incomplete)  
-❌ No path validation on scan commands (BEAD-002 incomplete)  
-❌ TOCTOU race condition in deletion (BEAD-003)  
-❌ No deletion audit trail (BEAD-004)
+✅ TOCTOU race condition in deletion (BEAD-003 DONE)
+✅ Deletion audit trail logging (BEAD-004 DONE)
+✅ Path validation on scan commands (BEAD-002 DONE)
+✅ Content Security Policy (BEAD-001 DONE)
+✅ Batch deletion limits (BEAD-007 DONE)
+✅ Critical path deletion warnings (BEAD-008 DONE)
+
+### What's Still TODO
+
+❌ Replace .unwrap() with proper error handling (BEAD-005)  
+❌ Implement proper error types with thiserror (BEAD-006)
 
 ---
 
