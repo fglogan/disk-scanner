@@ -184,8 +184,14 @@ pub fn delete_files(
         let p = Path::new(path);
         log::debug!("Processing: {}", path);
 
-        // Note: We don't pre-check exists() as it's subject to TOCTOU race conditions
-        // Instead, we check the result of the deletion operation itself
+        // Quick sanity check: if file doesn't exist right now, skip it.
+        // Note: We still verify post-deletion to catch TOCTOU races, but this
+        // catches the simple case where a file was already deleted.
+        if !p.exists() {
+            log::debug!("File does not exist, skipping: {}", path);
+            skipped.push(path.clone());
+            continue;
+        }
 
         log::debug!(
             "File exists, attempting deletion (trash={}): {}",
@@ -252,12 +258,22 @@ pub fn delete_files(
                 }
             }
             
-            // If all attempts failed, log the error
+            // If all attempts failed, analyze the error
             if let Some(e) = last_error {
                 let error_msg = format!("{}", e);
+                log::debug!("Trash deletion failed: {}", error_msg);
                 
                 // Provide helpful error messages for common issues
-                let helpful_msg = if error_msg.contains("permission") || error_msg.contains("-5000") {
+                // Note: trash crate may return different error messages across platforms
+                let helpful_msg = if error_msg.contains("not found") 
+                    || error_msg.contains("does not exist")
+                    || error_msg.contains("No such file")
+                    || error_msg.contains("404") {
+                    // File doesn't exist - this can happen due to TOCTOU race conditions
+                    log::debug!("File does not exist (likely deleted by another process), skipping: {}", path);
+                    skipped.push(path.clone());
+                    continue;
+                } else if error_msg.contains("permission") || error_msg.contains("-5000") {
                     format!("{}: Permission denied. iCloud Drive files may require manual deletion.", path)
                 } else if error_msg.contains("timed out") || error_msg.contains("-1712") {
                     format!("{}: Operation timed out. Try deleting this file manually from Finder.", path)
@@ -306,8 +322,14 @@ pub fn delete_files(
                     }
                 }
                 Err(e) => {
-                    log::error!("Cleanup error for {}: {}", path, e);
-                    errors.push(format!("{}: {}", path, e));
+                    // Check if file doesn't exist (skip rather than error)
+                    if e.kind() == std::io::ErrorKind::NotFound {
+                        log::debug!("File does not exist, skipping: {}", path);
+                        skipped.push(path.clone());
+                    } else {
+                        log::error!("Cleanup error for {}: {}", path, e);
+                        errors.push(format!("{}: {}", path, e));
+                    }
                 }
             }
         }
