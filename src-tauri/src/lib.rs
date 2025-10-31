@@ -23,8 +23,28 @@ use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
 use database::{ProjectDatabase, ProjectScanResult, ProjectMonitorConfig};
-use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport};
+use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport, ProjectBaseline};
 use arch_viz::{ArchVizEngine, ArchVizConfig, ArchitectureAnalysis};
+use serde::{Deserialize, Serialize};
+
+// Baseline comparison types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct BaselineComparison {
+    baseline_score: f64,
+    current_score: f64,
+    score_change: f64,
+    files_added: Vec<String>,
+    files_removed: Vec<String>,
+    files_modified: Vec<String>,
+    compliance_changes: HashMap<String, ComplianceChange>,
+    recommendations: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ComplianceChange {
+    old: bool,
+    new: bool,
+}
 
 // ============================================================================
 // Tauri Commands
@@ -585,6 +605,188 @@ async fn update_pacs_config(config: PACSConfig) -> Result<(), String> {
     Ok(())
 }
 
+/// Get all baselines for a project
+#[tauri::command]
+async fn get_project_baselines(project_path: String) -> Result<Vec<ProjectBaseline>, String> {
+    log::info!("Getting baselines for project: {}", project_path);
+    
+    let baselines_dir = Path::new(&project_path).join(".pacs").join("baselines");
+    let mut baselines = Vec::new();
+    
+    if baselines_dir.exists() {
+        for entry in std::fs::read_dir(&baselines_dir).map_err(|e| format!("Failed to read baselines directory: {}", e))? {
+            let entry = entry.map_err(|e| format!("Failed to read baseline entry: {}", e))?;
+            let path = entry.path();
+            
+            if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                let content = std::fs::read_to_string(&path)
+                    .map_err(|e| format!("Failed to read baseline file: {}", e))?;
+                let baseline: ProjectBaseline = serde_json::from_str(&content)
+                    .map_err(|e| format!("Failed to parse baseline: {}", e))?;
+                baselines.push(baseline);
+            }
+        }
+    }
+    
+    // Sort by captured_at date (newest first)
+    baselines.sort_by(|a, b| b.captured_at.cmp(&a.captured_at));
+    
+    Ok(baselines)
+}
+
+/// Create a new baseline for a project
+#[tauri::command]
+async fn create_project_baseline(project_path: String, version: String, description: Option<String>) -> Result<(), String> {
+    log::info!("Creating baseline '{}' for project: {}", version, project_path);
+    
+    let config = PACSConfig::default();
+    let mut scanner = DeepProjectScanner::new(&project_path, config);
+    
+    // Load existing baseline if available
+    scanner.load_baseline().map_err(|e| format!("Failed to load existing baseline: {}", e))?;
+    
+    // Perform scan to get current state
+    let report = scanner.scan().await.map_err(|e| format!("Failed to scan project: {}", e))?;
+    
+    if let Some(baseline) = report.baseline {
+        // Create versioned baseline
+        let mut versioned_baseline = baseline;
+        versioned_baseline.version = version.clone();
+        
+        // Save to baselines directory
+        let baselines_dir = Path::new(&project_path).join(".pacs").join("baselines");
+        std::fs::create_dir_all(&baselines_dir).map_err(|e| format!("Failed to create baselines directory: {}", e))?;
+        
+        let baseline_file = baselines_dir.join(format!("{}.json", version));
+        let baseline_content = serde_json::to_string_pretty(&versioned_baseline)
+            .map_err(|e| format!("Failed to serialize baseline: {}", e))?;
+        
+        std::fs::write(&baseline_file, baseline_content)
+            .map_err(|e| format!("Failed to write baseline file: {}", e))?;
+        
+        log::info!("Created baseline '{}' at: {}", version, baseline_file.display());
+    } else {
+        return Err("Failed to generate baseline from scan".to_string());
+    }
+    
+    Ok(())
+}
+
+/// Delete a project baseline
+#[tauri::command]
+async fn delete_project_baseline(project_path: String, version: String) -> Result<(), String> {
+    log::info!("Deleting baseline '{}' for project: {}", version, project_path);
+    
+    let baseline_file = Path::new(&project_path)
+        .join(".pacs")
+        .join("baselines")
+        .join(format!("{}.json", version));
+    
+    if baseline_file.exists() {
+        std::fs::remove_file(&baseline_file)
+            .map_err(|e| format!("Failed to delete baseline file: {}", e))?;
+        log::info!("Deleted baseline file: {}", baseline_file.display());
+    } else {
+        return Err(format!("Baseline '{}' not found", version));
+    }
+    
+    Ok(())
+}
+
+/// Compare current state with a baseline
+#[tauri::command]
+async fn compare_with_baseline(project_path: String, baseline_version: String, current_report: ProjectAuditReport) -> Result<BaselineComparison, String> {
+    log::info!("Comparing current state with baseline '{}' for project: {}", baseline_version, project_path);
+    
+    // Load the baseline
+    let baseline_file = Path::new(&project_path)
+        .join(".pacs")
+        .join("baselines")
+        .join(format!("{}.json", baseline_version));
+    
+    if !baseline_file.exists() {
+        return Err(format!("Baseline '{}' not found", baseline_version));
+    }
+    
+    let baseline_content = std::fs::read_to_string(&baseline_file)
+        .map_err(|e| format!("Failed to read baseline: {}", e))?;
+    let baseline: ProjectBaseline = serde_json::from_str(&baseline_content)
+        .map_err(|e| format!("Failed to parse baseline: {}", e))?;
+    
+    // Compare file inventories
+    let baseline_files: std::collections::HashSet<_> = baseline.file_inventory.keys().collect();
+    let current_files: std::collections::HashSet<_> = current_report.baseline
+        .as_ref()
+        .map(|b| b.file_inventory.keys().collect())
+        .unwrap_or_default();
+    
+    let files_added: Vec<String> = current_files.difference(&baseline_files)
+        .map(|s| s.to_string())
+        .collect();
+    let files_removed: Vec<String> = baseline_files.difference(&current_files)
+        .map(|s| s.to_string())
+        .collect();
+    
+    // Find modified files (same path, different hash)
+    let mut files_modified = Vec::new();
+    if let Some(current_baseline) = &current_report.baseline {
+        for (path, current_meta) in &current_baseline.file_inventory {
+            if let Some(baseline_meta) = baseline.file_inventory.get(path) {
+                if current_meta.hash != baseline_meta.hash {
+                    files_modified.push(path.clone());
+                }
+            }
+        }
+    }
+    
+    // Compare compliance changes
+    let mut compliance_changes = std::collections::HashMap::new();
+    if let Some(current_baseline) = &current_report.baseline {
+        for (standard, current_compliant) in &current_baseline.standards_compliance {
+            if let Some(baseline_compliant) = baseline.standards_compliance.get(standard) {
+                if current_compliant != baseline_compliant {
+                    compliance_changes.insert(standard.clone(), ComplianceChange {
+                        old: *baseline_compliant,
+                        new: *current_compliant,
+                    });
+                }
+            }
+        }
+    }
+    
+    // Generate recommendations based on changes
+    let mut recommendations = Vec::new();
+    if !files_added.is_empty() {
+        recommendations.push(format!("Review {} newly added files for compliance", files_added.len()));
+    }
+    if !files_removed.is_empty() {
+        recommendations.push(format!("Verify that {} removed files were intentionally deleted", files_removed.len()));
+    }
+    if !files_modified.is_empty() {
+        recommendations.push(format!("Review {} modified files for compliance impact", files_modified.len()));
+    }
+    
+    let score_change = current_report.compliance_score - baseline.compliance_score;
+    if score_change < -5.0 {
+        recommendations.push("Significant compliance score decrease detected - review recent changes".to_string());
+    } else if score_change > 5.0 {
+        recommendations.push("Compliance score improved - consider creating a new baseline".to_string());
+    }
+    
+    let comparison = BaselineComparison {
+        baseline_score: baseline.compliance_score,
+        current_score: current_report.compliance_score,
+        score_change,
+        files_added,
+        files_removed,
+        files_modified,
+        compliance_changes,
+        recommendations,
+    };
+    
+    Ok(comparison)
+}
+
 // ============================================================================
 // Architecture Visualization Commands
 // ============================================================================
@@ -723,6 +925,10 @@ pub fn run() {
             run_pacs_scan,
             get_pacs_config,
             update_pacs_config,
+            get_project_baselines,
+            create_project_baseline,
+            delete_project_baseline,
+            compare_with_baseline,
             run_architecture_analysis,
             get_archviz_config,
             update_archviz_config,

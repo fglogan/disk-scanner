@@ -2,6 +2,7 @@
   import { invoke } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import { onMount } from 'svelte';
+  import PACSBaselineManager from './PACSBaselineManager.svelte';
   
   // PACS types (matching Rust structs)
   interface PACSConfig {
@@ -452,9 +453,16 @@
           <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <span class="text-blue-800 font-medium">{scanProgress}</span>
         </div>
-      </div>
-    {/if}
-  </div>
+     </div>
+   {/if}
+ </div>
+ 
+ <!-- Baseline Management Section -->
+ {#if selectedProjectPath}
+   <div class="mt-8">
+     <PACSBaselineManager projectPath={selectedProjectPath} currentReport={report} />
+   </div>
+ {/if}
   
   <!-- Error Display -->
   {#if error}
