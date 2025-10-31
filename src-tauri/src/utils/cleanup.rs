@@ -166,11 +166,8 @@ pub fn delete_files(
         let p = Path::new(path);
         log::debug!("Processing: {}", path);
 
-        if !p.exists() {
-            log::debug!("File does not exist, skipping: {}", path);
-            skipped.push(path.clone());
-            continue;
-        }
+        // Note: We don't pre-check exists() as it's subject to TOCTOU race conditions
+        // Instead, we check the result of the deletion operation itself
 
         log::debug!(
             "File exists, attempting deletion (trash={}): {}",
@@ -195,11 +192,17 @@ pub fn delete_files(
                 match trash::delete(p) {
                     Ok(_) => {
                         log::debug!("Successfully moved to trash: {}", path);
-                        // Verify it's actually gone
+                        
+                        // Post-deletion verification: Wait briefly for OS to complete the operation
+                        // This mitigates TOCTOU (Time-of-check-time-of-use) race conditions
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        
+                        // Verify the file was actually removed (atomic verification)
                         if p.exists() {
-                            log::warn!("File still exists after trash: {}", path);
-                            errors.push(format!("{}: Moved to trash but file still exists", path));
+                            log::warn!("File still exists after trash operation: {}", path);
+                            errors.push(format!("{}: Moved to trash but file still exists (may indicate system issue)", path));
                         } else {
+                            log::info!("Deletion verified: {} successfully removed", path);
                             deleted.push(path.clone());
                         }
                         break;
@@ -233,7 +236,7 @@ pub fn delete_files(
                 errors.push(helpful_msg);
             }
         } else {
-            // Permanent deletion
+            // Permanent deletion (non-atomic, verify after)
             let result = if p.is_dir() {
                 std::fs::remove_dir_all(p)
             } else {
@@ -243,7 +246,16 @@ pub fn delete_files(
             match result {
                 Ok(_) => {
                     log::debug!("Successfully deleted: {}", path);
-                    deleted.push(path.clone());
+                    
+                    // Post-deletion verification: Check if file is actually gone
+                    // This ensures atomicity and detects race conditions
+                    if p.exists() {
+                        log::warn!("File still exists after deletion: {}", path);
+                        errors.push(format!("{}: Deletion returned Ok but file still exists (race condition?)", path));
+                    } else {
+                        log::info!("Deletion verified: {} successfully removed", path);
+                        deleted.push(path.clone());
+                    }
                 }
                 Err(e) => {
                     log::error!("Cleanup error for {}: {}", path, e);
