@@ -35,8 +35,7 @@
   }
   
   // Component props
-  export let projectPath: string = '';
-  export let currentReport: any = null;
+  let { projectPath = '', currentReport = null } = $props<{ projectPath?: string; currentReport?: any }>();
   
   // Component state
   let baselines: ProjectBaseline[] = $state([]);
