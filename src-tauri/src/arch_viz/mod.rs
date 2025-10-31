@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tree_sitter::{Language, Parser, Tree, Node};
+use tree_sitter::{Parser, Tree, Node};
 use chrono::{DateTime, Utc};
 
 /// Architecture visualization engine for code analysis and diagram generation
@@ -31,13 +31,26 @@ pub struct ArchVizConfig {
 }
 
 /// Supported diagram output formats
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum DiagramFormat {
     Mermaid,
+    Graphviz,
+    PlantUML,
     SVG,
     PNG,
     PDF,
     HTML,
+}
+
+/// Types of diagrams that can be generated
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum DiagramType {
+    ArchitectureOverview,
+    DependencyGraph,
+    ClassHierarchy,
+    FunctionCallGraph,
+    FileOrganization,
+    ModuleInteraction,
 }
 
 /// Analysis scope configuration
@@ -239,17 +252,30 @@ impl ArchVizEngine {
         // Step 4: Calculate architecture metrics
         let metrics = self.calculate_metrics(&modules, &dependencies)?;
         
-        // Step 5: Generate diagrams
+        // Step 5: Generate diagrams automatically
         let mut diagrams = HashMap::new();
         
-        // Generate Mermaid diagram
-        let mermaid_diagram = self.generate_mermaid_diagram(&modules, &dependencies)?;
-        diagrams.insert(DiagramFormat::Mermaid, mermaid_diagram);
+        // Generate all diagram types in Mermaid format
+        diagrams.insert(DiagramFormat::Mermaid, self.generate_architecture_overview(&modules, &dependencies)?);
         
-        // Generate other formats if requested
-        if self.config.output_format != DiagramFormat::Mermaid {
-            // TODO: Implement SVG, PNG, PDF generation
+        // Generate additional diagram formats
+        if modules.len() < 50 { // Only for smaller projects to avoid complexity
+            diagrams.insert(DiagramFormat::Graphviz, self.generate_graphviz_diagram(&modules, &dependencies)?);
+            diagrams.insert(DiagramFormat::PlantUML, self.generate_plantuml_diagram(&modules, &dependencies)?);
         }
+        
+        // Generate specialized diagrams
+        let dependency_diagram = self.generate_dependency_graph(&modules, &dependencies)?;
+        let class_diagram = self.generate_class_hierarchy(&modules)?;
+        let file_org_diagram = self.generate_file_organization(&modules)?;
+        
+        // Store specialized diagrams with prefixed keys
+        diagrams.insert(DiagramFormat::Mermaid, format!("# Architecture Overview\n{}\n\n# Dependency Graph\n{}\n\n# Class Hierarchy\n{}\n\n# File Organization\n{}", 
+            diagrams.get(&DiagramFormat::Mermaid).unwrap_or(&String::new()),
+            dependency_diagram,
+            class_diagram,
+            file_org_diagram
+        ));
         
         let analysis = ArchitectureAnalysis {
             project_path: self.project_path.to_string_lossy().to_string(),
@@ -288,6 +314,28 @@ impl ArchVizEngine {
                 .and_then(|name| name.to_str())
                 .map(|name| name.starts_with('.'))
                 .unwrap_or(false)
+            {
+                continue;
+            }
+            
+            // Skip common build/dependency directories
+            let path_str = path.to_string_lossy();
+            if path_str.contains("/node_modules/") ||
+               path_str.contains("/target/") ||
+               path_str.contains("/dist/") ||
+               path_str.contains("/build/") ||
+               path_str.contains("/.next/") ||
+               path_str.contains("/.nuxt/") ||
+               path_str.contains("/vendor/") ||
+               path_str.contains("/__pycache__/") ||
+               path_str.contains("/.venv/") ||
+               path_str.contains("/venv/") ||
+               path_str.contains("/.cargo/") ||
+               path_str.contains("/coverage/") ||
+               path_str.contains("/tmp/") ||
+               path_str.contains("/temp/") ||
+               // Skip generated schema directories but keep root configs
+               (path_str.contains("/gen/schemas/") && path_str.ends_with(".json"))
             {
                 continue;
             }
@@ -602,8 +650,8 @@ impl ArchVizEngine {
     }
     
     /// Analyze dependencies between modules
-    fn analyze_dependencies(&self, modules: &[ModuleInfo]) -> Result<Vec<DependencyRelation>, Box<dyn std::error::Error>> {
-        let mut dependencies = Vec::new();
+    fn analyze_dependencies(&self, _modules: &[ModuleInfo]) -> Result<Vec<DependencyRelation>, Box<dyn std::error::Error>> {
+        let dependencies = Vec::new();
         
         // TODO: Implement dependency analysis
         // This would involve:
@@ -645,56 +693,354 @@ impl ArchVizEngine {
         })
     }
     
-    /// Generate Mermaid diagram from analysis
-    fn generate_mermaid_diagram(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+    /// Generate architecture overview diagram
+    pub fn generate_architecture_overview(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
+        
+        // Helper function to sanitize names for Mermaid
+        let sanitize_name = |name: &str| -> String {
+            name.chars()
+                .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                .collect::<String>()
+                .trim_matches('_')
+                .to_string()
+        };
         
         // Start with graph definition
         diagram.push_str("graph TD\n");
+        diagram.push_str("    %% Architecture Overview - High-level module relationships\n\n");
+        
+        // Limit modules to prevent overwhelming diagrams
+        let limited_modules: Vec<_> = modules.iter().take(20).collect();
         
         // Add nodes for each module
-        for (i, module) in modules.iter().enumerate() {
-            let module_name = Path::new(&module.path)
+        for (i, module) in limited_modules.iter().enumerate() {
+            let module_name = std::path::Path::new(&module.path)
                 .file_stem()
                 .and_then(|name| name.to_str())
                 .unwrap_or("unknown");
             
-            let node_id = format!("M{}", i);
-            let label = format!("{}\\n({} lines)", module_name, module.line_count);
+            let clean_name = sanitize_name(module_name);
+            let safe_name = if clean_name.is_empty() { format!("Module{}", i) } else { clean_name };
             
-            // Color nodes by language
+            diagram.push_str(&format!(
+                "    M{}[\"{}\\n{} lines\"]\n",
+                i, safe_name, module.line_count
+            ));
+        }
+        
+        diagram.push_str("\n");
+        
+        // Add edges for dependencies (limit to prevent clutter)
+        let mut edge_count = 0;
+        for dependency in dependencies.iter().take(30) {
+            if edge_count >= 15 { break; } // Limit edges
+            
+            if let (Some(from_idx), Some(to_idx)) = (
+                limited_modules.iter().position(|m| m.path == dependency.from_module),
+                limited_modules.iter().position(|m| m.path == dependency.to_module),
+            ) {
+                if from_idx != to_idx { // Avoid self-references
+                    diagram.push_str(&format!("    M{} --> M{}\n", from_idx, to_idx));
+                    edge_count += 1;
+                }
+            }
+        }
+        
+        // Add styling based on language
+        diagram.push_str("\n    %% Styling by language\n");
+        let mut used_languages = std::collections::HashSet::new();
+        
+        for (i, module) in limited_modules.iter().enumerate() {
+            let lang = sanitize_name(&module.language);
+            if !used_languages.contains(&lang) {
+                let color = match module.language.as_str() {
+                    "rust" => "#dea584",
+                    "javascript" => "#f7df1e", 
+                    "typescript" => "#3178c6",
+                    "python" => "#3776ab",
+                    "json" => "#292929",
+                    _ => "#888888",
+                };
+                diagram.push_str(&format!(
+                    "    classDef lang_{} fill:{},stroke:#333,stroke-width:2px\n",
+                    lang, color
+                ));
+                used_languages.insert(lang.clone());
+            }
+            diagram.push_str(&format!("    class M{} lang_{}\n", i, lang));
+        }
+        
+        Ok(diagram)
+    }
+    
+    /// Generate detailed dependency graph
+    pub fn generate_dependency_graph(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+        let mut diagram = String::new();
+        
+        // Helper function to sanitize names for Mermaid
+        let sanitize_name = |name: &str| -> String {
+            name.chars()
+                .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                .collect::<String>()
+                .trim_matches('_')
+                .to_string()
+        };
+        
+        diagram.push_str("graph LR\n");
+        diagram.push_str("    %% Dependency Graph - Shows import/export relationships\n\n");
+        
+        // Limit modules to prevent overwhelming diagrams
+        let limited_modules: Vec<_> = modules.iter().take(15).collect();
+        
+        // Simple node approach instead of complex subgraphs
+        for (i, module) in limited_modules.iter().enumerate() {
+            let module_name = std::path::Path::new(&module.path)
+                .file_stem()
+                .and_then(|name| name.to_str())
+                .unwrap_or("unknown");
+            
+            let clean_name = sanitize_name(module_name);
+            let safe_name = if clean_name.is_empty() { format!("Mod{}", i) } else { clean_name };
+            
+            diagram.push_str(&format!("    M{}[\"{}\"]\n", i, safe_name));
+        }
+        
+        diagram.push_str("\n");
+        
+        // Add dependency arrows (limited)
+        let mut edge_count = 0;
+        for dependency in dependencies.iter().take(20) {
+            if edge_count >= 10 { break; } // Limit edges
+            
+            if let (Some(from_idx), Some(to_idx)) = (
+                limited_modules.iter().position(|m| m.path == dependency.from_module),
+                limited_modules.iter().position(|m| m.path == dependency.to_module),
+            ) {
+                if from_idx != to_idx { // Avoid self-references
+                    diagram.push_str(&format!("    M{} --> M{}\n", from_idx, to_idx));
+                    edge_count += 1;
+                }
+            }
+        }
+        
+        // If no dependencies found, add a note
+        if edge_count == 0 {
+            diagram.push_str("    NoDeps[\"No dependencies detected\\nThis might be a simple project\"]\n");
+        }
+        
+        Ok(diagram)
+    }
+    
+    /// Generate class hierarchy diagram
+    pub fn generate_class_hierarchy(&self, modules: &[ModuleInfo]) -> Result<String, Box<dyn std::error::Error>> {
+        let mut diagram = String::new();
+        
+        diagram.push_str("classDiagram\n");
+        diagram.push_str("    %% Class Hierarchy - Shows inheritance and composition\n\n");
+        
+        // Helper function to sanitize names for Mermaid
+        let sanitize_name = |name: &str| -> String {
+            name.chars()
+                .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                .collect::<String>()
+                .trim_matches('_')
+                .to_string()
+        };
+        
+        let mut class_count = 0;
+        
+        for module in modules {
+            for class in &module.classes {
+                // Skip if no meaningful content
+                if class.methods.is_empty() && class.properties.is_empty() {
+                    continue;
+                }
+                
+                class_count += 1;
+                if class_count > 10 { // Limit to prevent overwhelming diagrams
+                    break;
+                }
+                
+                let class_name = sanitize_name(&class.name);
+                if class_name.is_empty() {
+                    continue;
+                }
+                
+                // Add class definition
+                diagram.push_str(&format!("    class {} {{\n", class_name));
+                
+                // Add properties (limit to first 5)
+                for (i, property) in class.properties.iter().take(5).enumerate() {
+                    let prop_name = sanitize_name(property);
+                    if !prop_name.is_empty() {
+                        diagram.push_str(&format!("        +{} : Property\n", prop_name));
+                    }
+                }
+                
+                // Add methods (limit to first 5)
+                for (i, method) in class.methods.iter().take(5).enumerate() {
+                    let method_name = sanitize_name(&method.name);
+                    if !method_name.is_empty() {
+                        let visibility = if method.is_public { "+" } else { "-" };
+                        diagram.push_str(&format!("        {}{}()\n", visibility, method_name));
+                    }
+                }
+                
+                diagram.push_str("    }\n\n");
+                
+                // Add inheritance relationships (simplified)
+                if let Some(parent) = &class.extends {
+                    let parent_name = sanitize_name(parent);
+                    if !parent_name.is_empty() && parent_name != class_name {
+                        diagram.push_str(&format!("    {} <|-- {}\n", parent_name, class_name));
+                    }
+                }
+                
+                // Add interface implementations (limit to first 3)
+                for interface in class.implements.iter().take(3) {
+                    let interface_name = sanitize_name(interface);
+                    if !interface_name.is_empty() && interface_name != class_name {
+                        diagram.push_str(&format!("    {} <|.. {}\n", interface_name, class_name));
+                    }
+                }
+            }
+        }
+        
+        // If no classes found, create a simple message
+        if class_count == 0 {
+            diagram.push_str("    class NoClasses {\n");
+            diagram.push_str("        +message : \"No classes found in this project\"\n");
+            diagram.push_str("        +suggestion : \"This might be a functional or procedural codebase\"\n");
+            diagram.push_str("    }\n");
+        }
+        
+        Ok(diagram)
+    }
+    
+    /// Generate file organization diagram
+    pub fn generate_file_organization(&self, modules: &[ModuleInfo]) -> Result<String, Box<dyn std::error::Error>> {
+        let mut diagram = String::new();
+        
+        diagram.push_str("graph TD\n");
+        diagram.push_str("    %% File Organization - Shows directory structure\n");
+        
+        // Build directory tree
+        let mut dirs: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+        
+        for module in modules {
+            let path = std::path::Path::new(&module.path);
+            let dir = path.parent()
+                .and_then(|p| p.to_str())
+                .unwrap_or("root")
+                .to_string();
+            let file = path.file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("unknown")
+                .to_string();
+            
+            dirs.entry(dir).or_default().push(file);
+        }
+        
+        // Generate directory nodes
+        for (dir, files) in dirs {
+            let dir_id = dir.replace('/', "_").replace('.', "_");
+            diagram.push_str(&format!("    {}[\"📁 {}\"]\n", dir_id, dir));
+            
+            for file in files {
+                let file_id = format!("{}_{}", dir_id, file.replace('.', "_"));
+                let icon = match file.split('.').last() {
+                    Some("rs") => "🦀",
+                    Some("js") | Some("jsx") => "📜",
+                    Some("ts") | Some("tsx") => "📘",
+                    Some("py") => "🐍",
+                    Some("json") => "📋",
+                    Some("md") => "📝",
+                    _ => "📄",
+                };
+                diagram.push_str(&format!("    {}[\"{} {}\"]\n", file_id, icon, file));
+                diagram.push_str(&format!("    {} --> {}\n", dir_id, file_id));
+            }
+        }
+        
+        Ok(diagram)
+    }
+    
+    /// Generate Graphviz DOT format diagram
+    pub fn generate_graphviz_diagram(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+        let mut diagram = String::new();
+        
+        diagram.push_str("digraph Architecture {\n");
+        diagram.push_str("    rankdir=TB;\n");
+        diagram.push_str("    node [shape=box, style=rounded];\n");
+        diagram.push_str("    edge [color=gray];\n\n");
+        
+        // Add nodes with language-based styling
+        for (i, module) in modules.iter().enumerate() {
+            let module_name = std::path::Path::new(&module.path)
+                .file_stem()
+                .and_then(|name| name.to_str())
+                .unwrap_or("unknown");
+            
             let color = match module.language.as_str() {
-                "rust" => "#dea584",
-                "javascript" => "#f7df1e",
-                "typescript" => "#3178c6",
-                "python" => "#3776ab",
-                _ => "#gray",
+                "rust" => "orange",
+                "javascript" => "yellow",
+                "typescript" => "blue",
+                "python" => "green",
+                _ => "gray",
             };
             
-            diagram.push_str(&format!("    {}[\"{}\"]:::lang_{}\n", node_id, label, module.language));
+            diagram.push_str(&format!(
+                "    M{} [label=\"{}\\n({} lines)\", fillcolor={}, style=\"filled,rounded\"];\n",
+                i, module_name, module.line_count, color
+            ));
         }
         
         // Add edges for dependencies
         for dependency in dependencies {
-            // Find module indices
             if let (Some(from_idx), Some(to_idx)) = (
                 modules.iter().position(|m| m.path == dependency.from_module),
                 modules.iter().position(|m| m.path == dependency.to_module),
             ) {
-                let from_id = format!("M{}", from_idx);
-                let to_id = format!("M{}", to_idx);
-                
-                diagram.push_str(&format!("    {} --> {}\n", from_id, to_id));
+                diagram.push_str(&format!("    M{} -> M{};\n", from_idx, to_idx));
             }
         }
         
-        // Add CSS classes for styling
-        diagram.push_str("\n");
-        diagram.push_str("    classDef lang_rust fill:#dea584,stroke:#8b4513,stroke-width:2px\n");
-        diagram.push_str("    classDef lang_javascript fill:#f7df1e,stroke:#323330,stroke-width:2px\n");
-        diagram.push_str("    classDef lang_typescript fill:#3178c6,stroke:#ffffff,stroke-width:2px\n");
-        diagram.push_str("    classDef lang_python fill:#3776ab,stroke:#ffd43b,stroke-width:2px\n");
+        diagram.push_str("}\n");
+        Ok(diagram)
+    }
+    
+    /// Generate PlantUML diagram
+    pub fn generate_plantuml_diagram(&self, modules: &[ModuleInfo], _dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+        let mut diagram = String::new();
         
+        diagram.push_str("@startuml\n");
+        diagram.push_str("!theme plain\n");
+        diagram.push_str("title Architecture Overview\n\n");
+        
+        // Group by language
+        let mut lang_groups: std::collections::HashMap<String, Vec<&ModuleInfo>> = std::collections::HashMap::new();
+        for module in modules {
+            lang_groups.entry(module.language.clone()).or_default().push(module);
+        }
+        
+        // Create packages for each language
+        for (language, lang_modules) in lang_groups {
+            diagram.push_str(&format!("package \"{}\" {{\n", language.to_uppercase()));
+            
+            for module in lang_modules {
+                let module_name = std::path::Path::new(&module.path)
+                    .file_stem()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("unknown");
+                
+                diagram.push_str(&format!("    [{}]\n", module_name));
+            }
+            
+            diagram.push_str("}\n\n");
+        }
+        
+        diagram.push_str("@enduml\n");
         Ok(diagram)
     }
 }

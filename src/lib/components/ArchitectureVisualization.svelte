@@ -1,6 +1,8 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core';
+  import { open } from '@tauri-apps/plugin-dialog';
   import { onMount } from 'svelte';
+  import mermaid from 'mermaid';
   
   // Architecture Visualization types (matching Rust structs)
   interface ArchVizConfig {
@@ -77,18 +79,74 @@
   let selectedView = $state<'overview' | 'modules' | 'diagram' | 'metrics'>('overview');
   let selectedModule: ModuleInfo | null = $state(null);
   let diagramFormat = $state<'Mermaid' | 'SVG' | 'PNG'>('Mermaid');
+  let selectedDiagramType = $state<'overview' | 'dependency' | 'class' | 'files' | 'graphviz' | 'plantuml'>('overview');
+  let generatedDiagrams = $state<Record<string, string>>({});
+  let isGeneratingDiagrams = $state(false);
+  let activeViewTabs = $state<Record<string, 'visual' | 'source'>>({});
+  
+  // Tab configuration
+  const tabs = [
+    { id: 'overview' as const, label: 'Overview', icon: '📊' },
+    { id: 'modules' as const, label: 'Modules', icon: '📁' },
+    { id: 'diagram' as const, label: 'Diagram', icon: '🔗' },
+    { id: 'metrics' as const, label: 'Metrics', icon: '📈' }
+  ];
   
   // Load configuration on mount
   onMount(async () => {
     try {
       config = await invoke<ArchVizConfig>('get_archviz_config');
-      // Default to current project directory
-      selectedProjectPath = '/Users/tempext/Projects/disk-bloat-scanner';
+      // Start with empty path - user must select
+      selectedProjectPath = '';
+      
+      // Initialize Mermaid
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        fontFamily: 'monospace'
+      });
     } catch (e) {
       error = `Failed to load ArchViz config: ${e}`;
     }
   });
+
+  // Render Mermaid diagram
+  async function renderMermaidDiagram(diagramCode: string, elementId: string) {
+    try {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.innerHTML = '';
+        const { svg } = await mermaid.render(`diagram-${Date.now()}`, diagramCode);
+        element.innerHTML = svg;
+      }
+    } catch (e) {
+      console.error('Failed to render Mermaid diagram:', e);
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.innerHTML = `<div class="text-red-600 p-4">Failed to render diagram: ${e}</div>`;
+      }
+    }
+  }
   
+  // Open directory picker
+  async function selectProjectDirectory() {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: 'Select Project Directory to Analyze'
+      });
+      
+      if (selected && typeof selected === 'string') {
+        selectedProjectPath = selected;
+        error = null; // Clear any previous errors
+      }
+    } catch (e) {
+      error = `Failed to select directory: ${e}`;
+    }
+  }
+
   // Run architecture analysis
   async function runAnalysis() {
     if (!selectedProjectPath) {
@@ -129,6 +187,83 @@
       error = `Failed to generate ${format} diagram: ${e}`;
     }
   }
+
+  // Generate specific diagram type
+  async function generateSpecificDiagram(diagramType: string) {
+    if (!selectedProjectPath) return;
+    
+    try {
+      isGeneratingDiagrams = true;
+      const diagram = await invoke<string>('generate_diagram', {
+        projectPath: selectedProjectPath,
+        format: 'mermaid',
+        diagramType
+      });
+      
+      generatedDiagrams[diagramType] = diagram;
+    } catch (e) {
+      error = `Failed to generate ${diagramType} diagram: ${e}`;
+    } finally {
+      isGeneratingDiagrams = false;
+    }
+  }
+
+  // Generate all diagram types automatically
+  async function generateAllDiagrams() {
+    if (!selectedProjectPath) return;
+    
+    try {
+      isGeneratingDiagrams = true;
+      const diagramTypes = ['overview', 'dependency', 'class', 'files', 'graphviz', 'plantuml'];
+      
+      for (const diagramType of diagramTypes) {
+        try {
+          const diagram = await invoke<string>('generate_diagram', {
+            projectPath: selectedProjectPath,
+            format: 'mermaid',
+            diagramType
+          });
+          generatedDiagrams[diagramType] = diagram;
+        } catch (e) {
+          console.warn(`Failed to generate ${diagramType} diagram:`, e);
+        }
+      }
+    } catch (e) {
+      error = `Failed to generate diagrams: ${e}`;
+    } finally {
+      isGeneratingDiagrams = false;
+    }
+  }
+
+  // Export all diagrams to files
+  async function exportAllDiagrams() {
+    if (!selectedProjectPath) return;
+    
+    try {
+      const exportedFiles = await invoke<string[]>('export_all_diagrams', {
+        projectPath: selectedProjectPath,
+        outputDir: null // Use default
+      });
+      
+      alert(`Exported ${exportedFiles.length} diagrams:\n${exportedFiles.join('\n')}`);
+    } catch (e) {
+      error = `Failed to export diagrams: ${e}`;
+    }
+  }
+
+  // Auto-render Mermaid diagrams when they're generated
+  $effect(() => {
+    if (Object.keys(generatedDiagrams).length > 0) {
+      // Small delay to ensure DOM elements are ready
+      setTimeout(() => {
+        Object.entries(generatedDiagrams).forEach(([diagramType, diagramContent]) => {
+          if (['overview', 'dependency', 'class', 'files'].includes(diagramType)) {
+            renderMermaidDiagram(diagramContent, `mermaid-render-${diagramType}`);
+          }
+        });
+      }, 500);
+    }
+  });
   
   // Get language color for visualization
   function getLanguageColor(language: string): string {
@@ -178,15 +313,15 @@
   
   <!-- Configuration Section -->
   {#if config}
-    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-      <h3 class="text-lg font-semibold mb-3">Configuration</h3>
-      <div class="grid grid-cols-2 gap-4 text-sm">
+    <div class="mb-6 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">⚙️ Analysis Configuration</h3>
+      <div class="grid grid-cols-2 gap-6 text-base">
         <div>
-          <span class="font-medium">Languages:</span>
-          <div class="flex flex-wrap gap-1 mt-1">
+          <span class="font-bold text-gray-900">Languages:</span>
+          <div class="flex flex-wrap gap-2 mt-2">
             {#each config.languages as language}
               <span 
-                class="px-2 py-1 text-xs rounded-full text-white"
+                class="px-3 py-1 text-sm font-semibold rounded-full text-white border-2 border-white shadow-sm"
                 style="background-color: {getLanguageColor(language)}"
               >
                 {language}
@@ -194,49 +329,106 @@
             {/each}
           </div>
         </div>
-        <div>
-          <span class="font-medium">Max Depth:</span>
-          <span class="ml-2">{config.max_depth}</span>
-        </div>
-        <div>
-          <span class="font-medium">Include Tests:</span>
-          <span class="ml-2">{config.include_tests ? 'Yes' : 'No'}</span>
-        </div>
-        <div>
-          <span class="font-medium">Output Format:</span>
-          <span class="ml-2">{config.output_format}</span>
+        <div class="space-y-3">
+          <div>
+            <span class="font-bold text-gray-900">Max Depth:</span>
+            <span class="ml-2 text-gray-900 bg-gray-100 px-2 py-1 rounded font-mono">{config.max_depth}</span>
+          </div>
+          <div>
+            <span class="font-bold text-gray-900">Include Tests:</span>
+            <span class="ml-2 text-gray-900 bg-gray-100 px-2 py-1 rounded font-medium">{config.include_tests ? 'Yes' : 'No'}</span>
+          </div>
+          <div>
+            <span class="font-bold text-gray-900">Output Format:</span>
+            <span class="ml-2 text-gray-900 bg-gray-100 px-2 py-1 rounded font-medium">{config.output_format}</span>
+          </div>
         </div>
       </div>
     </div>
   {/if}
   
   <!-- Project Selection and Analysis Controls -->
-  <div class="mb-6">
-    <label for="project-path" class="block text-sm font-medium text-gray-700 mb-2">
-      Project Path
+  <div class="mb-6 bg-white p-4 rounded-lg border border-gray-200">
+    <label for="project-path" class="block text-lg font-semibold text-gray-900 mb-3">
+      📁 Select Project Directory
     </label>
+    
+    {#if selectedProjectPath}
+      <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+        <div class="text-sm font-medium text-green-800 mb-1">Selected Directory:</div>
+        <code class="text-green-900 bg-white px-2 py-1 rounded text-sm break-all">{selectedProjectPath}</code>
+      </div>
+    {:else}
+      <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div class="text-yellow-800">⚠️ No directory selected. Please choose a project directory to analyze.</div>
+      </div>
+    {/if}
+    
     <div class="flex gap-3">
+      <button
+        onclick={selectProjectDirectory}
+        class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2 font-medium"
+      >
+        📂 Browse Directories
+      </button>
+      
       <input
         id="project-path"
         type="text"
         bind:value={selectedProjectPath}
-        placeholder="/path/to/project"
-        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        placeholder="Or type path manually: /path/to/project"
+        class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-mono"
       />
+    </div>
+    
+    <div class="mt-4">
       <button
         onclick={runAnalysis}
         disabled={isAnalyzing || !selectedProjectPath}
-        class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        class="w-full px-6 py-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-lg"
       >
         {#if isAnalyzing}
-          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          Analyzing...
+          <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          Analyzing Architecture...
+        {:else if !selectedProjectPath}
+          ⚠️ Select Directory First
         {:else}
-          Run Analysis
+          🔍 Analyze Project Architecture
         {/if}
       </button>
-    </div>
+      
+      {#if selectedProjectPath && !isAnalyzing}
+        <div class="mt-2 text-sm text-gray-600 text-center">
+          This will analyze code structure, dependencies, and generate architecture diagrams
+      </div>
+    {/if}
   </div>
+</div>
+
+<style>
+  :global(.mermaid-container svg) {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  :global(.mermaid-container .node rect) {
+    stroke-width: 2px;
+  }
+  
+  :global(.mermaid-container .edgePath path) {
+    stroke-width: 2px;
+  }
+  
+  :global(.mermaid-container .cluster rect) {
+    stroke-width: 2px;
+    stroke-dasharray: 5,5;
+  }
+  
+  :global(.mermaid-container text) {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+    font-size: 12px;
+  }
+</style>
   
   <!-- Error Display -->
   {#if error}
@@ -253,17 +445,12 @@
     <!-- Navigation Tabs -->
     <div class="mb-6 border-b border-gray-200">
       <nav class="flex space-x-8">
-        {#each [
-          { id: 'overview', label: 'Overview', icon: '📊' },
-          { id: 'modules', label: 'Modules', icon: '📁' },
-          { id: 'diagram', label: 'Diagram', icon: '🔗' },
-          { id: 'metrics', label: 'Metrics', icon: '📈' }
-        ] as tab}
+        {#each tabs as tab}
           <button
             onclick={() => selectedView = tab.id}
             class="py-2 px-1 border-b-2 font-medium text-sm {selectedView === tab.id 
               ? 'border-indigo-500 text-indigo-600' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+              : 'border-transparent text-gray-700 hover:text-gray-900 hover:border-gray-300'}"
           >
             {tab.icon} {tab.label}
           </button>
@@ -274,47 +461,58 @@
     <!-- Overview Tab -->
     {#if selectedView === 'overview'}
       <div class="space-y-6">
+        <!-- Project Info Header -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+          <h3 class="text-xl font-bold text-indigo-900 mb-2">📊 Analysis Results</h3>
+          <div class="text-indigo-800">
+            <strong>Project:</strong> <code class="bg-white px-2 py-1 rounded text-indigo-900">{analysis.project_path}</code>
+          </div>
+          <div class="text-indigo-700 text-sm mt-1">
+            Analyzed at: {new Date(analysis.analyzed_at).toLocaleString()}
+          </div>
+        </div>
+        
         <!-- Quick Stats -->
         <div class="grid grid-cols-4 gap-4">
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <div class="text-2xl font-bold text-gray-900">{analysis.file_count}</div>
-            <div class="text-sm text-gray-600">Files Analyzed</div>
+          <div class="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+            <div class="text-3xl font-bold text-gray-900">{analysis.file_count}</div>
+            <div class="text-base font-medium text-gray-700">Files Analyzed</div>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <div class="text-2xl font-bold text-blue-600">{analysis.metrics.total_functions}</div>
-            <div class="text-sm text-gray-600">Functions</div>
+          <div class="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-sm">
+            <div class="text-3xl font-bold text-blue-700">{analysis.metrics.total_functions}</div>
+            <div class="text-base font-medium text-gray-700">Functions</div>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <div class="text-2xl font-bold text-green-600">{analysis.metrics.total_classes}</div>
-            <div class="text-sm text-gray-600">Classes</div>
+          <div class="bg-white p-6 rounded-lg border-2 border-green-200 shadow-sm">
+            <div class="text-3xl font-bold text-green-700">{analysis.metrics.total_classes}</div>
+            <div class="text-base font-medium text-gray-700">Classes</div>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <div class="text-2xl font-bold text-purple-600">{analysis.metrics.total_lines.toLocaleString()}</div>
-            <div class="text-sm text-gray-600">Lines of Code</div>
+          <div class="bg-white p-6 rounded-lg border-2 border-purple-200 shadow-sm">
+            <div class="text-3xl font-bold text-purple-700">{analysis.metrics.total_lines.toLocaleString()}</div>
+            <div class="text-base font-medium text-gray-700">Lines of Code</div>
           </div>
         </div>
         
         <!-- Language Breakdown -->
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Language Breakdown</h3>
-          <div class="space-y-3">
+        <div class="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+          <h3 class="text-xl font-bold text-gray-900 mb-6">🔤 Language Breakdown</h3>
+          <div class="space-y-4">
             {#each Object.entries(analysis.language_breakdown) as [language, count]}
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center gap-4">
                   <div 
-                    class="w-4 h-4 rounded-full"
+                    class="w-6 h-6 rounded-full border-2 border-white shadow-sm"
                     style="background-color: {getLanguageColor(language)}"
                   ></div>
-                  <span class="font-medium capitalize">{language}</span>
+                  <span class="text-lg font-semibold capitalize text-gray-900">{language}</span>
                 </div>
-                <div class="text-gray-600">{count} files</div>
+                <div class="text-lg font-bold text-gray-800 bg-white px-3 py-1 rounded">{count} files</div>
               </div>
             {/each}
           </div>
         </div>
         
         <!-- Analysis Metadata -->
-        <div class="text-xs text-gray-500 pt-4 border-t border-gray-200">
+        <div class="text-xs text-gray-700 pt-4 border-t border-gray-200">
           <div>Analyzed: {new Date(analysis.analyzed_at).toLocaleString()}</div>
           <div>Analyzer Version: {analysis.analyzer_version}</div>
           <div>Project: {analysis.project_path}</div>
@@ -324,17 +522,27 @@
     
     <!-- Modules Tab -->
     {#if selectedView === 'modules'}
-      <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="text-lg font-semibold text-gray-900">Project Modules</h3>
-          <div class="text-sm text-gray-600">{analysis.modules.length} modules</div>
+      <div class="space-y-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 class="text-xl font-bold text-blue-900">📁 Project Modules</h3>
+          <div class="text-blue-800 font-medium">{analysis.modules.length} modules found</div>
+          <div class="text-blue-700 text-sm mt-1">Click any module to expand details</div>
         </div>
         
         <div class="grid gap-4">
           {#each analysis.modules as module}
             <div 
               class="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 cursor-pointer transition-colors"
+              role="button"
+              tabindex="0"
+              aria-expanded={selectedModule === module}
               onclick={() => selectedModule = selectedModule === module ? null : module}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  selectedModule = selectedModule === module ? null : module;
+                }
+              }}
             >
               <div class="flex items-start justify-between">
                 <div class="flex-1">
@@ -344,10 +552,10 @@
                       style="background-color: {getLanguageColor(module.language)}"
                     ></div>
                     <h4 class="font-medium text-gray-900">{module.path.split('/').pop()}</h4>
-                    <span class="text-xs text-gray-500 capitalize">{module.language}</span>
+                    <span class="text-xs text-gray-700 capitalize font-medium">{module.language}</span>
                   </div>
                   <div class="text-sm text-gray-600 mb-2">{module.path}</div>
-                  <div class="flex gap-4 text-sm text-gray-500">
+                  <div class="flex gap-4 text-sm text-gray-700">
                     <span>{module.line_count} lines</span>
                     <span>{formatFileSize(module.size_bytes)}</span>
                     <span>{module.functions.length} functions</span>
@@ -420,38 +628,193 @@
     <!-- Diagram Tab -->
     {#if selectedView === 'diagram'}
       <div class="space-y-6">
-        <div class="flex justify-between items-center">
-          <h3 class="text-lg font-semibold text-gray-900">Architecture Diagram</h3>
-          <div class="flex gap-2">
+        <!-- Header with Controls -->
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <h3 class="text-xl font-bold text-purple-900 mb-4">🔗 Architecture Diagrams</h3>
+          
+          <div class="flex flex-wrap gap-3 mb-4">
             <select 
-              bind:value={diagramFormat}
-              class="px-3 py-1 border border-gray-300 rounded text-sm"
+              bind:value={selectedDiagramType}
+              class="px-4 py-2 bg-white text-gray-900 border-2 border-gray-400 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-medium shadow-sm"
             >
-              <option value="Mermaid">Mermaid</option>
-              <option value="SVG">SVG</option>
-              <option value="PNG">PNG</option>
+              <option value="overview">📊 Architecture Overview</option>
+              <option value="dependency">🔗 Dependency Graph</option>
+              <option value="class">🏗️ Class Hierarchy</option>
+              <option value="files">📁 File Organization</option>
+              <option value="graphviz">🎯 Graphviz DOT</option>
+              <option value="plantuml">📐 PlantUML</option>
             </select>
+            
             <button
-              onclick={() => generateDiagram(diagramFormat)}
-              class="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+              onclick={() => generateSpecificDiagram(selectedDiagramType)}
+              disabled={isGeneratingDiagrams}
+              class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
             >
-              Generate
+              {#if isGeneratingDiagrams}
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              {/if}
+              Generate Selected
+            </button>
+            
+            <button
+              onclick={generateAllDiagrams}
+              disabled={isGeneratingDiagrams}
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              🚀 Generate All Types
+            </button>
+            
+            <button
+              onclick={exportAllDiagrams}
+              disabled={isGeneratingDiagrams || Object.keys(generatedDiagrams).length === 0}
+              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              💾 Export All
             </button>
           </div>
+          
+          <div class="text-purple-700 text-sm">
+            Generate multiple diagram types automatically: overview, dependencies, classes, file structure, and more!
+          </div>
         </div>
-        
-        {#if analysis.diagrams.Mermaid}
+
+        <!-- Generated Diagrams Display -->
+        {#if Object.keys(generatedDiagrams).length > 0}
+          <div class="space-y-6">
+            {#each Object.entries(generatedDiagrams) as [diagramType, diagramContent]}
+              <div class="bg-white border-2 border-gray-200 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-3">
+                  <h4 class="text-lg font-semibold text-gray-900">
+                    {#if diagramType === 'overview'}📊 Architecture Overview
+                    {:else if diagramType === 'dependency'}🔗 Dependency Graph
+                    {:else if diagramType === 'class'}🏗️ Class Hierarchy
+                    {:else if diagramType === 'files'}📁 File Organization
+                    {:else if diagramType === 'graphviz'}🎯 Graphviz DOT
+                    {:else if diagramType === 'plantuml'}📐 PlantUML
+                    {:else}{diagramType.toUpperCase()}
+                    {/if}
+                  </h4>
+                  <button
+                    onclick={() => navigator.clipboard.writeText(diagramContent)}
+                    class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+                
+                <!-- Diagram Display with Visual Rendering -->
+                <div class="space-y-4">
+                  {#if diagramType === 'overview' || diagramType === 'dependency' || diagramType === 'class' || diagramType === 'files'}
+                    <!-- Mermaid Visual Rendering -->
+                    <div class="bg-white rounded-lg border-2 border-gray-200 p-6">
+                      <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-semibold text-gray-900">🎨 Visual Diagram</h5>
+                        <button
+                          onclick={() => renderMermaidDiagram(diagramContent, `mermaid-render-${diagramType}`)}
+                          class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-sm hover:bg-indigo-200"
+                        >
+                          🔄 Re-render
+                        </button>
+                      </div>
+                      <div 
+                        id="mermaid-render-{diagramType}" 
+                        class="mermaid-container min-h-64 border border-gray-200 rounded-lg p-4 bg-gray-50 overflow-auto"
+                      >
+                        <div class="flex items-center justify-center h-64 text-gray-500">
+                          <div class="text-center">
+                            <div class="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                            <div>Click "Re-render" to display visual diagram</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {:else}
+                    <!-- Non-Mermaid Diagram Instructions -->
+                    <div class="bg-white rounded-lg border-2 border-gray-200 p-6 text-center">
+                      {#if diagramType === 'graphviz'}
+                        <div class="text-4xl mb-4">🎯</div>
+                        <div class="text-lg font-semibold text-gray-900 mb-2">Graphviz DOT Diagram</div>
+                        <div class="text-gray-600 mb-4">
+                          Copy the source code below and paste it into Graphviz Online for visual rendering
+                        </div>
+                        <a 
+                          href="https://dreampuf.github.io/GraphvizOnline/"
+                          target="_blank"
+                          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          🌐 Open Graphviz Online
+                        </a>
+                      {:else if diagramType === 'plantuml'}
+                        <div class="text-4xl mb-4">📐</div>
+                        <div class="text-lg font-semibold text-gray-900 mb-2">PlantUML Diagram</div>
+                        <div class="text-gray-600 mb-4">
+                          Copy the source code below and paste it into PlantUML Online for visual rendering
+                        </div>
+                        <a 
+                          href="https://www.plantuml.com/plantuml/uml/"
+                          target="_blank"
+                          class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                        >
+                          🌐 Open PlantUML Online
+                        </a>
+                      {/if}
+                    </div>
+                  {/if}
+
+                  <!-- Source Code Section -->
+                  <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-3">
+                      <h5 class="text-lg font-semibold text-gray-900">📝 Source Code</h5>
+                      <div class="flex gap-2">
+                        <button
+                          onclick={() => navigator.clipboard.writeText(diagramContent)}
+                          class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
+                        >
+                          📋 Copy Code
+                        </button>
+                        {#if diagramType === 'overview' || diagramType === 'dependency' || diagramType === 'class' || diagramType === 'files'}
+                          <a
+                            href="https://mermaid.live"
+                            target="_blank"
+                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+                          >
+                            🌐 Open in Mermaid Live
+                          </a>
+                        {/if}
+                      </div>
+                    </div>
+                    <pre class="text-sm bg-white p-4 rounded border overflow-x-auto whitespace-pre-wrap"><code>{diagramContent}</code></pre>
+                  </div>
+                </div>
+                
+                {#if diagramType === 'overview' || diagramType === 'dependency' || diagramType === 'class' || diagramType === 'files'}
+                  <div class="mt-2 text-sm text-gray-600">
+                    💡 Copy this Mermaid code to <a href="https://mermaid.live" target="_blank" class="text-indigo-600 hover:underline">mermaid.live</a> for interactive viewing
+                  </div>
+                {:else if diagramType === 'graphviz'}
+                  <div class="mt-2 text-sm text-gray-600">
+                    💡 Use this DOT code with Graphviz tools or <a href="https://dreampuf.github.io/GraphvizOnline/" target="_blank" class="text-indigo-600 hover:underline">Graphviz Online</a>
+                  </div>
+                {:else if diagramType === 'plantuml'}
+                  <div class="mt-2 text-sm text-gray-600">
+                    💡 Use this PlantUML code with <a href="https://www.plantuml.com/plantuml/uml/" target="_blank" class="text-indigo-600 hover:underline">PlantUML Online</a>
+                  </div>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {:else if analysis?.diagrams?.Mermaid}
+          <!-- Fallback to original analysis diagram -->
           <div class="bg-gray-50 p-4 rounded-lg">
-            <h4 class="font-medium text-gray-900 mb-3">Mermaid Diagram</h4>
+            <h4 class="font-medium text-gray-900 mb-3">Original Analysis Diagram</h4>
             <pre class="text-sm bg-white p-4 rounded border overflow-x-auto"><code>{analysis.diagrams.Mermaid}</code></pre>
           </div>
+        {:else}
+          <div class="text-center py-8 text-gray-500">
+            <div class="text-4xl mb-2">🎨</div>
+            <div>No diagrams generated yet. Click "Generate All Types" to create automatic diagrams!</div>
+          </div>
         {/if}
-        
-        <div class="text-sm text-gray-600">
-          💡 Tip: Copy the Mermaid code above and paste it into 
-          <a href="https://mermaid.live" target="_blank" class="text-indigo-600 hover:underline">mermaid.live</a> 
-          to see the interactive diagram.
-        </div>
       </div>
     {/if}
     

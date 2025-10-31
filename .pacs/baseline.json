@@ -1,0 +1,2915 @@
+{
+  "project_path": "/Users/tempext/Projects/disk-bloat-scanner",
+  "captured_at": "2025-10-31T02:35:54.766964Z",
+  "version": "1.0.0",
+  "file_inventory": {
+    "EDGS_RECOVERY_COMPLETE.md": {
+      "path": "EDGS_RECOVERY_COMPLETE.md",
+      "size": 7562,
+      "modified": "2025-10-30T19:57:57.502639787Z",
+      "hash": "39e823585339da01f636700363620071",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/compliance/TES-2025_COMPLIANCE.md": {
+      "path": "docs/compliance/TES-2025_COMPLIANCE.md",
+      "size": 17907,
+      "modified": "2025-10-26T19:08:56.056577937Z",
+      "hash": "c61a4ae155adf20f729fb687c772db6c",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "dist/assets/index-CbLn9g5R.css": {
+      "path": "dist/assets/index-CbLn9g5R.css",
+      "size": 7326,
+      "modified": "2025-10-21T21:40:09.018941045Z",
+      "hash": "e679c824afe4543441ac3309996aaf16",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "ARCHITECTURE_VISUALIZATION_CONCEPT.md": {
+      "path": "ARCHITECTURE_VISUALIZATION_CONCEPT.md",
+      "size": 16358,
+      "modified": "2025-10-30T20:39:02.532095065Z",
+      "hash": "d6ed6d211fdfe45dca60ba399b9dfafc",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png": {
+      "path": "src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png",
+      "size": 61181,
+      "modified": "2025-10-30T19:57:57.638287797Z",
+      "hash": "bc592e6cbeaa82b291ee4c899d156dad",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DuT9u2Gy.js": {
+      "path": "dist/assets/index-DuT9u2Gy.js",
+      "size": 109234,
+      "modified": "2025-10-29T04:13:36.318443495Z",
+      "hash": "eb947447a8c8fe488d2fe504911c1bae",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png": {
+      "path": "src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png",
+      "size": 3708,
+      "modified": "2025-10-30T19:57:57.636517873Z",
+      "hash": "09b6cafbaee01b7bdb4d3e9d58728b04",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/ui-quick-wins/proposal.md": {
+      "path": "openspec/changes/ui-quick-wins/proposal.md",
+      "size": 716,
+      "modified": "2025-10-30T20:32:32.290876887Z",
+      "hash": "9dbd6a94d8a18266573fe559d39bcc9d",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/design/.beads/issues.jsonl": {
+      "path": "docs/design/.beads/issues.jsonl",
+      "size": 0,
+      "modified": "2025-10-25T23:08:04.200768709Z",
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "TAURI_TRAY_AGENTS_SPEC_COMPLETE.md": {
+      "path": "TAURI_TRAY_AGENTS_SPEC_COMPLETE.md",
+      "size": 13324,
+      "modified": "2025-10-30T19:57:57.518159824Z",
+      "hash": "e154a5fc3965c8806e352f5c19654ed5",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".beads/edgs/phase-0/PoE-MANIFEST.json": {
+      "path": ".beads/edgs/phase-0/PoE-MANIFEST.json",
+      "size": 812,
+      "modified": "2025-10-30T19:57:57.489149537Z",
+      "hash": "418b047738fb64431d07568a58d5b54d",
+      "file_type": "Configuration",
+      "compliance_relevant": true
+    },
+    "src/lib/components/DevCaches.svelte": {
+      "path": "src/lib/components/DevCaches.svelte",
+      "size": 11485,
+      "modified": "2025-10-30T19:57:57.720837554Z",
+      "hash": "ee116b5b64a83d4901f2b90096b249a8",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "WHEN_UI_TESTING_READY.md": {
+      "path": "WHEN_UI_TESTING_READY.md",
+      "size": 10451,
+      "modified": "2025-10-30T19:57:57.519810877Z",
+      "hash": "c0498dcb88d41d833ac2eeb0014ec60c",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/START_HERE.md": {
+      "path": "docs/START_HERE.md",
+      "size": 9049,
+      "modified": "2025-10-30T19:57:57.533129167Z",
+      "hash": "aec9f35f66634bc5ecb5a4a1632f6700",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "public/favicon.ico": {
+      "path": "public/favicon.ico",
+      "size": 458226,
+      "modified": "2025-10-30T22:22:20.805343173Z",
+      "hash": "ed8e33eebd4115ef67530da4f58f8e5d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/FINAL_WORKING_STATE.md": {
+      "path": ".archive/FINAL_WORKING_STATE.md",
+      "size": 7525,
+      "modified": "2025-10-24T05:09:04.746330023Z",
+      "hash": "76151420a6f2869e8a9b0978cf5c227e",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DlOCY0x9.js": {
+      "path": "dist/assets/index-DlOCY0x9.js",
+      "size": 95219,
+      "modified": "2025-10-27T22:43:57.597707213Z",
+      "hash": "69c84545fc436331cbb874331b634d1c",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".github/workflows/test.yml": {
+      "path": ".github/workflows/test.yml",
+      "size": 2606,
+      "modified": "2025-10-30T19:57:57.491868788Z",
+      "hash": "b8fcbc2c4b6f73a048f74e4b8bf280d1",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "openspec/changes/project-scaffolding/BEADS_TRACKING.md": {
+      "path": "openspec/changes/project-scaffolding/BEADS_TRACKING.md",
+      "size": 14165,
+      "modified": "2025-10-30T19:57:57.564928726Z",
+      "hash": "50c1a3cde1daad6a4326f89ca37fdb4e",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/changes/add-path-validation/tasks.md": {
+      "path": "openspec/changes/add-path-validation/tasks.md",
+      "size": 3494,
+      "modified": "2025-10-30T19:57:57.558482439Z",
+      "hash": "2898f88194c429fd1efae14e9ba51dd9",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/main.js": {
+      "path": "src/main.js",
+      "size": 177,
+      "modified": "2025-10-30T19:57:57.738439489Z",
+      "hash": "3e0860d9889abc35b411c0ab31d97925",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/ThemeToggle.svelte": {
+      "path": "src/lib/components/ui/ThemeToggle.svelte",
+      "size": 2805,
+      "modified": "2025-10-30T21:14:05.752642315Z",
+      "hash": "0bb4639d361812ce6a76b645e93dd8a4",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/modern/ModernDashboard.svelte": {
+      "path": "src/lib/components/modern/ModernDashboard.svelte",
+      "size": 15951,
+      "modified": "2025-10-30T19:57:57.731720611Z",
+      "hash": "70d3ab469f0660a57361a2ee0dddd486",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/utils/patterns.rs": {
+      "path": "src-tauri/src/utils/patterns.rs",
+      "size": 11430,
+      "modified": "2025-10-30T19:57:57.709795434Z",
+      "hash": "07789229d98caa52a57f420c168426ed",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/GitAssistance.svelte": {
+      "path": "src/lib/components/GitAssistance.svelte",
+      "size": 20927,
+      "modified": "2025-10-30T19:57:57.722113146Z",
+      "hash": "8e43b0d02376b702cfd75f2502eab73b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/gen/schemas/macOS-schema.json": {
+      "path": "src-tauri/gen/schemas/macOS-schema.json",
+      "size": 117512,
+      "modified": "2025-10-24T15:49:45.147595286Z",
+      "hash": "e849bf210e3fbcbd992533d88dbd0f28",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/Button.svelte": {
+      "path": "src/lib/components/ui/Button.svelte",
+      "size": 3418,
+      "modified": "2025-10-30T20:09:43.197884052Z",
+      "hash": "8ec6bc777333f19370c2251f13036525",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/utils/cleanup.rs": {
+      "path": "src-tauri/src/utils/cleanup.rs",
+      "size": 22827,
+      "modified": "2025-10-30T21:16:03.964102458Z",
+      "hash": "4e375a8d428457d8c75d3429a151859f",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".beads/edgs/README.md": {
+      "path": ".beads/edgs/README.md",
+      "size": 8192,
+      "modified": "2025-10-27T01:33:44.814635127Z",
+      "hash": "afebc9f50ca3f34e098536c0ccdcdc08",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/OPENSPEC_BD_EDGS_INTEGRATION.md": {
+      "path": "docs/OPENSPEC_BD_EDGS_INTEGRATION.md",
+      "size": 20260,
+      "modified": "2025-10-30T19:57:57.527594316Z",
+      "hash": "31f297ea1de68b097a3820d989a99986",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/changes/architecture-visualization/proposal.md": {
+      "path": "openspec/changes/architecture-visualization/proposal.md",
+      "size": 4333,
+      "modified": "2025-10-30T20:45:11.179036747Z",
+      "hash": "21903df7aa914f15d4c4962966c988f3",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "TEST_FEATURES.md": {
+      "path": "TEST_FEATURES.md",
+      "size": 5534,
+      "modified": "2025-10-31T02:33:13.290617032Z",
+      "hash": "de8ef9bf49570babbd658736f12636da",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/BEADS_INTEGRATION_STATUS.md": {
+      "path": "docs/BEADS_INTEGRATION_STATUS.md",
+      "size": 13225,
+      "modified": "2025-10-30T19:57:57.522060791Z",
+      "hash": "be8eb05e530880f573586285dd6049ab",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/EDGS_INTEGRATION.md": {
+      "path": "docs/EDGS_INTEGRATION.md",
+      "size": 10849,
+      "modified": "2025-10-30T19:57:57.525244030Z",
+      "hash": "bec9933a69ce76fabb17fa894a9ec416",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "SESSION_SUMMARY_CONTINUATION_OCT27.md": {
+      "path": "SESSION_SUMMARY_CONTINUATION_OCT27.md",
+      "size": 17523,
+      "modified": "2025-10-30T19:57:57.515825412Z",
+      "hash": "045d0b53c28fe19f0cb81229f381726d",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "scripts/beads-to-github.sh": {
+      "path": "scripts/beads-to-github.sh",
+      "size": 3060,
+      "modified": "2025-10-30T19:57:57.616597258Z",
+      "hash": "4958ef3585e65a71fa4dd74fa189aae1",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/monaco-editor-panel/tasks.md": {
+      "path": "openspec/changes/monaco-editor-panel/tasks.md",
+      "size": 9887,
+      "modified": "2025-10-30T19:57:57.562311712Z",
+      "hash": "056c763f5496246a7f48a83992a404d0",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "tailwind.config.js": {
+      "path": "tailwind.config.js",
+      "size": 188,
+      "modified": "2025-10-30T19:57:57.741432464Z",
+      "hash": "eae02f7121b6aab480d4ee1deaa521f3",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".archive/test~": {
+      "path": ".archive/test~",
+      "size": 0,
+      "modified": "2025-10-24T20:45:24.276060104Z",
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BORxXCrF.js": {
+      "path": "dist/assets/index-BORxXCrF.js",
+      "size": 127010,
+      "modified": "2025-10-30T22:22:40.281514817Z",
+      "hash": "7a14776d85e5f380cb3e6f2cf2d62059",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/BEADS_ISSUE_TRACKER.md": {
+      "path": "docs/BEADS_ISSUE_TRACKER.md",
+      "size": 30376,
+      "modified": "2025-10-30T19:57:57.522795293Z",
+      "hash": "a86ebd097eac28f0874ade1828729c4b",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/changes/ui-quick-wins/tasks.md": {
+      "path": "openspec/changes/ui-quick-wins/tasks.md",
+      "size": 862,
+      "modified": "2025-10-30T20:32:40.356397423Z",
+      "hash": "447fc2b50db52d8c49906eb67c0fce38",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "dist/assets/tempext-logo-BfHvVTvi.png": {
+      "path": "dist/assets/tempext-logo-BfHvVTvi.png",
+      "size": 47956,
+      "modified": "2025-10-30T23:46:58.478762403Z",
+      "hash": "d695fc66607fdfb821fd1b494a32b10d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/test_junk_detection": {
+      "path": ".archive/test_junk_detection",
+      "size": 500824,
+      "modified": "2025-10-25T03:50:55.892564058Z",
+      "hash": "2c19f48d516314dc5ab53ef2e0ee2710",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/Square71x71Logo.png": {
+      "path": "src-tauri/icons/Square71x71Logo.png",
+      "size": 8795,
+      "modified": "2025-10-30T19:57:57.630905013Z",
+      "hash": "6d51ceac98d87ed502e01aeb34f096d1",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Cub5BJ6d.js": {
+      "path": "dist/assets/index-Cub5BJ6d.js",
+      "size": 16619,
+      "modified": "2025-10-21T21:40:09.018951535Z",
+      "hash": "ec9fc7e098d53f9c6c14bf91d912a483",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/tauri.conf.json": {
+      "path": "src-tauri/tauri.conf.json",
+      "size": 1213,
+      "modified": "2025-10-30T19:57:57.714322917Z",
+      "hash": "eaae89def10c4514f214d3304cc5ffbe",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    ".opencode/command/init.md": {
+      "path": ".opencode/command/init.md",
+      "size": 1733,
+      "modified": "2025-10-30T19:57:57.495566923Z",
+      "hash": "6a17e71c7a4a98311d35218542fde292",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/BEADS_GITHUB_INTEGRATION.md": {
+      "path": "docs/BEADS_GITHUB_INTEGRATION.md",
+      "size": 13055,
+      "modified": "2025-10-30T19:57:57.521326858Z",
+      "hash": "c0e6efe6c1d3fd5bca46a06a3641e561",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/Square284x284Logo.png": {
+      "path": "src-tauri/icons/Square284x284Logo.png",
+      "size": 103093,
+      "modified": "2025-10-30T19:57:57.627080076Z",
+      "hash": "4cd3042f7bd00ec88660c4e16cb99c44",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/arch_viz/mod.rs": {
+      "path": "src-tauri/src/arch_viz/mod.rs",
+      "size": 26265,
+      "modified": "2025-10-31T02:26:45.926124725Z",
+      "hash": "1805a5b087e6c0050232e0b66f2cdee2",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "public/tempext-logo.png": {
+      "path": "public/tempext-logo.png",
+      "size": 458226,
+      "modified": "2025-10-30T19:57:57.612773062Z",
+      "hash": "ed8e33eebd4115ef67530da4f58f8e5d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-hdpi/ic_launcher.png": {
+      "path": "src-tauri/icons/android/mipmap-hdpi/ic_launcher.png",
+      "size": 3685,
+      "modified": "2025-10-30T19:57:57.633424423Z",
+      "hash": "08e1ea9c0423010468dcf83067d756d7",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".vscode/extensions.json": {
+      "path": ".vscode/extensions.json",
+      "size": 50,
+      "modified": "2025-10-30T19:57:57.498593048Z",
+      "hash": "200d2e103f19aa20cbc8eb59dd6079b1",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    ".beads/edgs/BOOTSTRAP_EDGS.sh": {
+      "path": ".beads/edgs/BOOTSTRAP_EDGS.sh",
+      "size": 5581,
+      "modified": "2025-10-27T01:30:11.007713770Z",
+      "hash": "4b9de3089ae6f8bdae3060ebd27813d7",
+      "file_type": "Other",
+      "compliance_relevant": true
+    },
+    "docs/analysis/ANALYSIS_SUMMARY.txt": {
+      "path": "docs/analysis/ANALYSIS_SUMMARY.txt",
+      "size": 15390,
+      "modified": "2025-10-30T19:57:57.537215931Z",
+      "hash": "ba1e47ecc7acbe2a4b300be42f0b0029",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/Settings.svelte": {
+      "path": "src/lib/components/Settings.svelte",
+      "size": 5635,
+      "modified": "2025-10-30T21:23:27.373125025Z",
+      "hash": "29ea78cbf07c6ecb19dc74958bf0c1cc",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/database/mod.rs": {
+      "path": "src-tauri/src/database/mod.rs",
+      "size": 16524,
+      "modified": "2025-10-30T21:21:36.587024496Z",
+      "hash": "10dc7f517d0b507a687119516cf6a8b3",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-C9jt6VxO.js": {
+      "path": "dist/assets/index-C9jt6VxO.js",
+      "size": 9996,
+      "modified": "2025-10-21T19:23:23.561214447Z",
+      "hash": "6f3482a9d69ff1f689fe7a6154694d9f",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "DESKTOP_UI_OVERVIEW.md": {
+      "path": "DESKTOP_UI_OVERVIEW.md",
+      "size": 10223,
+      "modified": "2025-10-30T20:17:44.983323566Z",
+      "hash": "e852fce2bee52528062d052a4aa582c6",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DOw0i8rt.js": {
+      "path": "dist/assets/index-DOw0i8rt.js",
+      "size": 120254,
+      "modified": "2025-10-30T21:07:33.365674158Z",
+      "hash": "cc8fdef66dad128d746a06363cba2eb8",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/Dashboard.svelte": {
+      "path": "src/lib/components/Dashboard.svelte",
+      "size": 15163,
+      "modified": "2025-10-30T21:23:06.444624786Z",
+      "hash": "0e259f7fae4d3822e84cfd5325f41df0",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/utils/scan.rs": {
+      "path": "src-tauri/src/utils/scan.rs",
+      "size": 26765,
+      "modified": "2025-10-30T19:57:57.710861343Z",
+      "hash": "aa61fdd06219d3b7d6bd76b5a4921e5f",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "UI_BUILD_TIMELINE.md": {
+      "path": "UI_BUILD_TIMELINE.md",
+      "size": 9615,
+      "modified": "2025-10-30T19:57:57.518968183Z",
+      "hash": "6e8913b1d5a49527cd9ae3cefbb400de",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".archive/WBS.md": {
+      "path": ".archive/WBS.md",
+      "size": 3540,
+      "modified": "2025-10-21T19:41:13.959985256Z",
+      "hash": "c7831234676f68779ec1c148baedaec4",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/PRODUCTION_READINESS.md": {
+      "path": "docs/PRODUCTION_READINESS.md",
+      "size": 10460,
+      "modified": "2025-10-30T19:57:57.530670313Z",
+      "hash": "9ef8f5cd1d84b57a064744b4fd02c118",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".beads/issues.jsonl": {
+      "path": ".beads/issues.jsonl",
+      "size": 4737,
+      "modified": "2025-10-30T19:57:57.489635758Z",
+      "hash": "a7ed61c53704a6afb88bb79de28c7fad",
+      "file_type": "Other",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ui/KeyboardShortcuts.svelte": {
+      "path": "src/lib/components/ui/KeyboardShortcuts.svelte",
+      "size": 4765,
+      "modified": "2025-10-30T21:11:08.365022024Z",
+      "hash": "a3dea89806b4600f331c915b10736c42",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/Square89x89Logo.png": {
+      "path": "src-tauri/icons/Square89x89Logo.png",
+      "size": 12840,
+      "modified": "2025-10-30T19:57:57.631653249Z",
+      "hash": "f754ca18ac53543e4d8d5a7bd1e5b51e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".opencode/agent/vos-architect.md": {
+      "path": ".opencode/agent/vos-architect.md",
+      "size": 2363,
+      "modified": "2025-10-30T19:57:57.495043102Z",
+      "hash": "1333376391fd0d2081ec9e03f4f2d29e",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/analysis/ROOT_CLEANUP_PLAN.md": {
+      "path": "docs/analysis/ROOT_CLEANUP_PLAN.md",
+      "size": 15365,
+      "modified": "2025-10-30T19:57:57.539390477Z",
+      "hash": "2e0ed30d9668bfe64228d0f095501d90",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/ios/AppIcon-20x20@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-20x20@2x.png",
+      "size": 3253,
+      "modified": "2025-10-30T19:57:57.680347773Z",
+      "hash": "601d9c6ca8e03d23bae044d1d8b10740",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "vite.config.ts": {
+      "path": "vite.config.ts",
+      "size": 1532,
+      "modified": "2025-10-30T22:02:21.950754393Z",
+      "hash": "59914dccba56950b73a2799429b15bb4",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".beads/edgs/phase-1/PHASE_1_COMPLETION_GATE.md": {
+      "path": ".beads/edgs/phase-1/PHASE_1_COMPLETION_GATE.md",
+      "size": 9713,
+      "modified": "2025-10-27T03:37:28.931317510Z",
+      "hash": "c1cc5a151081cd77817ae9cf727e1a58",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ui/UIQuickWinsDemo.svelte": {
+      "path": "src/lib/components/ui/UIQuickWinsDemo.svelte",
+      "size": 6651,
+      "modified": "2025-10-30T21:16:57.779134361Z",
+      "hash": "21f1a5b905e240e8daed116f54da9f80",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/GitScanner.svelte": {
+      "path": "src/lib/components/GitScanner.svelte",
+      "size": 15361,
+      "modified": "2025-10-30T19:57:57.723142797Z",
+      "hash": "6e0c29c4eba1364d9f28f400a0a4bb58",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/Duplicates.svelte": {
+      "path": "src/lib/components/Duplicates.svelte",
+      "size": 5239,
+      "modified": "2025-10-30T19:57:57.721488883Z",
+      "hash": "57dc981fa2eeaee42b4a35f5b9149da2",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/design/TAURI_ARCHITECTURE_MODERNIZATION.md": {
+      "path": "docs/design/TAURI_ARCHITECTURE_MODERNIZATION.md",
+      "size": 38959,
+      "modified": "2025-10-30T19:57:57.546088507Z",
+      "hash": "d042c4fd690dbd800a6fef463227f766",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".archive/test_new_scanners.rs": {
+      "path": ".archive/test_new_scanners.rs",
+      "size": 5292,
+      "modified": "2025-10-25T03:56:47.838711858Z",
+      "hash": "7bec947586b8eb18ee623c0819930870",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/modern/ScanCard.svelte": {
+      "path": "src/lib/components/modern/ScanCard.svelte",
+      "size": 6909,
+      "modified": "2025-10-30T19:57:57.732444483Z",
+      "hash": "59493690ab7d8a9c7f36a28c9c111678",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/ErrorBoundary.svelte": {
+      "path": "src/lib/components/ui/ErrorBoundary.svelte",
+      "size": 4859,
+      "modified": "2025-10-30T19:38:05.018624933Z",
+      "hash": "e791b05681d4372d25c898ad9b7b08ab",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "LICENSE": {
+      "path": "LICENSE",
+      "size": 10779,
+      "modified": "2025-10-30T19:57:57.504808712Z",
+      "hash": "aca171bc5762ff5bdc1dfb3229ce7d16",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/main.js": {
+      "path": "dist/main.js",
+      "size": 2141,
+      "modified": "2025-10-21T19:08:31.055494070Z",
+      "hash": "3a5c3efb287a8e7ebea40372445a57a4",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-29x29@2x-1.png": {
+      "path": "src-tauri/icons/ios/AppIcon-29x29@2x-1.png",
+      "size": 6036,
+      "modified": "2025-10-30T19:57:57.681830968Z",
+      "hash": "d19b257ccb35da4ec7cc1c0e067ba390",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DKjjS1Ep.js": {
+      "path": "dist/assets/index-DKjjS1Ep.js",
+      "size": 15151,
+      "modified": "2025-10-21T19:27:26.919345140Z",
+      "hash": "26a8769412893b9c6861d50205ccad80",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DgBM7WUI.css": {
+      "path": "dist/assets/index-DgBM7WUI.css",
+      "size": 22576,
+      "modified": "2025-10-24T16:47:58.057602167Z",
+      "hash": "8cfdac6c91cf06e4819b7665667cd888",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/test_junk_in_current_dir.sh": {
+      "path": ".archive/test_junk_in_current_dir.sh",
+      "size": 263,
+      "modified": "2025-10-24T20:45:23.461126447Z",
+      "hash": "39a798bc51d446ef2fe2aed866592bd5",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "scripts/github-to-beads.sh": {
+      "path": "scripts/github-to-beads.sh",
+      "size": 2962,
+      "modified": "2025-10-30T19:57:57.617575799Z",
+      "hash": "cefd109f7f5ba6c2d05fd6a194f27385",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/Cargo.toml": {
+      "path": "src-tauri/Cargo.toml",
+      "size": 2114,
+      "modified": "2025-10-30T23:41:03.117050903Z",
+      "hash": "7d9915a704801174228fb10214cc04c1",
+      "file_type": "Configuration",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png": {
+      "path": "src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png",
+      "size": 40945,
+      "modified": "2025-10-30T19:57:57.651402350Z",
+      "hash": "517a25989507f50da2fdac3bad22577e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/project-scaffolding/proposal.md": {
+      "path": "openspec/changes/project-scaffolding/proposal.md",
+      "size": 17306,
+      "modified": "2025-10-30T19:57:57.565550239Z",
+      "hash": "a40627f9eeaa292717488108cb269c61",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/changes/architecture-visualization/tasks.md": {
+      "path": "openspec/changes/architecture-visualization/tasks.md",
+      "size": 8314,
+      "modified": "2025-10-30T20:46:05.525344378Z",
+      "hash": "73aae16decd0dc4661eff7eade91f5d6",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/methodology/MACM-V1-IMPLEMENTATION.md": {
+      "path": "docs/methodology/MACM-V1-IMPLEMENTATION.md",
+      "size": 10295,
+      "modified": "2025-10-30T21:56:58.385696302Z",
+      "hash": "1d4e1277fce94856172dc187f8578c32",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "MACM_V1_IMPLEMENTATION_COMPLETE.md": {
+      "path": "MACM_V1_IMPLEMENTATION_COMPLETE.md",
+      "size": 7397,
+      "modified": "2025-10-30T21:26:36.440243357Z",
+      "hash": "711c7533880d54e3f7abd83a7c2fafff",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BSDeDWMX.js": {
+      "path": "dist/assets/index-BSDeDWMX.js",
+      "size": 95158,
+      "modified": "2025-10-28T00:15:33.799391221Z",
+      "hash": "30191576cc1c24b8530eee226e478614",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "GIT_ASSISTANCE_IMPLEMENTATION_SUMMARY.md": {
+      "path": "GIT_ASSISTANCE_IMPLEMENTATION_SUMMARY.md",
+      "size": 15033,
+      "modified": "2025-10-27T20:25:34.832718207Z",
+      "hash": "c42679330970d36381584cc4ec39f5ca",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/Square30x30Logo.png": {
+      "path": "src-tauri/icons/Square30x30Logo.png",
+      "size": 2128,
+      "modified": "2025-10-30T19:57:57.627684383Z",
+      "hash": "1fed0466604b716b1e88f53a9a0893e1",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BUm5G83B.css": {
+      "path": "dist/assets/index-BUm5G83B.css",
+      "size": 47995,
+      "modified": "2025-10-30T21:15:15.843952528Z",
+      "hash": "07c3595f1164b4fcca7cb5ce150514f1",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/responsive/ResponsiveContainer.svelte": {
+      "path": "src/lib/components/responsive/ResponsiveContainer.svelte",
+      "size": 5056,
+      "modified": "2025-10-30T22:02:22.727096440Z",
+      "hash": "c0392e390b6d5e80e7b8f521f38d08da",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/Square310x310Logo.png": {
+      "path": "src-tauri/icons/Square310x310Logo.png",
+      "size": 121807,
+      "modified": "2025-10-30T19:57:57.628914554Z",
+      "hash": "cce1099c132507d323905e6ef7b21f15",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-512@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-512@2x.png",
+      "size": 850530,
+      "modified": "2025-10-30T19:57:57.692373421Z",
+      "hash": "b5636fbb2dd3b513ab64566dac93b195",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/build.rs": {
+      "path": "src-tauri/build.rs",
+      "size": 175,
+      "modified": "2025-10-30T19:57:57.620118370Z",
+      "hash": "4618a3a9b0feaa061f8ca8c8a2edc58f",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png": {
+      "path": "src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png",
+      "size": 3824,
+      "modified": "2025-10-30T19:57:57.634689851Z",
+      "hash": "2cc68345b53452c4decfc7256c711cd8",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png": {
+      "path": "src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png",
+      "size": 12106,
+      "modified": "2025-10-30T19:57:57.639265363Z",
+      "hash": "fcf7350ac3c72d0cdb469a5de4463c46",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/tauri-tray-menu-agents/proposal.md": {
+      "path": "openspec/changes/tauri-tray-menu-agents/proposal.md",
+      "size": 23099,
+      "modified": "2025-10-30T19:57:57.568826233Z",
+      "hash": "d4d267510feffc1b58a5ec4bc7f811c0",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/design/SAFETY_FIRST_ARCHITECTURE.md": {
+      "path": "docs/design/SAFETY_FIRST_ARCHITECTURE.md",
+      "size": 32028,
+      "modified": "2025-10-30T19:57:57.545248169Z",
+      "hash": "157c1fadac8b274614c18b8532e18300",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".beads/daemon.pid": {
+      "path": ".beads/daemon.pid",
+      "size": 5,
+      "modified": "2025-10-22T20:22:06.836205244Z",
+      "hash": "6425d167c06fe773378b10b546b6e923",
+      "file_type": "Other",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/ios/AppIcon-20x20@1x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-20x20@1x.png",
+      "size": 1101,
+      "modified": "2025-10-30T19:57:57.678694076Z",
+      "hash": "434a6b907f147a8fed0f02cfba2cc1c7",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/64x64.png": {
+      "path": "src-tauri/icons/64x64.png",
+      "size": 7309,
+      "modified": "2025-10-30T19:57:57.624024555Z",
+      "hash": "52c8d462dd3ff9a5c6da01145696b35b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/.issues.json": {
+      "path": ".archive/.issues.json",
+      "size": 1634,
+      "modified": "2025-10-21T19:08:04.790474892Z",
+      "hash": "da0b1dc7f992c316ebd70479c40ab984",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/__tests__/ui-quick-wins.test.js": {
+      "path": "src/lib/components/ui/__tests__/ui-quick-wins.test.js",
+      "size": 6408,
+      "modified": "2025-10-30T21:13:18.359711027Z",
+      "hash": "fc9859b5724772cd71371c5d7377d162",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png": {
+      "path": "src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png",
+      "size": 22776,
+      "modified": "2025-10-30T19:57:57.640032645Z",
+      "hash": "2b20ada5ebfa81f968cae58465f01111",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/error.rs": {
+      "path": "src-tauri/src/error.rs",
+      "size": 10763,
+      "modified": "2025-10-30T19:57:57.703606730Z",
+      "hash": "7375da6027a59ffbea5b8842cbe54f6f",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png": {
+      "path": "src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png",
+      "size": 24493,
+      "modified": "2025-10-30T19:57:57.642748036Z",
+      "hash": "fa0fc716780a040778f35a334043d91c",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "scripts/update-beads-links.js": {
+      "path": "scripts/update-beads-links.js",
+      "size": 2449,
+      "modified": "2025-10-30T19:57:57.618057196Z",
+      "hash": "434476a74eb865e004299db3526eb26c",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/.pacs/reports/project-compliance-report.json": {
+      "path": "src-tauri/.pacs/reports/project-compliance-report.json",
+      "size": 112359,
+      "modified": "2025-10-31T02:33:38.141507473Z",
+      "hash": "a1bb928ecd96a2d90ea21b2f79d598c5",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/__tests__/ui-quick-wins-integration.test.js": {
+      "path": "src/lib/components/ui/__tests__/ui-quick-wins-integration.test.js",
+      "size": 7902,
+      "modified": "2025-10-30T21:15:55.208867937Z",
+      "hash": "62b95fbfd42c366149eda4eec23640de",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/data-viz/TreemapChart.svelte": {
+      "path": "src/lib/components/data-viz/TreemapChart.svelte",
+      "size": 5355,
+      "modified": "2025-10-30T22:00:29.983759808Z",
+      "hash": "23cc07a1405d16b8db299866e430f3ed",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-40x40@1x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-40x40@1x.png",
+      "size": 3253,
+      "modified": "2025-10-30T19:57:57.683340905Z",
+      "hash": "601d9c6ca8e03d23bae044d1d8b10740",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/QUICKSTART_OPENSPEC_BD_EDGS.md": {
+      "path": "docs/QUICKSTART_OPENSPEC_BD_EDGS.md",
+      "size": 11336,
+      "modified": "2025-10-30T19:57:57.531583084Z",
+      "hash": "a4fc11def54e4c746fd9ddbe420bf92a",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/128x128@2x.png": {
+      "path": "src-tauri/icons/128x128@2x.png",
+      "size": 84342,
+      "modified": "2025-10-30T19:57:57.622855933Z",
+      "hash": "ed7413f72eb3cbffa24b16d68d346ef7",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BTmSMUiC.js": {
+      "path": "dist/assets/index-BTmSMUiC.js",
+      "size": 68057,
+      "modified": "2025-10-24T15:18:39.851133108Z",
+      "hash": "8b843e520038e124cfe035076e78ab67",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Cu4WrJ4C.js": {
+      "path": "dist/assets/index-Cu4WrJ4C.js",
+      "size": 69791,
+      "modified": "2025-10-24T16:47:58.057630301Z",
+      "hash": "79b84936e32960b66d1a3e52d9360885",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".beads/edgs/BOOTSTRAP_EDGS_V2.sh": {
+      "path": ".beads/edgs/BOOTSTRAP_EDGS_V2.sh",
+      "size": 6813,
+      "modified": "2025-10-27T01:31:28.794379190Z",
+      "hash": "d8f1fea0718f0a7d2ae2e763dac75e3b",
+      "file_type": "Other",
+      "compliance_relevant": true
+    },
+    "src/lib/stores-enhanced.ts": {
+      "path": "src/lib/stores-enhanced.ts",
+      "size": 10080,
+      "modified": "2025-10-30T22:02:21.957332877Z",
+      "hash": "ad3c25bd735ebec75e3ba897364feb78",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".archive/accurate_scanner.rs": {
+      "path": ".archive/accurate_scanner.rs",
+      "size": 5070,
+      "modified": "2025-10-22T22:49:29.798130274Z",
+      "hash": "656c8696e1b9d12a268e4bf6a1b6a5c1",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "openspec/changes/project-auditor-compliance-scanner/tasks.md": {
+      "path": "openspec/changes/project-auditor-compliance-scanner/tasks.md",
+      "size": 37523,
+      "modified": "2025-10-30T19:57:57.564137750Z",
+      "hash": "0b9be2a8d64c80e35cad9b5ce80c38fe",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/Square142x142Logo.png": {
+      "path": "src-tauri/icons/Square142x142Logo.png",
+      "size": 28549,
+      "modified": "2025-10-30T19:57:57.625247180Z",
+      "hash": "7b131cd3e7a6adda0b2b1ab8ae3f96a8",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/persistent-project-monitoring/tasks.md": {
+      "path": "openspec/changes/persistent-project-monitoring/tasks.md",
+      "size": 1949,
+      "modified": "2025-10-30T20:35:26.536390984Z",
+      "hash": "f2f11e76bff4618c871ec061fd779d52",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".opencode/package.json": {
+      "path": ".opencode/package.json",
+      "size": 63,
+      "modified": "2025-10-30T19:50:54.730734501Z",
+      "hash": "c13cd95e5d6920841ce2be5226a20f06",
+      "file_type": "Configuration",
+      "compliance_relevant": true
+    },
+    ".archive/FIXED_AND_WORKING.md": {
+      "path": ".archive/FIXED_AND_WORKING.md",
+      "size": 7359,
+      "modified": "2025-10-24T05:06:28.383971930Z",
+      "hash": "ad4673e2d7ba374ae1e053eece2eddac",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".beads/disk-bloat-scanner.db": {
+      "path": ".beads/disk-bloat-scanner.db",
+      "size": 217088,
+      "modified": "2025-10-27T01:34:39.527369335Z",
+      "hash": "e173f517d5f5ff1cf68ddceb54ba5187",
+      "file_type": "Other",
+      "compliance_relevant": true
+    },
+    "docs/design/.beads/daemon.pid": {
+      "path": "docs/design/.beads/daemon.pid",
+      "size": 4,
+      "modified": "2025-10-22T20:11:59.609174609Z",
+      "hash": "ffa1e107c6469dafa0016703450e26ed",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/design/.beads/design.db": {
+      "path": "docs/design/.beads/design.db",
+      "size": 155648,
+      "modified": "2025-10-22T20:11:49.815962553Z",
+      "hash": "19d1bf4dfb6570a5ec36cd31fd5ad12e",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".beads/.gitignore": {
+      "path": ".beads/.gitignore",
+      "size": 12,
+      "modified": "2025-10-30T19:57:57.488592402Z",
+      "hash": "b8a247283893926e006b0e5aa0ce2c08",
+      "file_type": "Other",
+      "compliance_relevant": true
+    },
+    "PHASE_1_SESSION_COMPLETION.md": {
+      "path": "PHASE_1_SESSION_COMPLETION.md",
+      "size": 7742,
+      "modified": "2025-10-30T19:57:57.507063235Z",
+      "hash": "01373153c6bb135474d9dbb04e8e08f0",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png": {
+      "path": "src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png",
+      "size": 36139,
+      "modified": "2025-10-30T19:57:57.634089070Z",
+      "hash": "565a179440a93469ae6f5ce3d9d79b11",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "UI_QUICK_WINS_IMPLEMENTATION_COMPLETE.md": {
+      "path": "UI_QUICK_WINS_IMPLEMENTATION_COMPLETE.md",
+      "size": 10454,
+      "modified": "2025-10-30T21:18:59.793126079Z",
+      "hash": "65183f030099d94a6279d7654d3ea2c9",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".archive/GIT_COMMIT_STATUS.md": {
+      "path": ".archive/GIT_COMMIT_STATUS.md",
+      "size": 3992,
+      "modified": "2025-10-24T15:10:04.227397799Z",
+      "hash": "ea94a3d5431ebce8ca047c8ea99bfe16",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-76x76@1x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-76x76@1x.png",
+      "size": 9524,
+      "modified": "2025-10-30T19:57:57.695915962Z",
+      "hash": "06027e1177a279f229d19f4649260ee3",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DZ6H_TXl.css": {
+      "path": "dist/assets/index-DZ6H_TXl.css",
+      "size": 55999,
+      "modified": "2025-10-30T22:36:22.538878788Z",
+      "hash": "19cd0e2f178dce5d6c74a893f4edd324",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "PHASE_2_FINAL_SUMMARY.md": {
+      "path": "PHASE_2_FINAL_SUMMARY.md",
+      "size": 11085,
+      "modified": "2025-10-30T19:57:57.508044568Z",
+      "hash": "58d97c9d54fa725a2a29de22a100d75c",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "public/vite.svg": {
+      "path": "public/vite.svg",
+      "size": 1497,
+      "modified": "2025-10-30T19:57:57.614625640Z",
+      "hash": "8e3a10e157f75ada21ab742c022d5430",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "CTO_DASHBOARD_SUMMARY.md": {
+      "path": "CTO_DASHBOARD_SUMMARY.md",
+      "size": 12794,
+      "modified": "2025-10-30T19:57:57.500673168Z",
+      "hash": "be75ebaea78d048b34c911be876f61ce",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DkZUZOE2.js": {
+      "path": "dist/assets/index-DkZUZOE2.js",
+      "size": 94930,
+      "modified": "2025-10-28T00:25:01.220068548Z",
+      "hash": "47744af53e96b91876c37b55ea714840",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/design/.beads/design.db-wal": {
+      "path": "docs/design/.beads/design.db-wal",
+      "size": 0,
+      "modified": "2025-10-22T20:11:59.613613367Z",
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "scripts/beads-parser.js": {
+      "path": "scripts/beads-parser.js",
+      "size": 5151,
+      "modified": "2025-10-30T19:57:57.615233881Z",
+      "hash": "b97366b327d9f8e5b5c0e3766a4e1778",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/Square107x107Logo.png": {
+      "path": "src-tauri/icons/Square107x107Logo.png",
+      "size": 17589,
+      "modified": "2025-10-30T19:57:57.624585713Z",
+      "hash": "4cf770d505edc189fb20d1fe7047e1fe",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/SCREENSHOT_INSTRUCTIONS.md": {
+      "path": "docs/SCREENSHOT_INSTRUCTIONS.md",
+      "size": 1901,
+      "modified": "2025-10-30T19:57:57.532244714Z",
+      "hash": "ead37f512395d5357cecd919d767000a",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/GIT_ASSISTANCE_FEATURE.md": {
+      "path": "docs/GIT_ASSISTANCE_FEATURE.md",
+      "size": 12010,
+      "modified": "2025-10-30T19:57:57.526237372Z",
+      "hash": "f94325b5c4a7511f0ad2b0a69c59c6dd",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".laio/constitution.yaml": {
+      "path": ".laio/constitution.yaml",
+      "size": 7503,
+      "modified": "2025-10-30T19:57:57.492959466Z",
+      "hash": "70e711f41401186af1cfa94d2f1f278d",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-40x40@3x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-40x40@3x.png",
+      "size": 20412,
+      "modified": "2025-10-30T19:57:57.685507307Z",
+      "hash": "6eeb843445c2a548f325d33ca953f81b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".opencode/SETUP.md": {
+      "path": ".opencode/SETUP.md",
+      "size": 12585,
+      "modified": "2025-10-30T19:57:57.493471377Z",
+      "hash": "deba09548718a577e2353413a6665465",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "SVELTE_5_TESTING_GUIDE.md": {
+      "path": "SVELTE_5_TESTING_GUIDE.md",
+      "size": 7522,
+      "modified": "2025-10-30T20:10:23.669652224Z",
+      "hash": "3a417f74552dbb1b2ad226a889f40f6c",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src/lib/components/LargeFiles.svelte": {
+      "path": "src/lib/components/LargeFiles.svelte",
+      "size": 8513,
+      "modified": "2025-10-30T19:57:57.724491758Z",
+      "hash": "5199096ee30ac8762b37ced93244ffe0",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ProjectBloat.svelte": {
+      "path": "src/lib/components/ProjectBloat.svelte",
+      "size": 9536,
+      "modified": "2025-10-30T19:57:57.725728798Z",
+      "hash": "c57db4544d9d871a2cfe36390f218832",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/utils.js": {
+      "path": "src/lib/utils.js",
+      "size": 2956,
+      "modified": "2025-10-30T19:57:57.737821769Z",
+      "hash": "7a044455bc2b3f09b7984aed3175a2f2",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/stores.test.js": {
+      "path": "src/lib/stores.test.js",
+      "size": 8344,
+      "modified": "2025-10-30T21:11:41.692944751Z",
+      "hash": "c0d6762f2b64098644b568145223aaa2",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Cm1mWJ2V.css": {
+      "path": "dist/assets/index-Cm1mWJ2V.css",
+      "size": 35716,
+      "modified": "2025-10-29T04:13:36.318026714Z",
+      "hash": "079a3a4ea58405e9973b6cfe5921c4f5",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-40x40@2x-1.png": {
+      "path": "src-tauri/icons/ios/AppIcon-40x40@2x-1.png",
+      "size": 10391,
+      "modified": "2025-10-30T19:57:57.684233489Z",
+      "hash": "2de59f87a1d45a7f831d21a511c7771e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/history/RELEASE_NOTES_v0.1.1.md": {
+      "path": "docs/history/RELEASE_NOTES_v0.1.1.md",
+      "size": 5431,
+      "modified": "2025-10-30T19:57:57.551101681Z",
+      "hash": "66fbe4342d01075695203b5c0717099d",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "scripts/dynamic-vite.js": {
+      "path": "scripts/dynamic-vite.js",
+      "size": 796,
+      "modified": "2025-10-30T19:57:57.617054051Z",
+      "hash": "f71e756543b8669e02d64fedcb3716b6",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/schedules/MACM-V1.md": {
+      "path": "docs/schedules/MACM-V1.md",
+      "size": 24880,
+      "modified": "2025-10-30T20:56:08.577466852Z",
+      "hash": "83873e38448a8ec59d9f4d4645cfe7dc",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "DESKTOP_UI_TESTING_GUIDE.md": {
+      "path": "DESKTOP_UI_TESTING_GUIDE.md",
+      "size": 9668,
+      "modified": "2025-10-30T20:16:42.311233257Z",
+      "hash": "afb234b192a56f226a91939a7061ba96",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "tsconfig.app.json": {
+      "path": "tsconfig.app.json",
+      "size": 670,
+      "modified": "2025-10-30T19:57:57.742512259Z",
+      "hash": "bd4aeb118be52905e30ef7bf95e1625a",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-CmEgwzr3.css": {
+      "path": "dist/assets/index-CmEgwzr3.css",
+      "size": 7084,
+      "modified": "2025-10-21T19:27:26.919501185Z",
+      "hash": "638228176b6ae8253fd54c9058075602",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "SESSION_SUMMARY_OCT27.md": {
+      "path": "SESSION_SUMMARY_OCT27.md",
+      "size": 11661,
+      "modified": "2025-10-30T19:57:57.516780021Z",
+      "hash": "213cde984e36b6f8ef60de60c2f7d6fa",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "RECOVERY_SUMMARY_2025-10-30.md": {
+      "path": "RECOVERY_SUMMARY_2025-10-30.md",
+      "size": 6026,
+      "modified": "2025-10-30T20:03:36.530178277Z",
+      "hash": "e66b65c0530748dd25bce7412cb684fb",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "openspec/changes/persistent-project-monitoring/specs/project-persistence/spec.md": {
+      "path": "openspec/changes/persistent-project-monitoring/specs/project-persistence/spec.md",
+      "size": 2786,
+      "modified": "2025-10-30T20:35:44.990731590Z",
+      "hash": "a313ad3f69e6865ba7e4b86349c13057",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ProjectScanner.svelte": {
+      "path": "src/lib/components/ProjectScanner.svelte",
+      "size": 15769,
+      "modified": "2025-10-30T19:57:57.727633194Z",
+      "hash": "cc464d0ebd733bc39e02d46c8ac6ac08",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/CONTRIBUTING.md": {
+      "path": "docs/CONTRIBUTING.md",
+      "size": 7984,
+      "modified": "2025-10-30T19:57:57.523512220Z",
+      "hash": "5c4f04983ef89317a7399ed6e4db3013",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/icon.ico": {
+      "path": "src-tauri/icons/icon.ico",
+      "size": 102151,
+      "modified": "2025-10-30T19:57:57.674671998Z",
+      "hash": "715e7f00fcac6ab8f21d6a2764e4cd6d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/tests/integration_tests.rs": {
+      "path": "src-tauri/tests/integration_tests.rs",
+      "size": 13256,
+      "modified": "2025-10-30T19:57:57.715419220Z",
+      "hash": "f1412cced5eeb617efd7bd2b7b502441",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-7cDBp-Mg.js": {
+      "path": "dist/assets/index-7cDBp-Mg.js",
+      "size": 150764,
+      "modified": "2025-10-30T23:46:58.478950283Z",
+      "hash": "33511e95f6f0503fca3481f843260d08",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".prettierrc.json": {
+      "path": ".prettierrc.json",
+      "size": 159,
+      "modified": "2025-10-30T19:57:57.498017257Z",
+      "hash": "330beebb80636b0d9a50dffa9fac5be4",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/pacs/mod.rs": {
+      "path": "src-tauri/src/pacs/mod.rs",
+      "size": 27518,
+      "modified": "2025-10-30T22:33:17.226900146Z",
+      "hash": "62857dcb51a8f344593c131e1a5f6557",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/beads-export.json": {
+      "path": "docs/beads-export.json",
+      "size": 19850,
+      "modified": "2025-10-30T19:57:57.540541392Z",
+      "hash": "823da44cdcb26cb2151fdbdd2077671b",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "SCAN_FIX_SUMMARY.md": {
+      "path": "SCAN_FIX_SUMMARY.md",
+      "size": 5600,
+      "modified": "2025-10-29T04:08:13.646792170Z",
+      "hash": "59ec8acbffa5180f7cfdbaa6573f7449",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/design/.beads/design.db-shm": {
+      "path": "docs/design/.beads/design.db-shm",
+      "size": 32768,
+      "modified": "2025-10-22T20:11:59.614276290Z",
+      "hash": "b7c14ec6110fa820ca6b65f5aec85911",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".github/workflows/beads-sync.yml": {
+      "path": ".github/workflows/beads-sync.yml",
+      "size": 6744,
+      "modified": "2025-10-30T19:57:57.491359372Z",
+      "hash": "01498dadb35b9f06ff700366c2480b61",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/tests/security_integration_test.rs": {
+      "path": "src-tauri/tests/security_integration_test.rs",
+      "size": 5887,
+      "modified": "2025-10-30T21:19:02.247504577Z",
+      "hash": "22bce1414be7d2e7defe65b8934f6bd1",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "openspec/changes/ui-quick-wins/specs/ui-components/spec.md": {
+      "path": "openspec/changes/ui-quick-wins/specs/ui-components/spec.md",
+      "size": 1613,
+      "modified": "2025-10-30T20:32:51.102680094Z",
+      "hash": "9924cddd06ee1112c0668530c1fad620",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/changes/project-scaffolding/specs/project-initialization/spec.md": {
+      "path": "openspec/changes/project-scaffolding/specs/project-initialization/spec.md",
+      "size": 1525,
+      "modified": "2025-10-30T19:57:57.566363535Z",
+      "hash": "7626c6c54038e96276881790d38a3fdc",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ui/ResponsiveGrid.svelte": {
+      "path": "src/lib/components/ui/ResponsiveGrid.svelte",
+      "size": 4526,
+      "modified": "2025-10-30T22:04:46.388699885Z",
+      "hash": "650546b772d45e448a9f855346c82453",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "UI_ENHANCEMENT_SUMMARY.md": {
+      "path": "UI_ENHANCEMENT_SUMMARY.md",
+      "size": 10023,
+      "modified": "2025-10-29T04:14:52.389751879Z",
+      "hash": "031d2678ee71063a22f950207577c92d",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "launch-desktop.sh": {
+      "path": "launch-desktop.sh",
+      "size": 289,
+      "modified": "2025-10-30T19:57:57.552695287Z",
+      "hash": "d4965ac04535092dd428ac216b14144b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/gen/schemas/capabilities.json": {
+      "path": "src-tauri/gen/schemas/capabilities.json",
+      "size": 164,
+      "modified": "2025-10-24T15:49:45.153960824Z",
+      "hash": "2776aa5eea2c8dfedc0c50d8d9ef5f18",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-29x29@1x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-29x29@1x.png",
+      "size": 1923,
+      "modified": "2025-10-30T19:57:57.681297216Z",
+      "hash": "88dfb196a984159877ccbb02af53b171",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/utils/path.rs": {
+      "path": "src-tauri/src/utils/path.rs",
+      "size": 3182,
+      "modified": "2025-10-30T19:57:57.708802705Z",
+      "hash": "fa6228553637fc2c20aeb9237856a825",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/main.rs": {
+      "path": "src-tauri/src/main.rs",
+      "size": 435,
+      "modified": "2025-10-30T19:57:57.706266877Z",
+      "hash": "6413dea27d23caf6f0bc34fc84ee7db0",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".archive/QUICK_START.md": {
+      "path": ".archive/QUICK_START.md",
+      "size": 2199,
+      "modified": "2025-10-24T04:41:16.655155420Z",
+      "hash": "62b458b88265fe312a018e5fe18b4971",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "FEATURE_PIPELINE_STATUS.md": {
+      "path": "FEATURE_PIPELINE_STATUS.md",
+      "size": 9474,
+      "modified": "2025-10-30T20:34:55.377852725Z",
+      "hash": "44840cdb5922b23149265d7af7ac5846",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src/App.svelte": {
+      "path": "src/App.svelte",
+      "size": 7376,
+      "modified": "2025-10-30T23:46:20.920898053Z",
+      "hash": "7f3701f87dc2f4dbf2b0f239b836856b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/READY_FOR_RELEASE.md": {
+      "path": ".archive/READY_FOR_RELEASE.md",
+      "size": 6449,
+      "modified": "2025-10-24T16:04:49.109636545Z",
+      "hash": "f3397b91be7f5156e28c207231219100",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/PHASE_2_COMPLETION_GATE.md": {
+      "path": "docs/PHASE_2_COMPLETION_GATE.md",
+      "size": 18825,
+      "modified": "2025-10-30T19:57:57.529714968Z",
+      "hash": "35503634635522918aee266fdd738efd",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/icon.png": {
+      "path": "src-tauri/icons/icon.png",
+      "size": 323042,
+      "modified": "2025-10-30T19:57:57.677584541Z",
+      "hash": "c59701681d5672a5f72157894541d355",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/analysis/ANALYSIS_INDEX.md": {
+      "path": "docs/analysis/ANALYSIS_INDEX.md",
+      "size": 10496,
+      "modified": "2025-10-30T19:57:57.536599513Z",
+      "hash": "ab0d71df7be54b269cb481477b91d488",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "dist/assets/index-BfMuNlVn.js": {
+      "path": "dist/assets/index-BfMuNlVn.js",
+      "size": 109273,
+      "modified": "2025-10-30T20:13:50.433284961Z",
+      "hash": "5f1750351ef15191d3a823e9b2990e95",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "package.json": {
+      "path": "package.json",
+      "size": 1720,
+      "modified": "2025-10-30T21:57:59.386221728Z",
+      "hash": "cbfc00402bb432fc2650f0bd0b605288",
+      "file_type": "Configuration",
+      "compliance_relevant": true
+    },
+    "docs/compliance/TES-C.25-CODE-QUALITY.md": {
+      "path": "docs/compliance/TES-C.25-CODE-QUALITY.md",
+      "size": 37795,
+      "modified": "2025-10-26T23:35:05.007156849Z",
+      "hash": "efcf837cf52e4052af98210467c38298",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "dist/assets/index-BjaE31X0.css": {
+      "path": "dist/assets/index-BjaE31X0.css",
+      "size": 52807,
+      "modified": "2025-10-30T22:22:40.281923674Z",
+      "hash": "b20b0ec6717641e927857d0163312bbf",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/IMPLEMENTATION_COMPLETE.md": {
+      "path": ".archive/IMPLEMENTATION_COMPLETE.md",
+      "size": 11380,
+      "modified": "2025-10-24T04:33:56.863171101Z",
+      "hash": "c755e8f838ab1531a7bce616b805963a",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DSAYSY1b.css": {
+      "path": "dist/assets/index-DSAYSY1b.css",
+      "size": 24494,
+      "modified": "2025-10-24T19:59:02.422987580Z",
+      "hash": "7cc90bec9bd84b58482698ce50c58894",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-D2khCtKD.js": {
+      "path": "dist/assets/index-D2khCtKD.js",
+      "size": 22317,
+      "modified": "2025-10-23T05:18:28.222203970Z",
+      "hash": "66779e3ed10703297e3672809ed6a229",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".archive/test.pyc": {
+      "path": ".archive/test.pyc",
+      "size": 0,
+      "modified": "2025-10-24T20:45:24.003979206Z",
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-B5s2JSuo.js": {
+      "path": "dist/assets/index-B5s2JSuo.js",
+      "size": 76338,
+      "modified": "2025-10-24T19:59:02.422823310Z",
+      "hash": "cf294d6189f8ca78bea05fb5722ecf25",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/OPENSPEC_CHANGE_TEMPLATES.md": {
+      "path": "docs/OPENSPEC_CHANGE_TEMPLATES.md",
+      "size": 12420,
+      "modified": "2025-10-30T19:57:57.528273213Z",
+      "hash": "bbe0eb904db51c1760c17272760016b1",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/android/mipmap-mdpi/ic_launcher.png": {
+      "path": "src-tauri/icons/android/mipmap-mdpi/ic_launcher.png",
+      "size": 3540,
+      "modified": "2025-10-30T19:57:57.635326093Z",
+      "hash": "ec00e967750f63e8d1a3255c2034bfcb",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/128x128.png": {
+      "path": "src-tauri/icons/128x128.png",
+      "size": 23940,
+      "modified": "2025-10-30T19:57:57.621546902Z",
+      "hash": "eedbd7b841541d64fe5d83b5e8c3a45e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/tauri-tray-menu-agents/tasks.md": {
+      "path": "openspec/changes/tauri-tray-menu-agents/tasks.md",
+      "size": 25560,
+      "modified": "2025-10-30T19:57:57.569628015Z",
+      "hash": "b64159ce225083d995bd72d8aaa38dc9",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "dist/assets/index-BmAVGTu2.css": {
+      "path": "dist/assets/index-BmAVGTu2.css",
+      "size": 4766,
+      "modified": "2025-10-21T20:46:28.880621195Z",
+      "hash": "6c2174df3e5ca4d9ba2bb38ca5ad984e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/MASTER_WORKFLOW_GUIDE.md": {
+      "path": "docs/MASTER_WORKFLOW_GUIDE.md",
+      "size": 15174,
+      "modified": "2025-10-30T19:57:57.526968179Z",
+      "hash": "4011031f511aff6dc4eb363338522aee",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/compliance/TES-P.02-CI-CD-OPTIMIZATION.md": {
+      "path": "docs/compliance/TES-P.02-CI-CD-OPTIMIZATION.md",
+      "size": 17292,
+      "modified": "2025-10-26T23:57:10.544909596Z",
+      "hash": "5f31aae8c949b16d4892f682c4f478d0",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/changes/architecture-visualization/specs/diagram-generation/spec.md": {
+      "path": "openspec/changes/architecture-visualization/specs/diagram-generation/spec.md",
+      "size": 4262,
+      "modified": "2025-10-30T20:37:44.809118824Z",
+      "hash": "ce21621f8d06c7963c00c552e76ad362",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "openspec/project.md": {
+      "path": "openspec/project.md",
+      "size": 10441,
+      "modified": "2025-10-30T19:57:57.570725652Z",
+      "hash": "88026bf92b9e2faba8d6d5f395d377f0",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".pacs/baseline.json": {
+      "path": ".pacs/baseline.json",
+      "size": 105276,
+      "modified": "2025-10-31T02:33:38.151557270Z",
+      "hash": "57f227daa1ae1501edc2f11dfbefd0b6",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "ADVANCED_UI_IMPLEMENTATION_COMPLETE.md": {
+      "path": "ADVANCED_UI_IMPLEMENTATION_COMPLETE.md",
+      "size": 9978,
+      "modified": "2025-10-30T22:09:46.390473979Z",
+      "hash": "e04da4499bf8e354e224d1d841185d45",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "package-lock.json": {
+      "path": "package-lock.json",
+      "size": 166546,
+      "modified": "2025-10-30T21:57:59.533842141Z",
+      "hash": "c97bd49f5d3684a46a1b426a92031971",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-SDN67FHE.css": {
+      "path": "dist/assets/index-SDN67FHE.css",
+      "size": 33444,
+      "modified": "2025-10-28T00:25:01.219283144Z",
+      "hash": "6ca7f3223ed9b497f6fbbae9eed76697",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/TestUIFeatures.svelte": {
+      "path": "src/lib/components/ui/TestUIFeatures.svelte",
+      "size": 2251,
+      "modified": "2025-10-30T21:08:11.222260241Z",
+      "hash": "6fd1a4b474819cf7d241d11a949af4df",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BTWEZZPF.css": {
+      "path": "dist/assets/index-BTWEZZPF.css",
+      "size": 34535,
+      "modified": "2025-10-28T01:21:43.634246577Z",
+      "hash": "88e2ca1386f31c83287ff5d1b7f3462a",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-CP383yRB.js": {
+      "path": "dist/assets/index-CP383yRB.js",
+      "size": 121714,
+      "modified": "2025-10-30T21:15:15.843951176Z",
+      "hash": "97d5afa2c2b05cc9e19b133ace9f443c",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/__tests__/Button.test.ts": {
+      "path": "src/lib/components/__tests__/Button.test.ts",
+      "size": 1806,
+      "modified": "2025-10-30T20:09:23.176007564Z",
+      "hash": "31e96872292ec2f53064cbaf862d8dbb",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Cxpz4BU5.js": {
+      "path": "dist/assets/index-Cxpz4BU5.js",
+      "size": 11888,
+      "modified": "2025-10-21T19:26:13.296993256Z",
+      "hash": "ee256b3a3a4a014d075b5791294859fe",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".archive/SHOWCASE_SUMMARY.md": {
+      "path": ".archive/SHOWCASE_SUMMARY.md",
+      "size": 7705,
+      "modified": "2025-10-24T15:54:30.855808496Z",
+      "hash": "05d4fb337aa48a312a1385d91ab5be37",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-anydpi-v26/ic_launcher.xml": {
+      "path": "src-tauri/icons/android/mipmap-anydpi-v26/ic_launcher.xml",
+      "size": 261,
+      "modified": "2025-10-30T19:57:57.632871526Z",
+      "hash": "408663d7c8a841f30f26de5a8c9f669a",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/project-scaffolding/tasks.md": {
+      "path": "openspec/changes/project-scaffolding/tasks.md",
+      "size": 12937,
+      "modified": "2025-10-30T19:57:57.567294078Z",
+      "hash": "413b6f3e93b8aee2d5fd205cbb2c53a7",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ui/Card.svelte": {
+      "path": "src/lib/components/ui/Card.svelte",
+      "size": 937,
+      "modified": "2025-10-30T19:57:57.733691027Z",
+      "hash": "8644efe0422bf50e6b8046b13a0f0c5f",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/add-path-validation/proposal.md": {
+      "path": "openspec/changes/add-path-validation/proposal.md",
+      "size": 2203,
+      "modified": "2025-10-30T19:57:57.555111086Z",
+      "hash": "4dc959550e2acfe4ede4ef8b3ff2092f",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/design/.beads/.gitignore": {
+      "path": "docs/design/.beads/.gitignore",
+      "size": 12,
+      "modified": "2025-10-22T20:11:49.681716442Z",
+      "hash": "b8a247283893926e006b0e5aa0ce2c08",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/TAURI_SVELTE_SCAFFOLDING_BEST_PRACTICES.md": {
+      "path": "docs/TAURI_SVELTE_SCAFFOLDING_BEST_PRACTICES.md",
+      "size": 27409,
+      "modified": "2025-10-30T19:57:57.533861300Z",
+      "hash": "416ec31a86a52f276825337fcca0518e",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/ios/AppIcon-29x29@3x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-29x29@3x.png",
+      "size": 11926,
+      "modified": "2025-10-30T19:57:57.683044307Z",
+      "hash": "c1705e3cc24c7cda449247d6713bf782",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".beads/edgs/EDGS_PHASE_MAPPING.md": {
+      "path": ".beads/edgs/EDGS_PHASE_MAPPING.md",
+      "size": 14324,
+      "modified": "2025-10-27T01:29:35.345685145Z",
+      "hash": "fca18cef85b716770f982d5b2248c5b3",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/ios/AppIcon-76x76@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-76x76@2x.png",
+      "size": 30662,
+      "modified": "2025-10-30T19:57:57.696826190Z",
+      "hash": "f20f4094862ff2bb60fa353964426889",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-20x20@2x-1.png": {
+      "path": "src-tauri/icons/ios/AppIcon-20x20@2x-1.png",
+      "size": 3253,
+      "modified": "2025-10-30T19:57:57.680005845Z",
+      "hash": "601d9c6ca8e03d23bae044d1d8b10740",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png": {
+      "path": "src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png",
+      "size": 132524,
+      "modified": "2025-10-30T19:57:57.641737733Z",
+      "hash": "9c040f1e3579026d74c71df9821bbf73",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BERCHRGd.js": {
+      "path": "dist/assets/index-BERCHRGd.js",
+      "size": 16619,
+      "modified": "2025-10-21T20:46:28.880758643Z",
+      "hash": "ec9fc7e098d53f9c6c14bf91d912a483",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/PHASE_1_COMPLETION_GATE.md": {
+      "path": "docs/PHASE_1_COMPLETION_GATE.md",
+      "size": 9713,
+      "modified": "2025-10-30T19:57:57.529119853Z",
+      "hash": "c1cc5a151081cd77817ae9cf727e1a58",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/gen/schemas/acl-manifests.json": {
+      "path": "src-tauri/gen/schemas/acl-manifests.json",
+      "size": 66527,
+      "modified": "2025-10-24T15:49:45.133783698Z",
+      "hash": "e7f91647046676cbaadfc5573edc8654",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "PHASE_0_COMPLETION_REPORT.md": {
+      "path": "PHASE_0_COMPLETION_REPORT.md",
+      "size": 8896,
+      "modified": "2025-10-30T19:57:57.506529932Z",
+      "hash": "d77d82e8d43588769fb5e368ad5769e7",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "SESSION_HANDOFF_OCT27.md": {
+      "path": "SESSION_HANDOFF_OCT27.md",
+      "size": 8306,
+      "modified": "2025-10-30T19:57:57.515023408Z",
+      "hash": "b714bd83e3f5de2946b4538f16f225bc",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src/lib/stores.js": {
+      "path": "src/lib/stores.js",
+      "size": 4886,
+      "modified": "2025-10-30T21:26:46.004261736Z",
+      "hash": "f8e8a09b1facf854ddb1a7527419204c",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/StatusBadge.svelte": {
+      "path": "src/lib/components/ui/StatusBadge.svelte",
+      "size": 2218,
+      "modified": "2025-10-30T19:57:57.734339318Z",
+      "hash": "5c3964eddbf11a7c56918a5dfb835292",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "PACS_IMPLEMENTATION_COMPLETE.md": {
+      "path": "PACS_IMPLEMENTATION_COMPLETE.md",
+      "size": 6347,
+      "modified": "2025-10-30T22:40:06.193972471Z",
+      "hash": "e87595a03edcc10c70440e3ea0b5ceef",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".github/ISSUE_TEMPLATE/feature_request.md": {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "size": 729,
+      "modified": "2025-10-30T19:57:57.490677430Z",
+      "hash": "4dd9eb8bee6cf2879eec9fe01cc5f692",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "openspec/changes/monaco-editor-panel/proposal.md": {
+      "path": "openspec/changes/monaco-editor-panel/proposal.md",
+      "size": 22665,
+      "modified": "2025-10-30T19:57:57.561267296Z",
+      "hash": "511f973699988f437afc7c934d6186ae",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/stores.ts": {
+      "path": "src/lib/stores.ts",
+      "size": 7368,
+      "modified": "2025-10-30T21:13:48.952316290Z",
+      "hash": "a56733b78c8d42e76663db2f2afbc41c",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DwdkDsLl.js": {
+      "path": "dist/assets/index-DwdkDsLl.js",
+      "size": 101457,
+      "modified": "2025-10-28T01:21:43.638496035Z",
+      "hash": "c0b9acf4126c4555869ad7257ea2da2e",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-dhBH91fY.css": {
+      "path": "dist/assets/index-dhBH91fY.css",
+      "size": 45291,
+      "modified": "2025-10-30T21:07:33.365635252Z",
+      "hash": "7b862a14e4c42c3e1142d98aced33294",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/compliance/TES-C.25-IMPLEMENTATION-GUIDE.md": {
+      "path": "docs/compliance/TES-C.25-IMPLEMENTATION-GUIDE.md",
+      "size": 15563,
+      "modified": "2025-10-26T23:36:31.676276088Z",
+      "hash": "7164c9ec714ca635530277d354b9d3dd",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/icon.icns": {
+      "path": "src-tauri/icons/icon.icns",
+      "size": 1750380,
+      "modified": "2025-10-30T19:57:57.670378269Z",
+      "hash": "24393233eddda53c355f8f2db9564201",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/AGENTS.md": {
+      "path": "openspec/AGENTS.md",
+      "size": 14926,
+      "modified": "2025-10-27T01:27:28.679939755Z",
+      "hash": "91482ed78bcaaec7772628c8afdc6c30",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/src/models.rs": {
+      "path": "src-tauri/src/models.rs",
+      "size": 12839,
+      "modified": "2025-10-30T19:57:57.706999949Z",
+      "hash": "31a3f6fecd3abbdd530adb3f3d81a501",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "PHASE_2_PROGRESS.md": {
+      "path": "PHASE_2_PROGRESS.md",
+      "size": 11034,
+      "modified": "2025-10-30T19:57:57.508985729Z",
+      "hash": "5c9515c36abadecb07222611d029353b",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Eq_p-b31.js": {
+      "path": "dist/assets/index-Eq_p-b31.js",
+      "size": 135190,
+      "modified": "2025-10-30T22:36:22.538625352Z",
+      "hash": "eb18d970b536363f24d338fce40a57d0",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "docs/history/RELEASE_NOTES.md": {
+      "path": "docs/history/RELEASE_NOTES.md",
+      "size": 7059,
+      "modified": "2025-10-30T19:57:57.549346868Z",
+      "hash": "7f39bfaedfb319992f2fa80a36123a4a",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/Square150x150Logo.png": {
+      "path": "src-tauri/icons/Square150x150Logo.png",
+      "size": 31560,
+      "modified": "2025-10-30T19:57:57.625994600Z",
+      "hash": "fd7fb78ad73fe2a5f176ec57ba698a17",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/Square44x44Logo.png": {
+      "path": "src-tauri/icons/Square44x44Logo.png",
+      "size": 3892,
+      "modified": "2025-10-30T19:57:57.629658259Z",
+      "hash": "218e27d2a1ec76cc93e7d01e2f6ae27b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/add-path-validation/specs/cleanup-operations/spec.md": {
+      "path": "openspec/changes/add-path-validation/specs/cleanup-operations/spec.md",
+      "size": 3234,
+      "modified": "2025-10-30T19:57:57.555812814Z",
+      "hash": "7bf26e41c5aa665889cdc89012f1aa7c",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/TESTING.md": {
+      "path": "docs/TESTING.md",
+      "size": 6893,
+      "modified": "2025-10-30T19:57:57.534511729Z",
+      "hash": "759e830cb613d18bf7b37de5278d1702",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ui/VirtualList.svelte": {
+      "path": "src/lib/components/ui/VirtualList.svelte",
+      "size": 2444,
+      "modified": "2025-10-30T19:37:42.538412408Z",
+      "hash": "83d26596b24c5c975dc07ba5bd2a8c79",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".opencode/setup.sh": {
+      "path": ".opencode/setup.sh",
+      "size": 9303,
+      "modified": "2025-10-30T19:57:57.497526082Z",
+      "hash": "01dacd6d475c72176abd0ebea6e9ec2c",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "tsconfig.node.json": {
+      "path": "tsconfig.node.json",
+      "size": 653,
+      "modified": "2025-10-30T19:57:57.743521259Z",
+      "hash": "eec85c9d7c6b599801557f1afd86672c",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "EDGS_PACS_MILESTONE.md": {
+      "path": "EDGS_PACS_MILESTONE.md",
+      "size": 6440,
+      "modified": "2025-10-30T23:32:37.483220333Z",
+      "hash": "ee892aac807d24992c8ffaafd64b9bd9",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png": {
+      "path": "src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png",
+      "size": 11354,
+      "modified": "2025-10-30T19:57:57.637463811Z",
+      "hash": "afabdf142e447be3f997d489b115a490",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "SESSION_SUMMARY_OCT27_EVENING.md": {
+      "path": "SESSION_SUMMARY_OCT27_EVENING.md",
+      "size": 13152,
+      "modified": "2025-10-30T19:57:57.517512125Z",
+      "hash": "6da43bac6abcf8b941265be81aa5ca9d",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-8G0tqXJc.js": {
+      "path": "dist/assets/index-8G0tqXJc.js",
+      "size": 94745,
+      "modified": "2025-10-27T22:58:04.584844963Z",
+      "hash": "de0628aed942456a5219f2a135620827",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "AGENTS.md": {
+      "path": "AGENTS.md",
+      "size": 17955,
+      "modified": "2025-10-30T19:57:57.499382228Z",
+      "hash": "724a89c729e28e308e9f6b477b1e4513",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".archive/test_junk_detection.rs": {
+      "path": ".archive/test_junk_detection.rs",
+      "size": 3626,
+      "modified": "2025-10-25T03:50:46.779854655Z",
+      "hash": "fdbd1a69a01cfc69b2fefdf742c018b5",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "PROJECT_STATUS_PHASE2_COMPLETE.md": {
+      "path": "PROJECT_STATUS_PHASE2_COMPLETE.md",
+      "size": 10867,
+      "modified": "2025-10-30T19:57:57.511486287Z",
+      "hash": "31ec48842f037026a48af0b6375d7b7f",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/Toast.svelte": {
+      "path": "src/lib/components/ui/Toast.svelte",
+      "size": 2887,
+      "modified": "2025-10-30T21:13:42.142676752Z",
+      "hash": "5db7dfc286fd06d26765920c3a972d79",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "vite.config.js": {
+      "path": "vite.config.js",
+      "size": 356,
+      "modified": "2025-10-30T19:57:57.744107869Z",
+      "hash": "388b093973fcd366db19aca134deb498",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/lib.rs": {
+      "path": "src-tauri/src/lib.rs",
+      "size": 25237,
+      "modified": "2025-10-30T23:43:20.131472433Z",
+      "hash": "0e773a57d6b576ad56fbc5763c002ed0",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "ARCHITECTURE_VISUALIZATION_IMPLEMENTATION_COMPLETE.md": {
+      "path": "ARCHITECTURE_VISUALIZATION_IMPLEMENTATION_COMPLETE.md",
+      "size": 7061,
+      "modified": "2025-10-31T02:31:23.020992819Z",
+      "hash": "1e6725dda26a501dc827b11aef03e76c",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ui/DataVisualization.svelte": {
+      "path": "src/lib/components/ui/DataVisualization.svelte",
+      "size": 11730,
+      "modified": "2025-10-30T22:06:41.489216983Z",
+      "hash": "cc6bd15db8b141bfed7f6236cb9c4bf7",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/index.html": {
+      "path": "src/index.html",
+      "size": 565,
+      "modified": "2025-10-30T22:22:30.513803873Z",
+      "hash": "fecf194bac55f1948a81f48805100c23",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/design-tokens.css": {
+      "path": "src/lib/design-tokens.css",
+      "size": 8205,
+      "modified": "2025-10-30T19:37:22.570804377Z",
+      "hash": "9f17b1788abf9a8ce5bd7a2a4fea76b4",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".gitignore": {
+      "path": ".gitignore",
+      "size": 798,
+      "modified": "2025-10-30T19:57:57.492436889Z",
+      "hash": "d7e3f62fa71cfe39d3324122935e95ef",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Vqj89jym.css": {
+      "path": "dist/assets/index-Vqj89jym.css",
+      "size": 22145,
+      "modified": "2025-10-24T15:18:39.851105690Z",
+      "hash": "0e40e1c52b88adc9a0aeb36a85b17cc9",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "README.md": {
+      "path": "README.md",
+      "size": 9628,
+      "modified": "2025-10-30T19:57:57.513252990Z",
+      "hash": "295e7136f50b3f508d52172c3dd68086",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "PROJECT_AUDITOR_COMPLIANCE_SCANNER_SPEC_COMPLETE.md": {
+      "path": "PROJECT_AUDITOR_COMPLIANCE_SCANNER_SPEC_COMPLETE.md",
+      "size": 17043,
+      "modified": "2025-10-30T19:57:57.509609851Z",
+      "hash": "6d1869ec6948ae943b61e1b2d778dfea",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-Clv1jBKD.css": {
+      "path": "dist/assets/index-Clv1jBKD.css",
+      "size": 50565,
+      "modified": "2025-10-30T21:19:13.585190296Z",
+      "hash": "4d2fafdf4dbc1d75a79d45a23efc48ae",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/ARCHITECTURE.md": {
+      "path": "docs/ARCHITECTURE.md",
+      "size": 10866,
+      "modified": "2025-10-30T19:57:57.520655718Z",
+      "hash": "b6d1dfa33aa3b10afd4d9405d4e46f15",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "COMPREHENSIVE_AUDIT_REPORT_2025-10-30.md": {
+      "path": "COMPREHENSIVE_AUDIT_REPORT_2025-10-30.md",
+      "size": 11762,
+      "modified": "2025-10-30T20:01:40.905717829Z",
+      "hash": "032b8f693d2155002934a3b008c516d9",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-60x60@3x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-60x60@3x.png",
+      "size": 41114,
+      "modified": "2025-10-30T19:57:57.694865024Z",
+      "hash": "298ee6c929b4b7c0cc7694b9043bfc49",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "SESSION_COMPLETION_OCT28.md": {
+      "path": "SESSION_COMPLETION_OCT28.md",
+      "size": 11303,
+      "modified": "2025-10-30T19:57:57.514141522Z",
+      "hash": "62f82b96dfba75ef32a5ffea58bb8adf",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/values/ic_launcher_background.xml": {
+      "path": "src-tauri/icons/android/values/ic_launcher_background.xml",
+      "size": 115,
+      "modified": "2025-10-30T19:57:57.652123187Z",
+      "hash": "ceead947a211598b0fb4d3861e9e8f7c",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/32x32.png": {
+      "path": "src-tauri/icons/32x32.png",
+      "size": 2371,
+      "modified": "2025-10-30T19:57:57.623498281Z",
+      "hash": "d38b96bf38a059241a52d4f5028ffa3d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/accessibility.ts": {
+      "path": "src/lib/accessibility.ts",
+      "size": 15937,
+      "modified": "2025-10-30T22:02:21.953175079Z",
+      "hash": "9678cd1ca87118ab935b9352664cfdec",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/PACSCompliance.svelte": {
+      "path": "src/lib/components/PACSCompliance.svelte",
+      "size": 9917,
+      "modified": "2025-10-30T22:34:30.738611829Z",
+      "hash": "516f7fb7caafa861018e2f2a7285372c",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-CnxXTY4M.css": {
+      "path": "dist/assets/index-CnxXTY4M.css",
+      "size": 8554,
+      "modified": "2025-10-23T05:18:28.222637534Z",
+      "hash": "5ea11d6671b9967861c17063ba5b907f",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/analysis/ANALYSIS.md": {
+      "path": "docs/analysis/ANALYSIS.md",
+      "size": 23467,
+      "modified": "2025-10-30T19:57:57.535271973Z",
+      "hash": "5c964e0d4863b8566206fa56f100f08f",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/compliance/TES-2025-v6.9.md": {
+      "path": "docs/compliance/TES-2025-v6.9.md",
+      "size": 71181,
+      "modified": "2025-10-30T19:57:57.541832750Z",
+      "hash": "20086a465a8d3f86adf51d2a66d6a988",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/gen/schemas/desktop-schema.json": {
+      "path": "src-tauri/gen/schemas/desktop-schema.json",
+      "size": 117512,
+      "modified": "2025-10-24T15:49:45.147595286Z",
+      "hash": "e849bf210e3fbcbd992533d88dbd0f28",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-40x40@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-40x40@2x.png",
+      "size": 10391,
+      "modified": "2025-10-30T19:57:57.684872972Z",
+      "hash": "2de59f87a1d45a7f831d21a511c7771e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/Cargo-test.toml": {
+      "path": ".archive/Cargo-test.toml",
+      "size": 109,
+      "modified": "2025-10-23T04:42:56.798370004Z",
+      "hash": "be2ac7cd4e0e41a68112b04427e46b69",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BVjoeSmw.css": {
+      "path": "dist/assets/index-BVjoeSmw.css",
+      "size": 57035,
+      "modified": "2025-10-30T23:46:58.478582351Z",
+      "hash": "8d92135ce682c23dd5c22a7db228cc03",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".opencode/agent/svelte-expert.md": {
+      "path": ".opencode/agent/svelte-expert.md",
+      "size": 9171,
+      "modified": "2025-10-30T19:57:57.494632147Z",
+      "hash": "498702b7525afc7833c6e4ee3a76e181",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/design/V2_FEATURE_ROADMAP.md": {
+      "path": "docs/design/V2_FEATURE_ROADMAP.md",
+      "size": 15483,
+      "modified": "2025-10-30T19:57:57.547910207Z",
+      "hash": "7aad4599dab0e882c3f738f28c2ed84a",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "PROJECT_SCAFFOLDING_SPEC_SUMMARY.md": {
+      "path": "PROJECT_SCAFFOLDING_SPEC_SUMMARY.md",
+      "size": 10838,
+      "modified": "2025-10-30T19:57:57.510561069Z",
+      "hash": "ca02da6f8c2d87faeead053e8e91c78c",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/analysis/PROJECT_STATUS.md": {
+      "path": "docs/analysis/PROJECT_STATUS.md",
+      "size": 9564,
+      "modified": "2025-10-30T19:57:57.538084649Z",
+      "hash": "53e7ed0da8b24778d5499c2091f52c83",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "BEADS_SYNC_QUICKSTART.md": {
+      "path": "BEADS_SYNC_QUICKSTART.md",
+      "size": 6780,
+      "modified": "2025-10-30T19:57:57.500044935Z",
+      "hash": "62fbce0f2205f9fece01120a0cb7cb9d",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png": {
+      "path": "src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png",
+      "size": 37458,
+      "modified": "2025-10-30T19:57:57.644115103Z",
+      "hash": "abf23c952091893a5ddf2986c532d1e3",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/cto-dashboard/tasks.md": {
+      "path": "openspec/changes/cto-dashboard/tasks.md",
+      "size": 18512,
+      "modified": "2025-10-30T19:57:57.560384149Z",
+      "hash": "b7d38fa5c893ff4ab1077a7a5d221eda",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/app.css": {
+      "path": "src/app.css",
+      "size": 1341,
+      "modified": "2025-10-30T21:03:19.229069464Z",
+      "hash": "d3e688fe1b86c53bb75163f8ac6afa1f",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/test_junk_patterns.sh": {
+      "path": ".archive/test_junk_patterns.sh",
+      "size": 719,
+      "modified": "2025-10-24T17:09:30.103115678Z",
+      "hash": "a8822142952dd97fedfb9215615253ea",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "src/assets/tempext-logo.png": {
+      "path": "src/assets/tempext-logo.png",
+      "size": 47956,
+      "modified": "2025-10-30T19:57:57.717941629Z",
+      "hash": "d695fc66607fdfb821fd1b494a32b10d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-29x29@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-29x29@2x.png",
+      "size": 6036,
+      "modified": "2025-10-30T19:57:57.682164697Z",
+      "hash": "d19b257ccb35da4ec7cc1c0e067ba390",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/.gitignore": {
+      "path": "src-tauri/.gitignore",
+      "size": 86,
+      "modified": "2025-10-30T19:57:57.618594460Z",
+      "hash": "173fe707e36dc64ad0d41b7e2683edbf",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "NEXT_SESSION_GUIDE.md": {
+      "path": "NEXT_SESSION_GUIDE.md",
+      "size": 10239,
+      "modified": "2025-10-30T19:57:57.505690310Z",
+      "hash": "ee14f0525394d30614c24a85091d0a23",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/design/DESIGN_SPEC.md": {
+      "path": "docs/design/DESIGN_SPEC.md",
+      "size": 6695,
+      "modified": "2025-10-30T19:57:57.542544407Z",
+      "hash": "736676bebc718c3f00ba6cf5c74fe2e1",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/analysis/RECOMMENDATIONS.md": {
+      "path": "docs/analysis/RECOMMENDATIONS.md",
+      "size": 17527,
+      "modified": "2025-10-30T19:57:57.538626218Z",
+      "hash": "35e7c5678918f9e757f77fbb95925d8b",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".archive/SUCCESS.md": {
+      "path": ".archive/SUCCESS.md",
+      "size": 6297,
+      "modified": "2025-10-24T05:07:34.148686409Z",
+      "hash": "5f1420dd2d58425a483f22d41e51eabc",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".archive/STARTUP_FIXED.md": {
+      "path": ".archive/STARTUP_FIXED.md",
+      "size": 2937,
+      "modified": "2025-10-24T05:04:53.766263366Z",
+      "hash": "3c9c0ed5597232e56bc5f3951dcc6f4f",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "docs/compliance/TES-P.01-PROJECT-SCAFFOLDING.md": {
+      "path": "docs/compliance/TES-P.01-PROJECT-SCAFFOLDING.md",
+      "size": 29006,
+      "modified": "2025-10-26T23:53:30.314192176Z",
+      "hash": "670dea217856ca2bfbb574736152b272",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/design/JUNK_FILE_DETECTION_STRATEGY.md": {
+      "path": "docs/design/JUNK_FILE_DETECTION_STRATEGY.md",
+      "size": 11028,
+      "modified": "2025-10-30T19:57:57.543847553Z",
+      "hash": "3d6dd3e3e3ab0d74b3bda834f584d69f",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    ".archive/BD_IMPLEMENTATION_SUMMARY.md": {
+      "path": ".archive/BD_IMPLEMENTATION_SUMMARY.md",
+      "size": 3293,
+      "modified": "2025-10-22T20:36:32.915899515Z",
+      "hash": "96d59fbd3f55a520c11a7fd138a667f6",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    ".archive/BRANDING_UPDATE.md": {
+      "path": ".archive/BRANDING_UPDATE.md",
+      "size": 2489,
+      "modified": "2025-10-24T16:48:34.902911782Z",
+      "hash": "ddd522dbf5bf447effc3eced25f22ce6",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/utils/mod.rs": {
+      "path": "src-tauri/src/utils/mod.rs",
+      "size": 410,
+      "modified": "2025-10-30T19:57:57.708209437Z",
+      "hash": "012c348a30635faaab89901505a81ae9",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "svelte.config.js": {
+      "path": "svelte.config.js",
+      "size": 370,
+      "modified": "2025-10-30T20:07:03.949284655Z",
+      "hash": "87a0500f718fb7f5fe1d5f8d378e0621",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src-tauri/capabilities/default.json": {
+      "path": "src-tauri/capabilities/default.json",
+      "size": 229,
+      "modified": "2025-10-30T19:57:57.620820134Z",
+      "hash": "aee6821d480f0e665c6265bad75faef5",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    ".opencode/agent/core-coder.md": {
+      "path": ".opencode/agent/core-coder.md",
+      "size": 3629,
+      "modified": "2025-10-30T19:57:57.493930791Z",
+      "hash": "f8614e44d9845d262262b3ce51570564",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "openspec/changes/add-path-validation/specs/disk-scanning/spec.md": {
+      "path": "openspec/changes/add-path-validation/specs/disk-scanning/spec.md",
+      "size": 3462,
+      "modified": "2025-10-30T19:57:57.556384994Z",
+      "hash": "80d424ff4a85cc13ee9bbeceaddb63c3",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ui/AdvancedDashboard.svelte": {
+      "path": "src/lib/components/ui/AdvancedDashboard.svelte",
+      "size": 19688,
+      "modified": "2025-10-30T22:07:58.699242540Z",
+      "hash": "c2d98f4afd752e006ea52cac0a52e155",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/test/setup.js": {
+      "path": "src/test/setup.js",
+      "size": 321,
+      "modified": "2025-10-30T20:06:32.822222028Z",
+      "hash": "3cc9ab639ffe6ce4ecd090656d77bf8a",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    ".archive/test_new_scanners": {
+      "path": ".archive/test_new_scanners",
+      "size": 591720,
+      "modified": "2025-10-25T03:56:56.557310104Z",
+      "hash": "8b7103365b3cf907871b5c685cc08a96",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ArchitectureViewer.svelte": {
+      "path": "src/lib/components/ArchitectureViewer.svelte",
+      "size": 12723,
+      "modified": "2025-10-30T21:23:39.275227665Z",
+      "hash": "1a0dc8099dedf48bfcde60c6e0e5ccb3",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/data-viz/ProgressIndicator.svelte": {
+      "path": "src/lib/components/data-viz/ProgressIndicator.svelte",
+      "size": 7099,
+      "modified": "2025-10-30T22:01:20.846464954Z",
+      "hash": "90e2b4d2a84d4e2a2282099963f46e3b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".opencode/env.sh": {
+      "path": ".opencode/env.sh",
+      "size": 2334,
+      "modified": "2025-10-30T19:57:57.496082074Z",
+      "hash": "853e178dbd6f80cd21f73714022c3917",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "vitest.config.js": {
+      "path": "vitest.config.js",
+      "size": 698,
+      "modified": "2025-10-30T20:08:26.189397481Z",
+      "hash": "0241ce38edb7f7796ddc5f3d4a8da82d",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "openspec/changes/persistent-project-monitoring/proposal.md": {
+      "path": "openspec/changes/persistent-project-monitoring/proposal.md",
+      "size": 1174,
+      "modified": "2025-10-30T20:35:12.949497631Z",
+      "hash": "fc69bf4cab97ffe2e3a98bfc501eaea6",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png": {
+      "path": "src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png",
+      "size": 17891,
+      "modified": "2025-10-30T19:57:57.635973712Z",
+      "hash": "6e539e2b393b14e586f1ba2e50d38958",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "openspec/changes/project-auditor-compliance-scanner/proposal.md": {
+      "path": "openspec/changes/project-auditor-compliance-scanner/proposal.md",
+      "size": 20684,
+      "modified": "2025-10-30T19:57:57.563117201Z",
+      "hash": "e691656003a95aacd2d0d05a05ee681c",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src/lib/components/ArchitectureVisualization.svelte": {
+      "path": "src/lib/components/ArchitectureVisualization.svelte",
+      "size": 23691,
+      "modified": "2025-10-31T02:35:38.083303258Z",
+      "hash": "333164211b6b51b498cde0a5738d5c7d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-60x60@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-60x60@2x.png",
+      "size": 20412,
+      "modified": "2025-10-30T19:57:57.692912153Z",
+      "hash": "6eeb843445c2a548f325d33ca953f81b",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".opencode/opencode.jsonc": {
+      "path": ".opencode/opencode.jsonc",
+      "size": 3884,
+      "modified": "2025-10-30T19:57:57.496605489Z",
+      "hash": "92de3482980b895c749c5998ae8b9247",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/layout/ResponsiveLayout.svelte": {
+      "path": "src/lib/components/layout/ResponsiveLayout.svelte",
+      "size": 6081,
+      "modified": "2025-10-30T19:38:49.513048795Z",
+      "hash": "e0225f798adf695a0ac2450e499986b1",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    ".archive/test.swp": {
+      "path": ".archive/test.swp",
+      "size": 0,
+      "modified": "2025-10-24T20:45:24.143510103Z",
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "file_type": "Test",
+      "compliance_relevant": false
+    },
+    ".opencode/.gitignore": {
+      "path": ".opencode/.gitignore",
+      "size": 45,
+      "modified": "2025-10-27T22:15:46.599320126Z",
+      "hash": "661312dc5bee8c81e7248419d5012812",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/SystemJunk.svelte": {
+      "path": "src/lib/components/SystemJunk.svelte",
+      "size": 8884,
+      "modified": "2025-10-30T19:57:57.730528125Z",
+      "hash": "44e300eb31ab2b021ad272ee99135658",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png",
+      "size": 36073,
+      "modified": "2025-10-30T19:57:57.702275078Z",
+      "hash": "a1055e11a85a67e78e253a0cc6f0b7d5",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "QUICK_REFERENCE_P2_COMPLETE.md": {
+      "path": "QUICK_REFERENCE_P2_COMPLETE.md",
+      "size": 7047,
+      "modified": "2025-10-30T19:57:57.512066599Z",
+      "hash": "a1770b4aeaad93ff8e0fa0af14ba5ec9",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/ios/AppIcon-20x20@3x.png": {
+      "path": "src-tauri/icons/ios/AppIcon-20x20@3x.png",
+      "size": 6380,
+      "modified": "2025-10-30T19:57:57.680861635Z",
+      "hash": "a2925cb06fbea5f7b9a7e3524b6262cc",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "tsconfig.json": {
+      "path": "tsconfig.json",
+      "size": 119,
+      "modified": "2025-10-30T19:57:57.743016342Z",
+      "hash": "a3d39fa780ebff65444de257f291ce6c",
+      "file_type": "Configuration",
+      "compliance_relevant": false
+    },
+    "openspec/changes/cto-dashboard/proposal.md": {
+      "path": "openspec/changes/cto-dashboard/proposal.md",
+      "size": 28365,
+      "modified": "2025-10-30T19:57:57.559690984Z",
+      "hash": "296b2e0b69987fbf3ee2e0f5a2455266",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "dist/index.html": {
+      "path": "dist/index.html",
+      "size": 668,
+      "modified": "2025-10-30T23:46:58.478837988Z",
+      "hash": "9a70b0b9c20ad67258fe0ce78447cde3",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png": {
+      "path": "src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png",
+      "size": 233873,
+      "modified": "2025-10-30T19:57:57.649546400Z",
+      "hash": "2f74c06d707ed4f4b3f013e4fa6eef56",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src-tauri/src/utils/port.rs": {
+      "path": "src-tauri/src/utils/port.rs",
+      "size": 783,
+      "modified": "2025-10-30T19:57:57.710295088Z",
+      "hash": "3fef4103f1f665116c316e11e34f467f",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-CzwYUuR7.js": {
+      "path": "dist/assets/index-CzwYUuR7.js",
+      "size": 127010,
+      "modified": "2025-10-30T21:19:13.585490027Z",
+      "hash": "27e0cf12f75a13b6cce46aacd74851a2",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BOLzBBRk.css": {
+      "path": "dist/assets/index-BOLzBBRk.css",
+      "size": 40852,
+      "modified": "2025-10-30T20:13:50.432778412Z",
+      "hash": "aff6546d30207ddcac74254672a4e740",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/performance.ts": {
+      "path": "src/lib/performance.ts",
+      "size": 9256,
+      "modified": "2025-10-30T22:02:21.952084550Z",
+      "hash": "40a6d9c89baa35b8acd030c9b9b24dfb",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-BIkocKlC.js": {
+      "path": "dist/assets/index-BIkocKlC.js",
+      "size": 109234,
+      "modified": "2025-10-30T19:58:30.737127550Z",
+      "hash": "eb947447a8c8fe488d2fe504911c1bae",
+      "file_type": "Source",
+      "compliance_relevant": false
+    },
+    "src/lib/components/Sidebar.svelte": {
+      "path": "src/lib/components/Sidebar.svelte",
+      "size": 11629,
+      "modified": "2025-10-30T23:46:35.763473027Z",
+      "hash": "b3e09711ef143680203fceac70cd644d",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "docs/schedules/EDGS_SCHEDULE.md": {
+      "path": "docs/schedules/EDGS_SCHEDULE.md",
+      "size": 28914,
+      "modified": "2025-10-30T20:48:19.506316827Z",
+      "hash": "2d5f461e9b25d1a4c412e4b4a2749093",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "docs/DELIVERABLES.md": {
+      "path": "docs/DELIVERABLES.md",
+      "size": 13486,
+      "modified": "2025-10-30T19:57:57.524264633Z",
+      "hash": "a1cdc93f0da153b7f2850a9f4e937519",
+      "file_type": "Documentation",
+      "compliance_relevant": true
+    },
+    "src-tauri/icons/StoreLogo.png": {
+      "path": "src-tauri/icons/StoreLogo.png",
+      "size": 4854,
+      "modified": "2025-10-30T19:57:57.632192579Z",
+      "hash": "5e79935833ccae66f374450110ea5e9e",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "ICLOUD_DRIVE_FIX.md": {
+      "path": "ICLOUD_DRIVE_FIX.md",
+      "size": 8355,
+      "modified": "2025-10-30T19:57:57.503408422Z",
+      "hash": "022ad3a1b9eb37535bfbaa8584848867",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "Cargo.toml": {
+      "path": "Cargo.toml",
+      "size": 51,
+      "modified": "2025-10-30T19:57:57.501117561Z",
+      "hash": "63dc4ef8b2349779bb4c962312997417",
+      "file_type": "Configuration",
+      "compliance_relevant": true
+    },
+    ".github/ISSUE_TEMPLATE/bug_report.md": {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "size": 759,
+      "modified": "2025-10-30T19:57:57.490222897Z",
+      "hash": "4c71953e2fcf4d5ea6d5faaac9cf9070",
+      "file_type": "Documentation",
+      "compliance_relevant": false
+    },
+    "src/lib/components/data-viz/DiskUsageChart.svelte": {
+      "path": "src/lib/components/data-viz/DiskUsageChart.svelte",
+      "size": 4882,
+      "modified": "2025-10-30T21:59:22.069312197Z",
+      "hash": "c5cf96f673972ddc34501bd35214fb80",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "dist/assets/index-DFxHfLwi.css": {
+      "path": "dist/assets/index-DFxHfLwi.css",
+      "size": 6720,
+      "modified": "2025-10-21T19:26:13.296321869Z",
+      "hash": "4e5f59e1264bb8a91d2bb91ccad91878",
+      "file_type": "Other",
+      "compliance_relevant": false
+    },
+    "src/lib/components/ProjectScaffold.svelte": {
+      "path": "src/lib/components/ProjectScaffold.svelte",
+      "size": 25318,
+      "modified": "2025-10-30T19:57:57.726549927Z",
+      "hash": "e8776b015925e910f7fd14320c1dd1b1",
+      "file_type": "Other",
+      "compliance_relevant": false
+    }
+  },
+  "compliance_score": 90.0,
+  "architecture_hash": "9ed873645b120a6b9d4a9280cf9c0c9d",
+  "dependencies": [
+    "rust",
+    "tauri",
+    "svelte"
+  ],
+  "standards_compliance": {
+    "TES2025": false,
+    "EDGS": true,
+    "OpenSpec": true
+  }
+}

@@ -623,24 +623,80 @@ async fn update_archviz_config(config: ArchVizConfig) -> Result<(), String> {
 
 /// Generate specific diagram format from existing analysis
 #[tauri::command]
-async fn generate_diagram(project_path: String, format: String) -> Result<String, String> {
-    log::info!("Generating {} diagram for: {}", format, project_path);
+async fn generate_diagram(project_path: String, format: String, diagram_type: Option<String>) -> Result<String, String> {
+    log::info!("Generating {} {} diagram for: {}", format, diagram_type.as_deref().unwrap_or("overview"), project_path);
     
-    // For now, return a sample Mermaid diagram
-    let sample_diagram = r#"graph TD
-    A[Main Module] --> B[Utils Module]
-    A --> C[Components Module]
-    B --> D[File Operations]
-    C --> E[UI Components]
-    C --> F[Data Visualization]
+    // Create a quick analysis for diagram generation
+    let config = ArchVizConfig::default();
+    let mut engine = ArchVizEngine::new(&project_path, config)
+        .map_err(|e| format!("Failed to create ArchViz engine: {}", e))?;
     
-    classDef rust fill:#dea584,stroke:#8b4513,stroke-width:2px
-    classDef javascript fill:#f7df1e,stroke:#323330,stroke-width:2px
+    // Perform lightweight analysis
+    let analysis = engine.analyze().await
+        .map_err(|e| format!("Analysis failed: {}", e))?;
     
-    class A,B,D rust
-    class C,E,F javascript"#;
+    // Generate the requested diagram type
+    let diagram = match diagram_type.as_deref() {
+        Some("dependency") => engine.generate_dependency_graph(&analysis.modules, &analysis.dependencies)
+            .map_err(|e| format!("Failed to generate dependency graph: {}", e))?,
+        Some("class") => engine.generate_class_hierarchy(&analysis.modules)
+            .map_err(|e| format!("Failed to generate class hierarchy: {}", e))?,
+        Some("files") => engine.generate_file_organization(&analysis.modules)
+            .map_err(|e| format!("Failed to generate file organization: {}", e))?,
+        Some("graphviz") => engine.generate_graphviz_diagram(&analysis.modules, &analysis.dependencies)
+            .map_err(|e| format!("Failed to generate graphviz diagram: {}", e))?,
+        Some("plantuml") => engine.generate_plantuml_diagram(&analysis.modules, &analysis.dependencies)
+            .map_err(|e| format!("Failed to generate plantuml diagram: {}", e))?,
+        _ => engine.generate_architecture_overview(&analysis.modules, &analysis.dependencies)
+            .map_err(|e| format!("Failed to generate architecture overview: {}", e))?,
+    };
     
-    Ok(sample_diagram.to_string())
+    Ok(diagram)
+}
+
+/// Generate and export all diagram types automatically
+#[tauri::command]
+async fn export_all_diagrams(project_path: String, output_dir: Option<String>) -> Result<Vec<String>, String> {
+    log::info!("Exporting all diagrams for: {}", project_path);
+    
+    let output_path = output_dir.unwrap_or_else(|| format!("{}/diagrams", project_path));
+    std::fs::create_dir_all(&output_path).map_err(|e| format!("Failed to create output directory: {}", e))?;
+    
+    let mut exported_files = Vec::new();
+    
+    // Generate all diagram types
+    let diagram_types = vec![
+        ("overview", "Architecture Overview"),
+        ("dependency", "Dependency Graph"),
+        ("class", "Class Hierarchy"),
+        ("files", "File Organization"),
+        ("graphviz", "Graphviz DOT"),
+        ("plantuml", "PlantUML"),
+    ];
+    
+    for (diagram_type, description) in diagram_types {
+        match generate_diagram(project_path.clone(), "mermaid".to_string(), Some(diagram_type.to_string())).await {
+            Ok(diagram_content) => {
+                let filename = format!("{}/{}.{}", output_path, diagram_type, 
+                    if diagram_type == "graphviz" { "dot" } 
+                    else if diagram_type == "plantuml" { "puml" }
+                    else { "mmd" }
+                );
+                
+                if let Err(e) = std::fs::write(&filename, diagram_content) {
+                    log::warn!("Failed to write {}: {}", filename, e);
+                } else {
+                    exported_files.push(format!("{}: {}", description, filename));
+                    log::info!("Exported: {}", filename);
+                }
+            }
+            Err(e) => {
+                log::warn!("Failed to generate {} diagram: {}", diagram_type, e);
+            }
+        }
+    }
+    
+    Ok(exported_files)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -670,7 +726,8 @@ pub fn run() {
             run_architecture_analysis,
             get_archviz_config,
             update_archviz_config,
-            generate_diagram
+            generate_diagram,
+            export_all_diagrams
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

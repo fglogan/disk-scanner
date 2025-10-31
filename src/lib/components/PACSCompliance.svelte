@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core';
+  import { open } from '@tauri-apps/plugin-dialog';
   import { onMount } from 'svelte';
   
   // PACS types (matching Rust structs)
@@ -48,12 +49,30 @@
   onMount(async () => {
     try {
       config = await invoke<PACSConfig>('get_pacs_config');
-      // Default to current project directory
-      selectedProjectPath = '/Users/tempext/Projects/disk-bloat-scanner';
+      // Start with empty path - user must select
+      selectedProjectPath = '';
     } catch (e) {
       error = `Failed to load PACS config: ${e}`;
     }
   });
+
+  // Open directory picker
+  async function selectProjectDirectory() {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: 'Select Project Directory for PACS Compliance Scan'
+      });
+      
+      if (selected && typeof selected === 'string') {
+        selectedProjectPath = selected;
+        error = null; // Clear any previous errors
+      }
+    } catch (e) {
+      error = `Failed to select directory: ${e}`;
+    }
+  }
   
   // Run PACS scan
   async function runScan() {
@@ -84,8 +103,8 @@
       case 'High': return 'text-orange-600 bg-orange-50';
       case 'Medium': return 'text-yellow-600 bg-yellow-50';
       case 'Low': return 'text-blue-600 bg-blue-50';
-      case 'Info': return 'text-gray-600 bg-gray-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'Info': return 'text-gray-800 bg-gray-100 border border-gray-300';
+      default: return 'text-gray-800 bg-gray-100 border border-gray-300';
     }
   }
   
@@ -110,24 +129,28 @@
   
   <!-- Configuration Section -->
   {#if config}
-    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-      <h3 class="text-lg font-semibold mb-3">Configuration</h3>
-      <div class="grid grid-cols-2 gap-4 text-sm">
+    <div class="mb-6 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">⚙️ PACS Configuration</h3>
+      <div class="grid grid-cols-2 gap-6 text-base">
         <div>
-          <span class="font-medium">Standards:</span>
-          <span class="ml-2">{config.standards.join(', ')}</span>
+          <span class="font-bold text-gray-900">Standards:</span>
+          <div class="ml-2 text-gray-900 bg-blue-50 px-3 py-2 rounded border font-medium mt-1">
+            {config.standards.join(', ')}
+          </div>
         </div>
-        <div>
-          <span class="font-medium">Max Depth:</span>
-          <span class="ml-2">{config.max_depth}</span>
-        </div>
-        <div>
-          <span class="font-medium">Auto Generate Specs:</span>
-          <span class="ml-2">{config.auto_generate_specs ? 'Yes' : 'No'}</span>
-        </div>
-        <div>
-          <span class="font-medium">Auto Create Beads:</span>
-          <span class="ml-2">{config.auto_create_beads ? 'Yes' : 'No'}</span>
+        <div class="space-y-3">
+          <div>
+            <span class="font-bold text-gray-900">Max Depth:</span>
+            <span class="ml-2 text-gray-900 bg-gray-100 px-2 py-1 rounded font-mono">{config.max_depth}</span>
+          </div>
+          <div>
+            <span class="font-bold text-gray-900">Auto Generate Specs:</span>
+            <span class="ml-2 text-gray-900 bg-gray-100 px-2 py-1 rounded font-medium">{config.auto_generate_specs ? 'Yes' : 'No'}</span>
+          </div>
+          <div>
+            <span class="font-bold text-gray-900">Auto Create Beads:</span>
+            <span class="ml-2 text-gray-900 bg-gray-100 px-2 py-1 rounded font-medium">{config.auto_create_beads ? 'Yes' : 'No'}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -256,7 +279,7 @@
                 <p class="text-sm text-gray-600 mb-2">{finding.description}</p>
                 
                 {#if finding.file_path}
-                  <div class="text-xs text-gray-500 mb-2">
+                  <div class="text-xs text-gray-700 mb-2">
                     📁 {finding.file_path}
                     {#if finding.line_number}
                       : line {finding.line_number}
@@ -274,7 +297,7 @@
       {/if}
       
       <!-- Scan Metadata -->
-      <div class="text-xs text-gray-500 pt-4 border-t border-gray-200">
+      <div class="text-xs text-gray-700 pt-4 border-t border-gray-200">
         <div>Scanned: {new Date(report.scanned_at).toLocaleString()}</div>
         <div>Scanner Version: {report.scanner_version}</div>
         <div>Project: {report.project_path}</div>
