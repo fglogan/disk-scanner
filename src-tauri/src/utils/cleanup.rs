@@ -5,11 +5,13 @@
 //! - Dry-run support for previewing deletions
 //! - Trash/recycle bin support for non-permanent deletion
 //! - Comprehensive error handling and logging
+//! - Audit trail logging for all deletions
 
 use std::path::Path;
 
 use crate::{models::CleanupReq, ScannerResult};
 use super::path::validate_scan_path;
+use super::deletion_log::{DeletionRecord, log_deletion};
 
 /// Safety limits for batch deletion operations
 pub const MAX_BATCH_DELETE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
@@ -26,6 +28,22 @@ fn is_icloud_path(path: &str) -> bool {
 /// Counts how many paths are in iCloud Drive
 pub fn count_icloud_paths(paths: &[String]) -> usize {
     paths.iter().filter(|p| is_icloud_path(p)).count()
+}
+
+/// Infer the deletion category from the file path
+fn infer_deletion_category(path: &str) -> String {
+    if path.contains("node_modules") || path.contains(".cargo") || path.contains("__pycache__") 
+        || path.contains(".gradle") || path.contains(".m2") {
+        "developer_dependencies".to_string()
+    } else if path.contains(".cache") || path.contains("Cache") || path.contains("Caches") {
+        "cache".to_string()
+    } else if path.contains(".git") {
+        "git_metadata".to_string()
+    } else if path.contains("Duplicate") || path.starts_with(".") {
+        "duplicates".to_string()
+    } else {
+        "user_selected".to_string()
+    }
 }
 
 /// Validates a deletion request against safety limits and path security.
@@ -204,6 +222,21 @@ pub fn delete_files(
                         } else {
                             log::info!("Deletion verified: {} successfully removed", path);
                             deleted.push(path.clone());
+                            
+                            // Log to deletion audit trail
+                            let file_size = std::fs::metadata(path)
+                                .map(|m| m.len())
+                                .unwrap_or(0);
+                            let category = infer_deletion_category(path);
+                            let record = DeletionRecord::new(
+                                path.clone(),
+                                file_size,
+                                category,
+                                "trash".to_string(),
+                            );
+                            if let Err(e) = log_deletion(&record) {
+                                log::warn!("Failed to log deletion: {}", e);
+                            }
                         }
                         break;
                     }
@@ -255,6 +288,21 @@ pub fn delete_files(
                     } else {
                         log::info!("Deletion verified: {} successfully removed", path);
                         deleted.push(path.clone());
+                        
+                        // Log to deletion audit trail
+                        let file_size = std::fs::metadata(path)
+                            .map(|m| m.len())
+                            .unwrap_or(0);
+                        let category = infer_deletion_category(path);
+                        let record = DeletionRecord::new(
+                            path.clone(),
+                            file_size,
+                            category,
+                            "permanent".to_string(),
+                        );
+                        if let Err(e) = log_deletion(&record) {
+                            log::warn!("Failed to log deletion: {}", e);
+                        }
                     }
                 }
                 Err(e) => {
