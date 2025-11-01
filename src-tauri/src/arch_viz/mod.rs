@@ -1,11 +1,11 @@
 // Architecture Visualization Module
 // Advanced code analysis and diagram generation using Tree-sitter
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tree_sitter::{Parser, Tree, Node};
-use chrono::{DateTime, Utc};
+use tree_sitter::{Node, Parser, Tree};
 
 /// Architecture visualization engine for code analysis and diagram generation
 pub struct ArchVizEngine {
@@ -195,9 +195,12 @@ pub enum Visibility {
 
 impl ArchVizEngine {
     /// Create new architecture visualization engine
-    pub fn new(project_path: impl AsRef<Path>, config: ArchVizConfig) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        project_path: impl AsRef<Path>,
+        config: ArchVizConfig,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let mut parsers = HashMap::new();
-        
+
         // Initialize Tree-sitter parsers for supported languages
         for language in &config.languages {
             let mut parser = Parser::new();
@@ -209,11 +212,11 @@ impl ArchVizEngine {
                 "json" => tree_sitter_json::language(),
                 _ => continue, // Skip unsupported languages
             };
-            
+
             parser.set_language(tree_sitter_lang)?;
             parsers.insert(language.clone(), parser);
         }
-        
+
         Ok(Self {
             project_path: project_path.as_ref().to_path_buf(),
             config,
@@ -221,54 +224,70 @@ impl ArchVizEngine {
             analysis_cache: HashMap::new(),
         })
     }
-    
+
     /// Perform complete architecture analysis
     pub async fn analyze(&mut self) -> Result<ArchitectureAnalysis, Box<dyn std::error::Error>> {
-        log::info!("Starting architecture analysis for: {}", self.project_path.display());
-        
+        log::info!(
+            "Starting architecture analysis for: {}",
+            self.project_path.display()
+        );
+
         // Step 1: Discover and categorize files
         let files = self.discover_files().await?;
         log::info!("Discovered {} files for analysis", files.len());
-        
+
         // Step 2: Parse files and build ASTs
         let mut modules = Vec::new();
         let mut language_breakdown = HashMap::new();
-        
+
         for file_path in files {
             if let Ok(analysis) = self.analyze_file(&file_path).await {
                 let module_info = self.extract_module_info(&analysis)?;
-                
+
                 // Update language breakdown
-                *language_breakdown.entry(analysis.language.clone()).or_insert(0) += 1;
-                
+                *language_breakdown
+                    .entry(analysis.language.clone())
+                    .or_insert(0) += 1;
+
                 modules.push(module_info);
-                self.analysis_cache.insert(file_path.to_string_lossy().to_string(), analysis);
+                self.analysis_cache
+                    .insert(file_path.to_string_lossy().to_string(), analysis);
             }
         }
-        
+
         // Step 3: Analyze dependencies and relationships
         let dependencies = self.analyze_dependencies(&modules)?;
-        
+
         // Step 4: Calculate architecture metrics
         let metrics = self.calculate_metrics(&modules, &dependencies)?;
-        
+
         // Step 5: Generate diagrams automatically
         let mut diagrams = HashMap::new();
-        
+
         // Generate all diagram types in Mermaid format
-        diagrams.insert(DiagramFormat::Mermaid, self.generate_architecture_overview(&modules, &dependencies)?);
-        
+        diagrams.insert(
+            DiagramFormat::Mermaid,
+            self.generate_architecture_overview(&modules, &dependencies)?,
+        );
+
         // Generate additional diagram formats
-        if modules.len() < 50 { // Only for smaller projects to avoid complexity
-            diagrams.insert(DiagramFormat::Graphviz, self.generate_graphviz_diagram(&modules, &dependencies)?);
-            diagrams.insert(DiagramFormat::PlantUML, self.generate_plantuml_diagram(&modules, &dependencies)?);
+        if modules.len() < 50 {
+            // Only for smaller projects to avoid complexity
+            diagrams.insert(
+                DiagramFormat::Graphviz,
+                self.generate_graphviz_diagram(&modules, &dependencies)?,
+            );
+            diagrams.insert(
+                DiagramFormat::PlantUML,
+                self.generate_plantuml_diagram(&modules, &dependencies)?,
+            );
         }
-        
+
         // Generate specialized diagrams
         let dependency_diagram = self.generate_dependency_graph(&modules, &dependencies)?;
         let class_diagram = self.generate_class_hierarchy(&modules)?;
         let file_org_diagram = self.generate_file_organization(&modules)?;
-        
+
         // Store specialized diagrams with prefixed keys
         diagrams.insert(DiagramFormat::Mermaid, format!("# Architecture Overview\n{}\n\n# Dependency Graph\n{}\n\n# Class Hierarchy\n{}\n\n# File Organization\n{}", 
             diagrams.get(&DiagramFormat::Mermaid).unwrap_or(&String::new()),
@@ -276,7 +295,7 @@ impl ArchVizEngine {
             class_diagram,
             file_org_diagram
         ));
-        
+
         let analysis = ArchitectureAnalysis {
             project_path: self.project_path.to_string_lossy().to_string(),
             analyzed_at: Utc::now(),
@@ -288,36 +307,40 @@ impl ArchVizEngine {
             diagrams,
             metrics,
         };
-        
-        log::info!("Architecture analysis completed. {} modules analyzed", analysis.file_count);
-        
+
+        log::info!(
+            "Architecture analysis completed. {} modules analyzed",
+            analysis.file_count
+        );
+
         Ok(analysis)
     }
-    
+
     /// Discover files to analyze based on configuration
     async fn discover_files(&self) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
         use walkdir::WalkDir;
-        
+
         let mut files = Vec::new();
-        
+
         let walker = WalkDir::new(&self.project_path)
             .max_depth(self.config.max_depth)
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|entry| entry.file_type().is_file());
-        
+
         for entry in walker {
             let path = entry.path();
-            
+
             // Skip hidden files and directories
-            if path.file_name()
+            if path
+                .file_name()
                 .and_then(|name| name.to_str())
                 .map(|name| name.starts_with('.'))
                 .unwrap_or(false)
             {
                 continue;
             }
-            
+
             // Skip common build/dependency directories
             let path_str = path.to_string_lossy();
             if path_str.contains("/node_modules/") ||
@@ -339,7 +362,7 @@ impl ArchVizEngine {
             {
                 continue;
             }
-            
+
             // Check if file extension matches supported languages
             if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
                 let language = match extension {
@@ -350,36 +373,39 @@ impl ArchVizEngine {
                     "json" => "json",
                     _ => continue,
                 };
-                
+
                 if self.config.languages.contains(&language.to_string()) {
                     // Skip test files if configured
                     if !self.config.include_tests && self.is_test_file(path) {
                         continue;
                     }
-                    
+
                     files.push(path.to_path_buf());
                 }
             }
         }
-        
+
         Ok(files)
     }
-    
+
     /// Check if a file is a test file
     fn is_test_file(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy().to_lowercase();
-        path_str.contains("test") || 
-        path_str.contains("spec") ||
-        path_str.contains("__tests__") ||
-        path_str.ends_with("_test.rs") ||
-        path_str.ends_with(".test.js") ||
-        path_str.ends_with(".spec.js")
+        path_str.contains("test")
+            || path_str.contains("spec")
+            || path_str.contains("__tests__")
+            || path_str.ends_with("_test.rs")
+            || path_str.ends_with(".test.js")
+            || path_str.ends_with(".spec.js")
     }
-    
+
     /// Analyze a single file
-    async fn analyze_file(&mut self, file_path: &Path) -> Result<FileAnalysis, Box<dyn std::error::Error>> {
+    async fn analyze_file(
+        &mut self,
+        file_path: &Path,
+    ) -> Result<FileAnalysis, Box<dyn std::error::Error>> {
         let content = std::fs::read_to_string(file_path)?;
-        
+
         // Determine language from file extension
         let language = match file_path.extension().and_then(|ext| ext.to_str()) {
             Some("rs") => "rust",
@@ -389,18 +415,19 @@ impl ArchVizEngine {
             Some("json") => "json",
             _ => return Err("Unsupported file type".into()),
         };
-        
+
         // Get parser for this language
-        let parser = self.parsers.get_mut(language)
+        let parser = self
+            .parsers
+            .get_mut(language)
             .ok_or("Parser not available for language")?;
-        
+
         // Parse the file
-        let tree = parser.parse(&content, None)
-            .ok_or("Failed to parse file")?;
-        
+        let tree = parser.parse(&content, None).ok_or("Failed to parse file")?;
+
         // Extract symbols from AST
         let symbols = self.extract_symbols(&tree, &content, language)?;
-        
+
         Ok(FileAnalysis {
             path: file_path.to_string_lossy().to_string(),
             language: language.to_string(),
@@ -409,17 +436,22 @@ impl ArchVizEngine {
             analyzed_at: Utc::now(),
         })
     }
-    
+
     /// Extract symbols from AST
-    fn extract_symbols(&self, tree: &Tree, content: &str, language: &str) -> Result<Vec<Symbol>, Box<dyn std::error::Error>> {
+    fn extract_symbols(
+        &self,
+        tree: &Tree,
+        content: &str,
+        language: &str,
+    ) -> Result<Vec<Symbol>, Box<dyn std::error::Error>> {
         let mut symbols = Vec::new();
         let root_node = tree.root_node();
-        
+
         self.traverse_node(root_node, content, language, &mut symbols, "global")?;
-        
+
         Ok(symbols)
     }
-    
+
     /// Recursively traverse AST nodes to extract symbols
     fn traverse_node(
         &self,
@@ -431,20 +463,22 @@ impl ArchVizEngine {
     ) -> Result<(), Box<dyn std::error::Error>> {
         match language {
             "rust" => self.extract_rust_symbols(node, content, symbols, scope)?,
-            "javascript" | "typescript" => self.extract_js_symbols(node, content, symbols, scope)?,
+            "javascript" | "typescript" => {
+                self.extract_js_symbols(node, content, symbols, scope)?
+            }
             "python" => self.extract_python_symbols(node, content, symbols, scope)?,
             _ => {} // Skip unsupported languages
         }
-        
+
         // Recursively process child nodes
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
             self.traverse_node(child, content, language, symbols, scope)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Extract Rust-specific symbols
     fn extract_rust_symbols(
         &self,
@@ -463,7 +497,11 @@ impl ArchVizEngine {
                         line_start: node.start_position().row + 1,
                         line_end: node.end_position().row + 1,
                         scope: scope.to_string(),
-                        visibility: if node.to_sexp().contains("pub") { Visibility::Public } else { Visibility::Private },
+                        visibility: if node.to_sexp().contains("pub") {
+                            Visibility::Public
+                        } else {
+                            Visibility::Private
+                        },
                     });
                 }
             }
@@ -476,7 +514,11 @@ impl ArchVizEngine {
                         line_start: node.start_position().row + 1,
                         line_end: node.end_position().row + 1,
                         scope: scope.to_string(),
-                        visibility: if node.to_sexp().contains("pub") { Visibility::Public } else { Visibility::Private },
+                        visibility: if node.to_sexp().contains("pub") {
+                            Visibility::Public
+                        } else {
+                            Visibility::Private
+                        },
                     });
                 }
             }
@@ -495,10 +537,10 @@ impl ArchVizEngine {
             }
             _ => {}
         }
-        
+
         Ok(())
     }
-    
+
     /// Extract JavaScript/TypeScript symbols
     fn extract_js_symbols(
         &self,
@@ -555,10 +597,10 @@ impl ArchVizEngine {
             }
             _ => {}
         }
-        
+
         Ok(())
     }
-    
+
     /// Extract Python symbols
     fn extract_python_symbols(
         &self,
@@ -577,7 +619,11 @@ impl ArchVizEngine {
                         line_start: node.start_position().row + 1,
                         line_end: node.end_position().row + 1,
                         scope: scope.to_string(),
-                        visibility: if name.starts_with('_') { Visibility::Private } else { Visibility::Public },
+                        visibility: if name.starts_with('_') {
+                            Visibility::Private
+                        } else {
+                            Visibility::Public
+                        },
                     });
                 }
             }
@@ -590,23 +636,31 @@ impl ArchVizEngine {
                         line_start: node.start_position().row + 1,
                         line_end: node.end_position().row + 1,
                         scope: scope.to_string(),
-                        visibility: if name.starts_with('_') { Visibility::Private } else { Visibility::Public },
+                        visibility: if name.starts_with('_') {
+                            Visibility::Private
+                        } else {
+                            Visibility::Public
+                        },
                     });
                 }
             }
             _ => {}
         }
-        
+
         Ok(())
     }
-    
+
     /// Extract module information from file analysis
-    fn extract_module_info(&self, analysis: &FileAnalysis) -> Result<ModuleInfo, Box<dyn std::error::Error>> {
+    fn extract_module_info(
+        &self,
+        analysis: &FileAnalysis,
+    ) -> Result<ModuleInfo, Box<dyn std::error::Error>> {
         let path = Path::new(&analysis.path);
         let metadata = std::fs::metadata(path)?;
         let content = std::fs::read_to_string(path)?;
-        
-        let functions: Vec<FunctionInfo> = analysis.symbols
+
+        let functions: Vec<FunctionInfo> = analysis
+            .symbols
             .iter()
             .filter(|s| matches!(s.symbol_type, SymbolType::Function))
             .map(|s| FunctionInfo {
@@ -614,28 +668,29 @@ impl ArchVizEngine {
                 line_start: s.line_start,
                 line_end: s.line_end,
                 parameters: Vec::new(), // TODO: Extract parameters from AST
-                return_type: None, // TODO: Extract return type
-                calls: Vec::new(), // TODO: Extract function calls
-                complexity: 1, // TODO: Calculate cyclomatic complexity
+                return_type: None,      // TODO: Extract return type
+                calls: Vec::new(),      // TODO: Extract function calls
+                complexity: 1,          // TODO: Calculate cyclomatic complexity
                 is_public: matches!(s.visibility, Visibility::Public),
             })
             .collect();
-        
-        let classes: Vec<ClassInfo> = analysis.symbols
+
+        let classes: Vec<ClassInfo> = analysis
+            .symbols
             .iter()
             .filter(|s| matches!(s.symbol_type, SymbolType::Class))
             .map(|s| ClassInfo {
                 name: s.name.clone(),
                 line_start: s.line_start,
                 line_end: s.line_end,
-                methods: Vec::new(), // TODO: Extract methods
+                methods: Vec::new(),    // TODO: Extract methods
                 properties: Vec::new(), // TODO: Extract properties
-                extends: None, // TODO: Extract inheritance
+                extends: None,          // TODO: Extract inheritance
                 implements: Vec::new(), // TODO: Extract interfaces
                 is_public: matches!(s.visibility, Visibility::Public),
             })
             .collect();
-        
+
         Ok(ModuleInfo {
             path: analysis.path.clone(),
             language: analysis.language.clone(),
@@ -643,44 +698,51 @@ impl ArchVizEngine {
             line_count: content.lines().count(),
             functions,
             classes,
-            imports: Vec::new(), // TODO: Extract imports
-            exports: Vec::new(), // TODO: Extract exports
+            imports: Vec::new(),   // TODO: Extract imports
+            exports: Vec::new(),   // TODO: Extract exports
             complexity_score: 1.0, // TODO: Calculate module complexity
         })
     }
-    
+
     /// Analyze dependencies between modules
-    fn analyze_dependencies(&self, _modules: &[ModuleInfo]) -> Result<Vec<DependencyRelation>, Box<dyn std::error::Error>> {
+    fn analyze_dependencies(
+        &self,
+        _modules: &[ModuleInfo],
+    ) -> Result<Vec<DependencyRelation>, Box<dyn std::error::Error>> {
         let dependencies = Vec::new();
-        
+
         // TODO: Implement dependency analysis
         // This would involve:
         // 1. Analyzing import/export statements
         // 2. Tracking function calls between modules
         // 3. Identifying inheritance relationships
         // 4. Calculating dependency strength
-        
+
         Ok(dependencies)
     }
-    
+
     /// Calculate architecture metrics
-    fn calculate_metrics(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<ArchitectureMetrics, Box<dyn std::error::Error>> {
+    fn calculate_metrics(
+        &self,
+        modules: &[ModuleInfo],
+        dependencies: &[DependencyRelation],
+    ) -> Result<ArchitectureMetrics, Box<dyn std::error::Error>> {
         let total_lines: usize = modules.iter().map(|m| m.line_count).sum();
         let total_functions: usize = modules.iter().map(|m| m.functions.len()).sum();
         let total_classes: usize = modules.iter().map(|m| m.classes.len()).sum();
-        
+
         let average_complexity = if !modules.is_empty() {
             modules.iter().map(|m| m.complexity_score).sum::<f64>() / modules.len() as f64
         } else {
             0.0
         };
-        
+
         // TODO: Implement more sophisticated metrics
         let coupling_score = dependencies.len() as f64 / modules.len().max(1) as f64;
         let cohesion_score = 0.8; // Placeholder
         let maintainability_index = 100.0 - (coupling_score * 10.0); // Simplified calculation
         let technical_debt_ratio = 0.1; // Placeholder
-        
+
         Ok(ArchitectureMetrics {
             total_lines,
             total_functions,
@@ -692,71 +754,92 @@ impl ArchVizEngine {
             technical_debt_ratio,
         })
     }
-    
+
     /// Generate architecture overview diagram
-    pub fn generate_architecture_overview(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_architecture_overview(
+        &self,
+        modules: &[ModuleInfo],
+        dependencies: &[DependencyRelation],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
-        
+
         // Helper function to sanitize names for Mermaid
         let sanitize_name = |name: &str| -> String {
             name.chars()
-                .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                .map(|c| {
+                    if c.is_alphanumeric() || c == '_' {
+                        c
+                    } else {
+                        '_'
+                    }
+                })
                 .collect::<String>()
                 .trim_matches('_')
                 .to_string()
         };
-        
+
         // Start with graph definition
         diagram.push_str("graph TD\n");
         diagram.push_str("    %% Architecture Overview - High-level module relationships\n\n");
-        
+
         // Limit modules to prevent overwhelming diagrams
         let limited_modules: Vec<_> = modules.iter().take(20).collect();
-        
+
         // Add nodes for each module
         for (i, module) in limited_modules.iter().enumerate() {
             let module_name = std::path::Path::new(&module.path)
                 .file_stem()
                 .and_then(|name| name.to_str())
                 .unwrap_or("unknown");
-            
+
             let clean_name = sanitize_name(module_name);
-            let safe_name = if clean_name.is_empty() { format!("Module{}", i) } else { clean_name };
-            
+            let safe_name = if clean_name.is_empty() {
+                format!("Module{}", i)
+            } else {
+                clean_name
+            };
+
             diagram.push_str(&format!(
                 "    M{}[\"{}\\n{} lines\"]\n",
                 i, safe_name, module.line_count
             ));
         }
-        
+
         diagram.push_str("\n");
-        
+
         // Add edges for dependencies (limit to prevent clutter)
         let mut edge_count = 0;
         for dependency in dependencies.iter().take(30) {
-            if edge_count >= 15 { break; } // Limit edges
-            
+            if edge_count >= 15 {
+                break;
+            } // Limit edges
+
             if let (Some(from_idx), Some(to_idx)) = (
-                limited_modules.iter().position(|m| m.path == dependency.from_module),
-                limited_modules.iter().position(|m| m.path == dependency.to_module),
+                limited_modules
+                    .iter()
+                    .position(|m| m.path == dependency.from_module),
+                limited_modules
+                    .iter()
+                    .position(|m| m.path == dependency.to_module),
             ) {
-                if from_idx != to_idx { // Avoid self-references
+                if from_idx != to_idx {
+                    // Avoid self-references
                     diagram.push_str(&format!("    M{} --> M{}\n", from_idx, to_idx));
                     edge_count += 1;
                 }
             }
         }
-        
+
         // Add styling based on language
         diagram.push_str("\n    %% Styling by language\n");
         let mut used_languages = std::collections::HashSet::new();
-        
+
         for (i, module) in limited_modules.iter().enumerate() {
             let lang = sanitize_name(&module.language);
             if !used_languages.contains(&lang) {
                 let color = match module.language.as_str() {
                     "rust" => "#dea584",
-                    "javascript" => "#f7df1e", 
+                    "javascript" => "#f7df1e",
                     "typescript" => "#3178c6",
                     "python" => "#3776ab",
                     "json" => "#292929",
@@ -770,106 +853,139 @@ impl ArchVizEngine {
             }
             diagram.push_str(&format!("    class M{} lang_{}\n", i, lang));
         }
-        
+
         Ok(diagram)
     }
-    
+
     /// Generate detailed dependency graph
-    pub fn generate_dependency_graph(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_dependency_graph(
+        &self,
+        modules: &[ModuleInfo],
+        dependencies: &[DependencyRelation],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
-        
+
         // Helper function to sanitize names for Mermaid
         let sanitize_name = |name: &str| -> String {
             name.chars()
-                .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                .map(|c| {
+                    if c.is_alphanumeric() || c == '_' {
+                        c
+                    } else {
+                        '_'
+                    }
+                })
                 .collect::<String>()
                 .trim_matches('_')
                 .to_string()
         };
-        
+
         diagram.push_str("graph LR\n");
         diagram.push_str("    %% Dependency Graph - Shows import/export relationships\n\n");
-        
+
         // Limit modules to prevent overwhelming diagrams
         let limited_modules: Vec<_> = modules.iter().take(15).collect();
-        
+
         // Simple node approach instead of complex subgraphs
         for (i, module) in limited_modules.iter().enumerate() {
             let module_name = std::path::Path::new(&module.path)
                 .file_stem()
                 .and_then(|name| name.to_str())
                 .unwrap_or("unknown");
-            
+
             let clean_name = sanitize_name(module_name);
-            let safe_name = if clean_name.is_empty() { format!("Mod{}", i) } else { clean_name };
-            
+            let safe_name = if clean_name.is_empty() {
+                format!("Mod{}", i)
+            } else {
+                clean_name
+            };
+
             diagram.push_str(&format!("    M{}[\"{}\"]\n", i, safe_name));
         }
-        
+
         diagram.push_str("\n");
-        
+
         // Add dependency arrows (limited)
         let mut edge_count = 0;
         for dependency in dependencies.iter().take(20) {
-            if edge_count >= 10 { break; } // Limit edges
-            
+            if edge_count >= 10 {
+                break;
+            } // Limit edges
+
             if let (Some(from_idx), Some(to_idx)) = (
-                limited_modules.iter().position(|m| m.path == dependency.from_module),
-                limited_modules.iter().position(|m| m.path == dependency.to_module),
+                limited_modules
+                    .iter()
+                    .position(|m| m.path == dependency.from_module),
+                limited_modules
+                    .iter()
+                    .position(|m| m.path == dependency.to_module),
             ) {
-                if from_idx != to_idx { // Avoid self-references
+                if from_idx != to_idx {
+                    // Avoid self-references
                     diagram.push_str(&format!("    M{} --> M{}\n", from_idx, to_idx));
                     edge_count += 1;
                 }
             }
         }
-        
+
         // If no dependencies found, add a note
         if edge_count == 0 {
-            diagram.push_str("    NoDeps[\"No dependencies detected\\nThis might be a simple project\"]\n");
+            diagram.push_str(
+                "    NoDeps[\"No dependencies detected\\nThis might be a simple project\"]\n",
+            );
         }
-        
+
         Ok(diagram)
     }
-    
+
     /// Generate class hierarchy diagram
-    pub fn generate_class_hierarchy(&self, modules: &[ModuleInfo]) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_class_hierarchy(
+        &self,
+        modules: &[ModuleInfo],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
-        
+
         diagram.push_str("classDiagram\n");
         diagram.push_str("    %% Class Hierarchy - Shows inheritance and composition\n\n");
-        
+
         // Helper function to sanitize names for Mermaid
         let sanitize_name = |name: &str| -> String {
             name.chars()
-                .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                .map(|c| {
+                    if c.is_alphanumeric() || c == '_' {
+                        c
+                    } else {
+                        '_'
+                    }
+                })
                 .collect::<String>()
                 .trim_matches('_')
                 .to_string()
         };
-        
+
         let mut class_count = 0;
-        
+
         for module in modules {
             for class in &module.classes {
                 // Skip if no meaningful content
                 if class.methods.is_empty() && class.properties.is_empty() {
                     continue;
                 }
-                
+
                 class_count += 1;
-                if class_count > 10 { // Limit to prevent overwhelming diagrams
+                if class_count > 10 {
+                    // Limit to prevent overwhelming diagrams
                     break;
                 }
-                
+
                 let class_name = sanitize_name(&class.name);
                 if class_name.is_empty() {
                     continue;
                 }
-                
+
                 // Add class definition
                 diagram.push_str(&format!("    class {} {{\n", class_name));
-                
+
                 // Add properties (limit to first 5)
                 for (_i, property) in class.properties.iter().take(5).enumerate() {
                     let prop_name = sanitize_name(property);
@@ -877,7 +993,7 @@ impl ArchVizEngine {
                         diagram.push_str(&format!("        +{} : Property\n", prop_name));
                     }
                 }
-                
+
                 // Add methods (limit to first 5)
                 for (_i, method) in class.methods.iter().take(5).enumerate() {
                     let method_name = sanitize_name(&method.name);
@@ -886,9 +1002,9 @@ impl ArchVizEngine {
                         diagram.push_str(&format!("        {}{}()\n", visibility, method_name));
                     }
                 }
-                
+
                 diagram.push_str("    }\n\n");
-                
+
                 // Add inheritance relationships (simplified)
                 if let Some(parent) = &class.extends {
                     let parent_name = sanitize_name(parent);
@@ -896,7 +1012,7 @@ impl ArchVizEngine {
                         diagram.push_str(&format!("    {} <|-- {}\n", parent_name, class_name));
                     }
                 }
-                
+
                 // Add interface implementations (limit to first 3)
                 for interface in class.implements.iter().take(3) {
                     let interface_name = sanitize_name(interface);
@@ -906,47 +1022,55 @@ impl ArchVizEngine {
                 }
             }
         }
-        
+
         // If no classes found, create a simple message
         if class_count == 0 {
             diagram.push_str("    class NoClasses {\n");
             diagram.push_str("        +message : \"No classes found in this project\"\n");
-            diagram.push_str("        +suggestion : \"This might be a functional or procedural codebase\"\n");
+            diagram.push_str(
+                "        +suggestion : \"This might be a functional or procedural codebase\"\n",
+            );
             diagram.push_str("    }\n");
         }
-        
+
         Ok(diagram)
     }
-    
+
     /// Generate file organization diagram
-    pub fn generate_file_organization(&self, modules: &[ModuleInfo]) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_file_organization(
+        &self,
+        modules: &[ModuleInfo],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
-        
+
         diagram.push_str("graph TD\n");
         diagram.push_str("    %% File Organization - Shows directory structure\n");
-        
+
         // Build directory tree
-        let mut dirs: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
-        
+        let mut dirs: std::collections::HashMap<String, Vec<String>> =
+            std::collections::HashMap::new();
+
         for module in modules {
             let path = std::path::Path::new(&module.path);
-            let dir = path.parent()
+            let dir = path
+                .parent()
                 .and_then(|p| p.to_str())
                 .unwrap_or("root")
                 .to_string();
-            let file = path.file_name()
+            let file = path
+                .file_name()
                 .and_then(|name| name.to_str())
                 .unwrap_or("unknown")
                 .to_string();
-            
+
             dirs.entry(dir).or_default().push(file);
         }
-        
+
         // Generate directory nodes
         for (dir, files) in dirs {
             let dir_id = dir.replace('/', "_").replace('.', "_");
             diagram.push_str(&format!("    {}[\"📁 {}\"]\n", dir_id, dir));
-            
+
             for file in files {
                 let file_id = format!("{}_{}", dir_id, file.replace('.', "_"));
                 let icon = match file.split('.').last() {
@@ -962,26 +1086,30 @@ impl ArchVizEngine {
                 diagram.push_str(&format!("    {} --> {}\n", dir_id, file_id));
             }
         }
-        
+
         Ok(diagram)
     }
-    
+
     /// Generate Graphviz DOT format diagram
-    pub fn generate_graphviz_diagram(&self, modules: &[ModuleInfo], dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_graphviz_diagram(
+        &self,
+        modules: &[ModuleInfo],
+        dependencies: &[DependencyRelation],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
-        
+
         diagram.push_str("digraph Architecture {\n");
         diagram.push_str("    rankdir=TB;\n");
         diagram.push_str("    node [shape=box, style=rounded];\n");
         diagram.push_str("    edge [color=gray];\n\n");
-        
+
         // Add nodes with language-based styling
         for (i, module) in modules.iter().enumerate() {
             let module_name = std::path::Path::new(&module.path)
                 .file_stem()
                 .and_then(|name| name.to_str())
                 .unwrap_or("unknown");
-            
+
             let color = match module.language.as_str() {
                 "rust" => "orange",
                 "javascript" => "yellow",
@@ -989,57 +1117,67 @@ impl ArchVizEngine {
                 "python" => "green",
                 _ => "gray",
             };
-            
+
             diagram.push_str(&format!(
                 "    M{} [label=\"{}\\n({} lines)\", fillcolor={}, style=\"filled,rounded\"];\n",
                 i, module_name, module.line_count, color
             ));
         }
-        
+
         // Add edges for dependencies
         for dependency in dependencies {
             if let (Some(from_idx), Some(to_idx)) = (
-                modules.iter().position(|m| m.path == dependency.from_module),
+                modules
+                    .iter()
+                    .position(|m| m.path == dependency.from_module),
                 modules.iter().position(|m| m.path == dependency.to_module),
             ) {
                 diagram.push_str(&format!("    M{} -> M{};\n", from_idx, to_idx));
             }
         }
-        
+
         diagram.push_str("}\n");
         Ok(diagram)
     }
-    
+
     /// Generate PlantUML diagram
-    pub fn generate_plantuml_diagram(&self, modules: &[ModuleInfo], _dependencies: &[DependencyRelation]) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_plantuml_diagram(
+        &self,
+        modules: &[ModuleInfo],
+        _dependencies: &[DependencyRelation],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut diagram = String::new();
-        
+
         diagram.push_str("@startuml\n");
         diagram.push_str("!theme plain\n");
         diagram.push_str("title Architecture Overview\n\n");
-        
+
         // Group by language
-        let mut lang_groups: std::collections::HashMap<String, Vec<&ModuleInfo>> = std::collections::HashMap::new();
+        let mut lang_groups: std::collections::HashMap<String, Vec<&ModuleInfo>> =
+            std::collections::HashMap::new();
         for module in modules {
-            lang_groups.entry(module.language.clone()).or_default().push(module);
+            lang_groups
+                .entry(module.language.clone())
+                .or_default()
+                .push(module);
         }
-        
+
         // Create packages for each language
         for (language, lang_modules) in lang_groups {
             diagram.push_str(&format!("package \"{}\" {{\n", language.to_uppercase()));
-            
+
             for module in lang_modules {
                 let module_name = std::path::Path::new(&module.path)
                     .file_stem()
                     .and_then(|name| name.to_str())
                     .unwrap_or("unknown");
-                
+
                 diagram.push_str(&format!("    [{}]\n", module_name));
             }
-            
+
             diagram.push_str("}\n\n");
         }
-        
+
         diagram.push_str("@enduml\n");
         Ok(diagram)
     }

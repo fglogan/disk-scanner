@@ -1,8 +1,8 @@
 // Database module for disk bloat scanner
 // SQLite foundation with OSM-lite migration planning
 
-use rusqlite::{Connection, Result};
 use chrono::{DateTime, Utc};
+use rusqlite::{Connection, Result};
 use serde::{Deserialize, Serialize};
 
 /// Project monitoring database with OSM-lite migration support
@@ -53,7 +53,7 @@ impl ProjectDatabase {
     /// Create new database connection with OSM-lite compatibility
     pub fn new(db_path: &str) -> Result<Self> {
         let conn = Connection::open(db_path)?;
-        
+
         // Initialize schema with OSM-lite compatibility markers
         conn.execute_batch(
             r#"
@@ -128,13 +128,13 @@ impl ProjectDatabase {
             VALUES (1, '1.0.0', 'pre-osm', 'sqlite_native');
             "#,
         )?;
-        
+
         Ok(Self {
             conn,
             osm_migration_ready: true,
         })
     }
-    
+
     /// Store project scan result
     pub fn store_scan_result(&self, result: &ProjectScanResult) -> Result<i64> {
         let mut stmt = self.conn.prepare(
@@ -146,7 +146,7 @@ impl ProjectDatabase {
             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
             "#,
         )?;
-        
+
         stmt.execute((
             &result.project_path,
             result.scan_timestamp.to_rfc3339(),
@@ -159,12 +159,16 @@ impl ProjectDatabase {
             &result.project_type,
             result.compliance_score,
         ))?;
-        
+
         Ok(self.conn.last_insert_rowid())
     }
-    
+
     /// Get project scan history
-    pub fn get_project_history(&self, project_path: &str, limit: i32) -> Result<Vec<ProjectScanResult>> {
+    pub fn get_project_history(
+        &self,
+        project_path: &str,
+        limit: i32,
+    ) -> Result<Vec<ProjectScanResult>> {
         let mut stmt = self.conn.prepare(
             r#"
             SELECT id, project_path, scan_timestamp, total_size_mb, bloat_size_mb,
@@ -176,13 +180,19 @@ impl ProjectDatabase {
             LIMIT ?2
             "#,
         )?;
-        
+
         let rows = stmt.query_map((project_path, limit), |row| {
             Ok(ProjectScanResult {
                 id: Some(row.get(0)?),
                 project_path: row.get(1)?,
                 scan_timestamp: DateTime::parse_from_rfc3339(&row.get::<_, String>(2)?)
-                    .map_err(|_e| rusqlite::Error::InvalidColumnType(2, "timestamp".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| {
+                        rusqlite::Error::InvalidColumnType(
+                            2,
+                            "timestamp".to_string(),
+                            rusqlite::types::Type::Text,
+                        )
+                    })?
                     .with_timezone(&Utc),
                 total_size_mb: row.get(3)?,
                 bloat_size_mb: row.get(4)?,
@@ -194,14 +204,14 @@ impl ProjectDatabase {
                 compliance_score: row.get(10)?,
             })
         })?;
-        
+
         let mut results = Vec::new();
         for row in rows {
             results.push(row?);
         }
         Ok(results)
     }
-    
+
     /// Configure project monitoring
     pub fn configure_monitoring(&self, config: &ProjectMonitorConfig) -> Result<i64> {
         let mut stmt = self.conn.prepare(
@@ -211,17 +221,17 @@ impl ProjectDatabase {
             ) VALUES (?1, ?2, ?3, ?4)
             "#,
         )?;
-        
+
         stmt.execute((
             &config.project_path,
             config.monitor_enabled as i32,
             config.scan_interval_hours,
             &config.alert_thresholds,
         ))?;
-        
+
         Ok(self.conn.last_insert_rowid())
     }
-    
+
     /// Get monitored projects
     pub fn get_monitored_projects(&self) -> Result<Vec<ProjectMonitorConfig>> {
         let mut stmt = self.conn.prepare(
@@ -233,7 +243,7 @@ impl ProjectDatabase {
             ORDER BY project_path
             "#,
         )?;
-        
+
         let rows = stmt.query_map([], |row| {
             Ok(ProjectMonitorConfig {
                 id: Some(row.get(0)?),
@@ -242,39 +252,49 @@ impl ProjectDatabase {
                 scan_interval_hours: row.get(3)?,
                 alert_thresholds: row.get(4)?,
                 created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
-                    .map_err(|_e| rusqlite::Error::InvalidColumnType(5, "created_at".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| {
+                        rusqlite::Error::InvalidColumnType(
+                            5,
+                            "created_at".to_string(),
+                            rusqlite::types::Type::Text,
+                        )
+                    })?
                     .with_timezone(&Utc),
                 updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
-                    .map_err(|_e| rusqlite::Error::InvalidColumnType(6, "updated_at".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| {
+                        rusqlite::Error::InvalidColumnType(
+                            6,
+                            "updated_at".to_string(),
+                            rusqlite::types::Type::Text,
+                        )
+                    })?
                     .with_timezone(&Utc),
             })
         })?;
-        
+
         let mut results = Vec::new();
         for row in rows {
             results.push(row?);
         }
         Ok(results)
     }
-    
+
     /// Prepare OSM-lite migration plan
     pub fn prepare_osm_migration(&self) -> Result<OSMMigrationPlan> {
         // Check current data volume and complexity
-        let scan_count: i32 = self.conn.query_row(
-            "SELECT COUNT(*) FROM project_scans",
-            [],
-            |row| row.get(0),
-        )?;
-        
-        let monitor_count: i32 = self.conn.query_row(
-            "SELECT COUNT(*) FROM project_monitors",
-            [],
-            |row| row.get(0),
-        )?;
-        
+        let scan_count: i32 =
+            self.conn
+                .query_row("SELECT COUNT(*) FROM project_scans", [], |row| row.get(0))?;
+
+        let monitor_count: i32 =
+            self.conn
+                .query_row("SELECT COUNT(*) FROM project_monitors", [], |row| {
+                    row.get(0)
+                })?;
+
         // Estimate migration complexity
         let estimated_duration = ((scan_count + monitor_count) as f32 * 0.1).ceil() as i32;
-        
+
         let migration_plan = OSMMigrationPlan {
             current_schema_version: "1.0.0".to_string(),
             target_osm_version: "osm-lite-1.0".to_string(),
@@ -290,25 +310,25 @@ impl ProjectDatabase {
             ],
             estimated_duration_minutes: estimated_duration.max(5),
         };
-        
+
         // Store migration plan
         let plan_json = serde_json::to_string(&migration_plan)
             .map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
-        
+
         self.conn.execute(
             "UPDATE osm_migration_metadata SET migration_plan = ?1, last_migration_check = CURRENT_TIMESTAMP WHERE id = 1",
             [plan_json],
         )?;
-        
+
         Ok(migration_plan)
     }
-    
+
     /// Export data for OSM-lite migration
     pub fn export_for_osm_migration(&self, export_path: &str) -> Result<usize> {
         // Export all data in OSM-compatible format
         let scans = self.get_all_scan_results()?;
         let monitors = self.get_monitored_projects()?;
-        
+
         let export_data = serde_json::json!({
             "schema_version": "1.0.0",
             "export_timestamp": Utc::now().to_rfc3339(),
@@ -322,16 +342,17 @@ impl ProjectDatabase {
                 "osm_compatibility": "pre-osm"
             }
         });
-        
-        std::fs::write(export_path, export_data.to_string())
-            .map_err(|e| rusqlite::Error::SqliteFailure(
+
+        std::fs::write(export_path, export_data.to_string()).map_err(|e| {
+            rusqlite::Error::SqliteFailure(
                 rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_IOERR),
-                Some(format!("Failed to write export file: {}", e))
-            ))?;
-        
+                Some(format!("Failed to write export file: {}", e)),
+            )
+        })?;
+
         Ok(scans.len() + monitors.len())
     }
-    
+
     /// Get all scan results for migration
     fn get_all_scan_results(&self) -> Result<Vec<ProjectScanResult>> {
         let mut stmt = self.conn.prepare(
@@ -343,13 +364,19 @@ impl ProjectDatabase {
             ORDER BY scan_timestamp DESC
             "#,
         )?;
-        
+
         let rows = stmt.query_map([], |row| {
             Ok(ProjectScanResult {
                 id: Some(row.get(0)?),
                 project_path: row.get(1)?,
                 scan_timestamp: DateTime::parse_from_rfc3339(&row.get::<_, String>(2)?)
-                    .map_err(|_e| rusqlite::Error::InvalidColumnType(2, "timestamp".to_string(), rusqlite::types::Type::Text))?
+                    .map_err(|_e| {
+                        rusqlite::Error::InvalidColumnType(
+                            2,
+                            "timestamp".to_string(),
+                            rusqlite::types::Type::Text,
+                        )
+                    })?
                     .with_timezone(&Utc),
                 total_size_mb: row.get(3)?,
                 bloat_size_mb: row.get(4)?,
@@ -361,7 +388,7 @@ impl ProjectDatabase {
                 compliance_score: row.get(10)?,
             })
         })?;
-        
+
         let mut results = Vec::new();
         for row in rows {
             results.push(row?);
@@ -374,19 +401,19 @@ impl ProjectDatabase {
 mod tests {
     use super::*;
     use tempfile::NamedTempFile;
-    
+
     #[test]
     fn test_database_creation() {
         let temp_file = NamedTempFile::new().unwrap();
         let db = ProjectDatabase::new(temp_file.path().to_str().unwrap()).unwrap();
         assert!(db.osm_migration_ready);
     }
-    
+
     #[test]
     fn test_scan_result_storage() {
         let temp_file = NamedTempFile::new().unwrap();
         let db = ProjectDatabase::new(temp_file.path().to_str().unwrap()).unwrap();
-        
+
         let result = ProjectScanResult {
             id: None,
             project_path: "/test/project".to_string(),
@@ -400,20 +427,20 @@ mod tests {
             project_type: Some("rust".to_string()),
             compliance_score: Some(95.5),
         };
-        
+
         let id = db.store_scan_result(&result).unwrap();
         assert!(id > 0);
-        
+
         let history = db.get_project_history("/test/project", 10).unwrap();
         assert_eq!(history.len(), 1);
         assert_eq!(history[0].project_path, "/test/project");
     }
-    
+
     #[test]
     fn test_osm_migration_plan() {
         let temp_file = NamedTempFile::new().unwrap();
         let db = ProjectDatabase::new(temp_file.path().to_str().unwrap()).unwrap();
-        
+
         let plan = db.prepare_osm_migration().unwrap();
         assert_eq!(plan.current_schema_version, "1.0.0");
         assert_eq!(plan.target_osm_version, "osm-lite-1.0");

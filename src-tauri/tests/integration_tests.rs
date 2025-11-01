@@ -300,10 +300,7 @@ fn test_file_size_verification_after_write() {
 
     // Write 1MB of data
     let data = vec![0u8; 1024 * 1024];
-    File::create(&file_path)
-        .unwrap()
-        .write_all(&data)
-        .unwrap();
+    File::create(&file_path).unwrap().write_all(&data).unwrap();
 
     let metadata = fs::metadata(&file_path).unwrap();
     assert_eq!(metadata.len() as usize, data.len());
@@ -371,7 +368,10 @@ fn test_mixed_duplicate_and_unique_files() {
         let path = entry.path();
         if path.is_file() {
             let content = fs::read(&path).unwrap();
-            file_map.insert(path.file_name().unwrap().to_string_lossy().to_string(), content);
+            file_map.insert(
+                path.file_name().unwrap().to_string_lossy().to_string(),
+                content,
+            );
         }
     }
 

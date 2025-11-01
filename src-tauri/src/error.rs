@@ -125,7 +125,10 @@ mod tests {
     fn test_compare_safe_very_large_numbers() {
         let large1 = 1e30;
         let large2 = 1e31;
-        assert_eq!(compare_f32_safe(large1, large2), std::cmp::Ordering::Greater);
+        assert_eq!(
+            compare_f32_safe(large1, large2),
+            std::cmp::Ordering::Greater
+        );
         assert_eq!(compare_f32_safe(large2, large1), std::cmp::Ordering::Less);
     }
 
@@ -134,7 +137,10 @@ mod tests {
         let small1 = 1e-30;
         let small2 = 1e-31;
         assert_eq!(compare_f32_safe(small1, small2), std::cmp::Ordering::Less);
-        assert_eq!(compare_f32_safe(small2, small1), std::cmp::Ordering::Greater);
+        assert_eq!(
+            compare_f32_safe(small2, small1),
+            std::cmp::Ordering::Greater
+        );
     }
 
     #[test]
@@ -156,7 +162,10 @@ mod tests {
 
         assert_eq!(compare_f32_safe(inf, 100.0), std::cmp::Ordering::Less);
         assert_eq!(compare_f32_safe(100.0, inf), std::cmp::Ordering::Greater);
-        assert_eq!(compare_f32_safe(neg_inf, 100.0), std::cmp::Ordering::Greater);
+        assert_eq!(
+            compare_f32_safe(neg_inf, 100.0),
+            std::cmp::Ordering::Greater
+        );
     }
 
     // ========================================================================

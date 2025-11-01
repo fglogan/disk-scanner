@@ -8,8 +8,8 @@
 //! - Developer cache discovery
 //! - Git repository analysis
 
-use crate::models::*;
 use crate::error;
+use crate::models::*;
 use crate::utils::patterns::{detect_bloat_category, detect_junk_file, CACHE_PATTERNS};
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
@@ -442,30 +442,35 @@ pub fn scan_dev_caches(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCa
 pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepository>, String> {
     let mut repositories = Vec::new();
     let mut error_count = 0;
-    
-    log::info!("Starting git repository scan in: {:?} (follow_symlinks={})", root, follow_symlinks);
+
+    log::info!(
+        "Starting git repository scan in: {:?} (follow_symlinks={})",
+        root,
+        follow_symlinks
+    );
 
     // Find all .git directories - with explicit error logging
-    for entry_result in WalkDir::new(root)
-        .follow_links(follow_symlinks)
-        .into_iter()
-    {
+    for entry_result in WalkDir::new(root).follow_links(follow_symlinks).into_iter() {
         let entry = match entry_result {
             Ok(e) => e,
             Err(err) => {
                 error_count += 1;
-                log::warn!("Error walking directory (#{} errors total): {}", error_count, err);
+                log::warn!(
+                    "Error walking directory (#{} errors total): {}",
+                    error_count,
+                    err
+                );
                 continue; // Skip this entry but continue scanning
             }
         };
-        
+
         // Only process directories named ".git"
         if !entry.file_type().is_dir() || entry.file_name() != ".git" {
             continue;
         }
-        
+
         log::debug!("Found .git directory: {:?}", entry.path());
-        
+
         let git_path = entry.path();
         let repo_path = git_path.parent().unwrap_or(git_path);
 
@@ -565,7 +570,10 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
 
         // Check for large files in git history (using git command)
         // TODO: This is VERY slow - temporarily disabled for testing
-        log::debug!("Skipping large file check (temporarily disabled): {:?}", repo_path);
+        log::debug!(
+            "Skipping large file check (temporarily disabled): {:?}",
+            repo_path
+        );
         // if let Ok(large_files) = find_large_git_files(repo_path) {
         //     log::debug!("Found {} large files in history", large_files.len());
         //     for (file_path, file_size) in large_files {
@@ -595,11 +603,11 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
     repositories.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     log::info!(
-        "Git repository scan complete: {} repositories found, {} errors encountered", 
-        repositories.len(), 
+        "Git repository scan complete: {} repositories found, {} errors encountered",
+        repositories.len(),
         error_count
     );
-    
+
     Ok(repositories)
 }
 

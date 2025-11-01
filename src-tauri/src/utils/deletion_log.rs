@@ -6,11 +6,11 @@
 //! - **Analytics** on what types of files are being deleted
 //! - **Safety verification** to confirm intended deletions occurred
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
-use chrono::{DateTime, Utc};
 
 use crate::ScannerResult;
 
@@ -55,11 +55,11 @@ fn get_log_path() -> Result<PathBuf, String> {
     } else {
         return Err("Cannot determine log directory".to_string());
     };
-    
+
     // Create directory if it doesn't exist
     std::fs::create_dir_all(&log_dir)
         .map_err(|e| format!("Failed to create log directory: {}", e))?;
-    
+
     Ok(log_dir.join("deletion_log.jsonl"))
 }
 
@@ -89,21 +89,20 @@ fn get_log_path() -> Result<PathBuf, String> {
 /// ```
 pub fn log_deletion(record: &DeletionRecord) -> Result<(), String> {
     let log_path = get_log_path()?;
-    
+
     let json = serde_json::to_string(record)
         .map_err(|e| format!("Failed to serialize deletion record: {}", e))?;
-    
+
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(&log_path)
         .map_err(|e| format!("Failed to open deletion log: {}", e))?;
-    
-    writeln!(file, "{}", json)
-        .map_err(|e| format!("Failed to write deletion log: {}", e))?;
-    
+
+    writeln!(file, "{}", json).map_err(|e| format!("Failed to write deletion log: {}", e))?;
+
     log::debug!("Logged deletion: {} ({})", record.path, record.category);
-    
+
     Ok(())
 }
 
@@ -116,20 +115,20 @@ pub fn log_deletion(record: &DeletionRecord) -> Result<(), String> {
 /// Returns an error if the log file cannot be read or parsed.
 pub fn get_deletion_history() -> Result<Vec<DeletionRecord>, String> {
     let log_path = get_log_path()?;
-    
+
     if !log_path.exists() {
         return Ok(Vec::new());
     }
-    
+
     let content = std::fs::read_to_string(&log_path)
         .map_err(|e| format!("Failed to read deletion log: {}", e))?;
-    
+
     let mut records = Vec::new();
     for line in content.lines() {
         if line.trim().is_empty() {
             continue;
         }
-        
+
         match serde_json::from_str::<DeletionRecord>(line) {
             Ok(record) => records.push(record),
             Err(e) => {
@@ -138,7 +137,7 @@ pub fn get_deletion_history() -> Result<Vec<DeletionRecord>, String> {
             }
         }
     }
-    
+
     Ok(records)
 }
 
@@ -147,14 +146,12 @@ pub fn get_deletion_history() -> Result<Vec<DeletionRecord>, String> {
 /// Returns the count and total size of deletions in a category.
 pub fn get_category_stats(category: &str) -> Result<(usize, u64), String> {
     let history = get_deletion_history()?;
-    
-    let records: Vec<_> = history.iter()
-        .filter(|r| r.category == category)
-        .collect();
-    
+
+    let records: Vec<_> = history.iter().filter(|r| r.category == category).collect();
+
     let count = records.len();
     let total_size: u64 = records.iter().map(|r| r.size_bytes).sum();
-    
+
     Ok((count, total_size))
 }
 
@@ -163,21 +160,21 @@ pub fn get_category_stats(category: &str) -> Result<(usize, u64), String> {
 /// This function should only be called by user action or when explicitly confirmed.
 pub fn clear_log() -> Result<(), String> {
     let log_path = get_log_path()?;
-    
+
     if log_path.exists() {
         std::fs::remove_file(&log_path)
             .map_err(|e| format!("Failed to clear deletion log: {}", e))?;
-        
+
         log::warn!("Deletion log cleared by user action");
     }
-    
+
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_deletion_record_creation() {
         let record = DeletionRecord::new(
@@ -186,14 +183,14 @@ mod tests {
             "test".to_string(),
             "trash".to_string(),
         );
-        
+
         assert_eq!(record.path, "/test/file.txt");
         assert_eq!(record.size_bytes, 1024);
         assert_eq!(record.category, "test");
         assert_eq!(record.method, "trash");
         assert!(!record.restored);
     }
-    
+
     #[test]
     fn test_deletion_record_serialization() {
         let record = DeletionRecord::new(
@@ -202,10 +199,10 @@ mod tests {
             "cache".to_string(),
             "permanent".to_string(),
         );
-        
+
         let json = serde_json::to_string(&record).unwrap();
         let deserialized: DeletionRecord = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(record.path, deserialized.path);
         assert_eq!(record.size_bytes, deserialized.size_bytes);
         assert_eq!(record.category, deserialized.category);
