@@ -6,6 +6,7 @@ authors = ["Tempext AI"]
 license = "Apache-2.0"
 repository = "https://github.com/yourusername/disk-bloat-scanner"
 homepage = "https://github.com/yourusername/disk-bloat-scanner"
+readme = "../README.md"
 keywords = ["disk-space", "cleanup", "duplicates", "tauri", "desktop"]
 categories = ["command-line-utilities", "filesystem"]
 edition = "2021"
@@ -44,6 +45,7 @@ tree-sitter-javascript = "0.20"
 tree-sitter-typescript = "0.20"
 tree-sitter-python = "0.20"
 tree-sitter-json = "0.20"
+byte-unit = "5"
 
 [dev-dependencies]
 tempfile = "3"

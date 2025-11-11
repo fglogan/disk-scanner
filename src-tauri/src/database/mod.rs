@@ -1,5 +1,6 @@
 // Database module for disk bloat scanner
 // SQLite foundation with OSM-lite migration planning
+#![allow(clippy::needless_raw_string_hashes)]
 
 use chrono::{DateTime, Utc};
 use rusqlite::{Connection, Result};
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Project monitoring database with OSM-lite migration support
 pub struct ProjectDatabase {
     conn: Connection,
+    #[allow(dead_code)]
     osm_migration_ready: bool,
 }
 
@@ -224,7 +226,7 @@ impl ProjectDatabase {
 
         stmt.execute((
             &config.project_path,
-            config.monitor_enabled as i32,
+            i32::from(config.monitor_enabled),
             config.scan_interval_hours,
             &config.alert_thresholds,
         ))?;
@@ -293,7 +295,8 @@ impl ProjectDatabase {
                 })?;
 
         // Estimate migration complexity
-        let estimated_duration = ((scan_count + monitor_count) as f32 * 0.1).ceil() as i32;
+        let count_sum = scan_count + monitor_count;
+        let estimated_duration = ((count_sum + 9) / 10).max(5);
 
         let migration_plan = OSMMigrationPlan {
             current_schema_version: "1.0.0".to_string(),
@@ -346,7 +349,7 @@ impl ProjectDatabase {
         std::fs::write(export_path, export_data.to_string()).map_err(|e| {
             rusqlite::Error::SqliteFailure(
                 rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_IOERR),
-                Some(format!("Failed to write export file: {}", e)),
+                Some(format!("Failed to write export file: {e}")),
             )
         })?;
 
@@ -398,6 +401,7 @@ impl ProjectDatabase {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
     use tempfile::NamedTempFile;

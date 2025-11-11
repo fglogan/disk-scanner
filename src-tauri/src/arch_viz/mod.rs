@@ -1,5 +1,18 @@
 // Architecture Visualization Module
 // Advanced code analysis and diagram generation using Tree-sitter
+#![allow(
+    clippy::unused_self,
+    clippy::unnecessary_wraps,
+    clippy::uninlined_format_args,
+    clippy::if_not_else,
+    clippy::cast_precision_loss,
+    clippy::format_push_string,
+    clippy::single_char_add_str,
+    clippy::unused_enumerate_index,
+    clippy::collapsible_str_replace,
+    clippy::double_ended_iterator_last,
+    clippy::doc_markdown
+)]
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -325,7 +338,7 @@ impl ArchVizEngine {
         let walker = WalkDir::new(&self.project_path)
             .max_depth(self.config.max_depth)
             .into_iter()
-            .filter_map(|e| e.ok())
+            .filter_map(Result::ok)
             .filter(|entry| entry.file_type().is_file());
 
         for entry in walker {
@@ -335,8 +348,7 @@ impl ArchVizEngine {
             if path
                 .file_name()
                 .and_then(|name| name.to_str())
-                .map(|name| name.starts_with('.'))
-                .unwrap_or(false)
+                .is_some_and(|name| name.starts_with('.'))
             {
                 continue;
             }
@@ -376,7 +388,7 @@ impl ArchVizEngine {
 
                 if self.config.languages.contains(&language.to_string()) {
                     // Skip test files if configured
-                    if !self.config.include_tests && self.is_test_file(path) {
+                    if !self.config.include_tests && Self::is_test_file(path) {
                         continue;
                     }
 
@@ -389,7 +401,7 @@ impl ArchVizEngine {
     }
 
     /// Check if a file is a test file
-    fn is_test_file(&self, path: &Path) -> bool {
+    fn is_test_file(path: &Path) -> bool {
         let path_str = path.to_string_lossy().to_lowercase();
         path_str.contains("test")
             || path_str.contains("spec")
@@ -409,8 +421,8 @@ impl ArchVizEngine {
         // Determine language from file extension
         let language = match file_path.extension().and_then(|ext| ext.to_str()) {
             Some("rs") => "rust",
-            Some("js") | Some("jsx") => "javascript",
-            Some("ts") | Some("tsx") => "typescript",
+            Some("js" | "jsx") => "javascript",
+            Some("ts" | "tsx") => "typescript",
             Some("py") => "python",
             Some("json") => "json",
             _ => return Err("Unsupported file type".into()),
@@ -464,7 +476,7 @@ impl ArchVizEngine {
         match language {
             "rust" => self.extract_rust_symbols(node, content, symbols, scope)?,
             "javascript" | "typescript" => {
-                self.extract_js_symbols(node, content, symbols, scope)?
+                self.extract_js_symbols(node, content, symbols, scope)?;
             }
             "python" => self.extract_python_symbols(node, content, symbols, scope)?,
             _ => {} // Skip unsupported languages
@@ -1075,8 +1087,8 @@ impl ArchVizEngine {
                 let file_id = format!("{}_{}", dir_id, file.replace('.', "_"));
                 let icon = match file.split('.').last() {
                     Some("rs") => "🦀",
-                    Some("js") | Some("jsx") => "📜",
-                    Some("ts") | Some("tsx") => "📘",
+                    Some("js" | "jsx") => "📜",
+                    Some("ts" | "tsx") => "📘",
                     Some("py") => "🐍",
                     Some("json") => "📋",
                     Some("md") => "📝",

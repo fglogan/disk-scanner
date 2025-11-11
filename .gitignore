@@ -64,4 +64,4 @@ tempext_*.ko
 .laio/
 docs/audit/
 *.audit.log
-*.deletion.log
+*.deletion.logliberror.rlib

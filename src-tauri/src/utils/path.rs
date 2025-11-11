@@ -15,11 +15,11 @@ pub fn validate_scan_path(path: &str) -> Result<PathBuf, String> {
     // Try to canonicalize the path
     let canonical = path_buf
         .canonicalize()
-        .map_err(|e| format!("Invalid path '{}': {}", path, e))?;
+        .map_err(|e| format!("Invalid path '{path}': {e}"))?;
 
     // Check if path exists
     if !canonical.exists() {
-        return Err(format!("Path does not exist: {}", path));
+        return Err(format!("Path does not exist: {path}"));
     }
 
     // Block system-critical directories (macOS/Linux)
@@ -54,8 +54,7 @@ pub fn validate_scan_path(path: &str) -> Result<PathBuf, String> {
     for blocked_path in &blocked_unix {
         if canonical_str.starts_with(blocked_path) {
             return Err(format!(
-                "Access denied: '{}' is a protected system directory",
-                blocked_path
+                "Access denied: '{blocked_path}' is a protected system directory"
             ));
         }
     }
@@ -67,8 +66,7 @@ pub fn validate_scan_path(path: &str) -> Result<PathBuf, String> {
             .starts_with(&blocked_path.to_lowercase())
         {
             return Err(format!(
-                "Access denied: '{}' is a protected system directory",
-                blocked_path
+                "Access denied: '{blocked_path}' is a protected system directory"
             ));
         }
     }
@@ -82,7 +80,7 @@ pub fn validate_scan_path(path: &str) -> Result<PathBuf, String> {
                 .to_lowercase()
                 .starts_with(&warning_path.to_lowercase())
         {
-            log::warn!("Scanning potentially sensitive directory: {}", warning_path);
+            log::warn!("Scanning potentially sensitive directory: {warning_path}");
             break;
         }
     }

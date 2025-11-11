@@ -1,5 +1,16 @@
 // Project Auditor & Compliance Scanner (PACS) Module
 // Implementation of deep project analysis and compliance monitoring
+#![allow(
+    clippy::use_self,
+    clippy::uninlined_format_args,
+    clippy::redundant_closure_for_method_calls,
+    clippy::unused_self,
+    clippy::case_sensitive_file_extension_comparisons,
+    clippy::doc_markdown,
+    clippy::for_kv_map,
+    clippy::manual_clamp,
+    clippy::format_push_string
+)]
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -441,7 +452,7 @@ impl DeepProjectScanner {
 
         for pattern in required_files {
             let found = if pattern.contains('*') {
-                let prefix = pattern.split('*').next().unwrap();
+                let prefix = pattern.split('*').next().unwrap_or("");
                 inventory.keys().any(|path| path.starts_with(prefix))
             } else {
                 inventory.contains_key(pattern)

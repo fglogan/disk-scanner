@@ -72,6 +72,7 @@ pub const BLOAT_PATTERNS: &[BloatPattern] = &[
 ///     println!("Found bloat: {}", name); // Output: "Found bloat: Node.js"
 /// }
 /// ```
+#[must_use]
 pub fn detect_bloat_category(path: &Path) -> Option<(&'static str, &'static str)> {
     if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
         for pattern in BLOAT_PATTERNS {
@@ -187,7 +188,7 @@ pub const JUNK_PATTERNS: &[JunkPattern] = &[
 /// Check if a filename matches a junk file pattern.
 ///
 /// Supports glob-style patterns:
-/// - Exact match: ".DS_Store"
+/// - Exact match: `.DS_Store`
 /// - Extension match: "*.pyc"
 /// - Suffix match: "*~"
 /// - Prefix match: "test*"
@@ -206,6 +207,7 @@ pub const JUNK_PATTERNS: &[JunkPattern] = &[
 /// assert!(matches_junk_pattern("file~", "*~"));
 /// assert!(matches_junk_pattern(".DS_Store", ".DS_Store"));
 /// ```
+#[must_use]
 pub fn matches_junk_pattern(filename: &str, pattern: &str) -> bool {
     if pattern.starts_with("*.") {
         // Extension match (e.g., "*.pyc")
@@ -215,9 +217,8 @@ pub fn matches_junk_pattern(filename: &str, pattern: &str) -> bool {
         // Suffix match (e.g., "*~" matches "test~")
         let suffix = &pattern[1..]; // Remove the *
         filename.ends_with(suffix)
-    } else if pattern.ends_with('*') {
+    } else if let Some(prefix) = pattern.strip_suffix('*') {
         // Prefix match (e.g., "test*")
-        let prefix = &pattern[..pattern.len() - 1];
         filename.starts_with(prefix)
     } else if pattern.contains('*') {
         // Middle wildcard (not implemented for now)
@@ -243,6 +244,7 @@ pub fn matches_junk_pattern(filename: &str, pattern: &str) -> bool {
 ///     println!("Found junk: {} ({})", name, safety);
 /// }
 /// ```
+#[must_use]
 pub fn detect_junk_file(filename: &str) -> Option<(&'static str, &'static str, &'static str)> {
     for pattern in JUNK_PATTERNS {
         if matches_junk_pattern(filename, pattern.pattern) {

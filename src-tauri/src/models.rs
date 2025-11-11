@@ -2,6 +2,7 @@
 //!
 //! This module contains all serializable data structures used for communication
 //! between the Tauri backend and frontend, as well as internal request/response types.
+#![allow(clippy::doc_markdown)]
 
 use serde::{Deserialize, Serialize};
 
@@ -119,7 +120,7 @@ pub struct BloatEntry {
 /// Grouped collection of bloat entries by category
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BloatCategory {
-    /// Category identifier (e.g., "node_modules", "rust_target")
+    /// Category identifier (e.g., `node_modules`, `rust_target`)
     pub category_id: String,
     /// Human-readable category name (e.g., "Node.js", "Rust")
     pub display_name: String,

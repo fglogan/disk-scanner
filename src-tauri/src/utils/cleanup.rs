@@ -26,6 +26,7 @@ fn is_icloud_path(path: &str) -> bool {
 }
 
 /// Counts how many paths are in iCloud Drive
+#[must_use]
 pub fn count_icloud_paths(paths: &[String]) -> usize {
     paths.iter().filter(|p| is_icloud_path(p)).count()
 }
@@ -43,7 +44,7 @@ fn infer_deletion_category(path: &str) -> String {
         "cache".to_string()
     } else if path.contains(".git") {
         "git_metadata".to_string()
-    } else if path.contains("Duplicate") || path.starts_with(".") {
+    } else if path.contains("Duplicate") || path.starts_with('.') {
         "duplicates".to_string()
     } else {
         "user_selected".to_string()
@@ -91,15 +92,12 @@ pub fn validate_deletion_request(req: &CleanupReq) -> ScannerResult<()> {
     // Security validation: Check each path for system directory access
     for path in &req.paths {
         // Extract parent directory for validation (files inherit their parent's security context)
-        let path_for_validation = if let Some(parent) = Path::new(path).parent() {
-            parent.to_string_lossy().to_string()
-        } else {
-            path.clone()
-        };
+        let path_for_validation = Path::new(path)
+            .parent().map_or_else(|| path.clone(), |p| p.to_string_lossy().to_string());
 
         // Validate the path to prevent deletion of files in system directories
         validate_scan_path(&path_for_validation)
-            .map_err(|e| format!("Security validation failed for '{}': {}", path, e))?;
+            .map_err(|e| format!("Security validation failed for '{path}': {e}"))?;
     }
 
     // Calculate total size
@@ -111,11 +109,10 @@ pub fn validate_deletion_request(req: &CleanupReq) -> ScannerResult<()> {
         .sum();
 
     if total_size > MAX_BATCH_DELETE_SIZE {
-        let total_gb = total_size as f64 / (1024.0 * 1024.0 * 1024.0);
-        let max_gb = MAX_BATCH_DELETE_SIZE as f64 / (1024.0 * 1024.0 * 1024.0);
+        let total = byte_unit::Byte::from_u64(total_size).get_appropriate_unit(byte_unit::UnitType::Decimal);
+        let max = byte_unit::Byte::from_u64(MAX_BATCH_DELETE_SIZE).get_appropriate_unit(byte_unit::UnitType::Decimal);
         return Err(format!(
-            "Cannot delete {:.1} GB at once (maximum: {:.0} GB)",
-            total_gb, max_gb
+            "Cannot delete {total} at once (maximum: {max})"
         )
         .into());
     }
@@ -152,6 +149,7 @@ pub fn validate_deletion_request(req: &CleanupReq) -> ScannerResult<()> {
 /// - System directories cannot be accessed (validation happens in scan layer)
 /// - Each file deletion is individually verified
 /// - Trash operation is atomic at the OS level
+#[allow(clippy::too_many_lines)]
 pub fn delete_files(
     paths: &[String],
     dry_run: bool,
@@ -172,10 +170,7 @@ pub fn delete_files(
     );
 
     if icloud_count > 0 {
-        log::warn!(
-            "⚠️  {} iCloud Drive files detected - these may fail due to macOS permissions",
-            icloud_count
-        );
+        log::warn!("⚠️  {icloud_count} iCloud Drive files detected - these may fail due to macOS permissions");
     }
 
     if dry_run {
@@ -185,29 +180,25 @@ pub fn delete_files(
 
     for path in paths {
         let p = Path::new(path);
-        log::debug!("Processing: {}", path);
+        log::debug!("Processing: {path}");
 
         // Quick sanity check: if file doesn't exist right now, skip it.
         // Note: We still verify post-deletion to catch TOCTOU races, but this
         // catches the simple case where a file was already deleted.
         if !p.exists() {
-            log::debug!("File does not exist, skipping: {}", path);
+            log::debug!("File does not exist, skipping: {path}");
             skipped.push(path.clone());
             continue;
         }
 
-        log::debug!(
-            "File exists, attempting deletion (trash={}): {}",
-            use_trash,
-            path
-        );
+log::debug!("File exists, attempting deletion (trash={use_trash}): {path}");
 
         if use_trash {
             // Check if this is an iCloud Drive path
             let is_icloud = is_icloud_path(path);
 
             if is_icloud {
-                log::warn!("iCloud Drive file detected: {}", path);
+                log::warn!("iCloud Drive file detected: {path}");
                 log::warn!("Attempting deletion with retry logic...");
             }
 
@@ -217,8 +208,8 @@ pub fn delete_files(
 
             while attempts > 0 {
                 match trash::delete(p) {
-                    Ok(_) => {
-                        log::debug!("Successfully moved to trash: {}", path);
+Ok(()) => {
+                        log::debug!("Successfully moved to trash: {path}");
 
                         // Post-deletion verification: Wait briefly for OS to complete the operation
                         // This mitigates TOCTOU (Time-of-check-time-of-use) race conditions
@@ -226,10 +217,10 @@ pub fn delete_files(
 
                         // Verify the file was actually removed (atomic verification)
                         if p.exists() {
-                            log::warn!("File still exists after trash operation: {}", path);
-                            errors.push(format!("{}: Moved to trash but file still exists (may indicate system issue)", path));
+                            log::warn!("File still exists after trash operation: {path}");
+                            errors.push(format!("{path}: Moved to trash but file still exists (may indicate system issue)"));
                         } else {
-                            log::info!("Deletion verified: {} successfully removed", path);
+log::info!("Deletion verified: {path} successfully removed");
                             deleted.push(path.clone());
 
                             // Log to deletion audit trail
@@ -242,7 +233,7 @@ pub fn delete_files(
                                 "trash".to_string(),
                             );
                             if let Err(e) = log_deletion(&record) {
-                                log::warn!("Failed to log deletion: {}", e);
+log::warn!("Failed to log deletion: {e}");
                             }
                         }
                         break;
@@ -252,10 +243,7 @@ pub fn delete_files(
                         attempts -= 1;
 
                         if attempts > 0 && is_icloud {
-                            log::warn!(
-                                "Retry attempt for iCloud file (attempts left: {})",
-                                attempts
-                            );
+                            log::warn!("Retry attempt for iCloud file (attempts left: {attempts})");
                             std::thread::sleep(std::time::Duration::from_millis(500));
                         }
                     }
@@ -264,8 +252,8 @@ pub fn delete_files(
 
             // If all attempts failed, analyze the error
             if let Some(e) = last_error {
-                let error_msg = format!("{}", e);
-                log::debug!("Trash deletion failed: {}", error_msg);
+                let error_msg = format!("{e}");
+                log::debug!("Trash deletion failed: {error_msg}");
 
                 // Provide helpful error messages for common issues
                 // Note: trash crate may return different error messages across platforms
@@ -275,27 +263,22 @@ pub fn delete_files(
                     || error_msg.contains("404")
                 {
                     // File doesn't exist - this can happen due to TOCTOU race conditions
-                    log::debug!(
-                        "File does not exist (likely deleted by another process), skipping: {}",
-                        path
-                    );
+                    log::debug!("File does not exist (likely deleted by another process), skipping: {path}");
                     skipped.push(path.clone());
                     continue;
                 } else if error_msg.contains("permission") || error_msg.contains("-5000") {
                     format!(
-                        "{}: Permission denied. iCloud Drive files may require manual deletion.",
-                        path
+                        "{path}: Permission denied. iCloud Drive files may require manual deletion."
                     )
                 } else if error_msg.contains("timed out") || error_msg.contains("-1712") {
                     format!(
-                        "{}: Operation timed out. Try deleting this file manually from Finder.",
-                        path
+                        "{path}: Operation timed out. Try deleting this file manually from Finder."
                     )
                 } else {
-                    format!("{}: {}", path, error_msg)
+                    format!("{path}: {error_msg}")
                 };
 
-                log::error!("Cleanup error for {}: {}", path, helpful_msg);
+                log::error!("Cleanup error for {path}: {helpful_msg}");
                 errors.push(helpful_msg);
             }
         } else {
@@ -307,19 +290,18 @@ pub fn delete_files(
             };
 
             match result {
-                Ok(_) => {
-                    log::debug!("Successfully deleted: {}", path);
+                Ok(()) => {
+                    log::debug!("Successfully deleted: {path}");
 
                     // Post-deletion verification: Check if file is actually gone
                     // This ensures atomicity and detects race conditions
                     if p.exists() {
-                        log::warn!("File still exists after deletion: {}", path);
+                        log::warn!("File still exists after deletion: {path}");
                         errors.push(format!(
-                            "{}: Deletion returned Ok but file still exists (race condition?)",
-                            path
+                            "{path}: Deletion returned Ok but file still exists (race condition?)"
                         ));
                     } else {
-                        log::info!("Deletion verified: {} successfully removed", path);
+                        log::info!("Deletion verified: {path} successfully removed");
                         deleted.push(path.clone());
 
                         // Log to deletion audit trail
@@ -332,18 +314,18 @@ pub fn delete_files(
                             "permanent".to_string(),
                         );
                         if let Err(e) = log_deletion(&record) {
-                            log::warn!("Failed to log deletion: {}", e);
+                            log::warn!("Failed to log deletion: {e}");
                         }
                     }
                 }
                 Err(e) => {
                     // Check if file doesn't exist (skip rather than error)
                     if e.kind() == std::io::ErrorKind::NotFound {
-                        log::debug!("File does not exist, skipping: {}", path);
+log::debug!("File does not exist, skipping: {path}");
                         skipped.push(path.clone());
                     } else {
-                        log::error!("Cleanup error for {}: {}", path, e);
-                        errors.push(format!("{}: {}", path, e));
+                        log::error!("Cleanup error for {path}: {e}");
+                        errors.push(format!("{path}: {e}"));
                     }
                 }
             }

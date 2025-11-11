@@ -1,7 +1,7 @@
 /// Custom error type for disk bloat scanner operations.
 ///
 /// Provides structured error handling with context about what went wrong,
-/// eliminating panic-prone .unwrap() calls and providing better error messages.
+/// eliminating panic-prone `.unwrap()` calls and providing better error messages.
 use std::fmt;
 use std::io;
 
@@ -39,19 +39,19 @@ pub enum ScannerError {
 impl fmt::Display for ScannerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ScannerError::Io(err) => write!(f, "I/O error: {}", err),
-            ScannerError::InvalidPath(msg) => write!(f, "Invalid path: {}", msg),
-            ScannerError::InvalidFloatComparison(msg) => {
-                write!(f, "Cannot compare values: {} (likely NaN or Inf)", msg)
+            Self::Io(err) => write!(f, "I/O error: {err}"),
+            Self::InvalidPath(msg) => write!(f, "Invalid path: {msg}"),
+            Self::InvalidFloatComparison(msg) => {
+                write!(f, "Cannot compare values: {msg} (likely NaN or Inf)")
             }
-            ScannerError::LockPoisoned(msg) => {
-                write!(f, "Concurrent access error (mutex poisoned): {}", msg)
+            Self::LockPoisoned(msg) => {
+                write!(f, "Concurrent access error (mutex poisoned): {msg}")
             }
-            ScannerError::PermissionDenied(msg) => write!(f, "Permission denied: {}", msg),
-            ScannerError::NotFound(msg) => write!(f, "Not found: {}", msg),
-            ScannerError::InvalidConfig(msg) => write!(f, "Invalid configuration: {}", msg),
-            ScannerError::DeletionFailed(msg) => write!(f, "Deletion failed: {}", msg),
-            ScannerError::Other(msg) => write!(f, "{}", msg),
+            Self::PermissionDenied(msg) => write!(f, "Permission denied: {msg}"),
+            Self::NotFound(msg) => write!(f, "Not found: {msg}"),
+            Self::InvalidConfig(msg) => write!(f, "Invalid configuration: {msg}"),
+            Self::DeletionFailed(msg) => write!(f, "Deletion failed: {msg}"),
+            Self::Other(msg) => write!(f, "{msg}"),
         }
     }
 }
@@ -60,7 +60,7 @@ impl std::error::Error for ScannerError {}
 
 impl From<io::Error> for ScannerError {
     fn from(err: io::Error) -> Self {
-        ScannerError::Io(err)
+        Self::Io(err)
     }
 }
 
@@ -72,7 +72,7 @@ impl From<ScannerError> for String {
 
 impl From<String> for ScannerError {
     fn from(msg: String) -> Self {
-        ScannerError::Other(msg)
+        Self::Other(msg)
     }
 }
 
@@ -82,18 +82,22 @@ pub type ScannerResult<T> = Result<T, ScannerError>;
 /// Helper function to handle comparison of floats safely without panicking on NaN
 ///
 /// Sorts by the provided float values, treating NaN as smallest (end of sort)
+#[must_use]
 pub fn compare_f32_safe(a: f32, b: f32) -> std::cmp::Ordering {
-    match b.partial_cmp(&a) {
-        Some(order) => order,
-        None => {
-            // NaN comparison returns None; place NaN values at end
-            std::cmp::Ordering::Greater
-        }
-    }
+    b.partial_cmp(&a)
+        .map_or(std::cmp::Ordering::Greater, |order| order)
 }
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        clippy::panic,
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::unnecessary_literal_unwrap,
+        clippy::uninlined_format_args,
+        clippy::unused_parens
+    )]
     use super::*;
 
     // ========================================================================
@@ -239,7 +243,7 @@ mod tests {
     #[test]
     fn test_error_debug_format() {
         let err = ScannerError::InvalidPath("/test".to_string());
-        let debug = format!("{:?}", err);
+        let debug = format!("{err:?}");
         assert!(debug.contains("InvalidPath"));
     }
 
@@ -250,7 +254,7 @@ mod tests {
     #[test]
     fn test_error_is_error_trait() {
         let err = ScannerError::Other("test".to_string());
-        let _: &(dyn std::error::Error) = &err;
+        let _: &dyn std::error::Error = &err;
     }
 
     // ========================================================================

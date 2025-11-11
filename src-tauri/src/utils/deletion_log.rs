@@ -12,7 +12,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
 
-use crate::ScannerResult;
+
 
 /// A single deletion record in the audit trail
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,7 +23,7 @@ pub struct DeletionRecord {
     pub size_bytes: u64,
     /// Timestamp when deletion occurred (UTC)
     pub deleted_at: DateTime<Utc>,
-    /// Category of what was deleted (e.g., "cache", "duplicate", "large_file", "junk")
+    /// Category of what was deleted (e.g., "cache", "duplicate", "`large_file`", "junk")
     pub category: String,
     /// Deletion method: "trash" or "permanent"
     pub method: String,
@@ -33,6 +33,7 @@ pub struct DeletionRecord {
 
 impl DeletionRecord {
     /// Create a new deletion record
+    #[must_use]
     pub fn new(path: String, size_bytes: u64, category: String, method: String) -> Self {
         Self {
             path,
@@ -58,7 +59,7 @@ fn get_log_path() -> Result<PathBuf, String> {
 
     // Create directory if it doesn't exist
     std::fs::create_dir_all(&log_dir)
-        .map_err(|e| format!("Failed to create log directory: {}", e))?;
+        .map_err(|e| format!("Failed to create log directory: {e}"))?;
 
     Ok(log_dir.join("deletion_log.jsonl"))
 }
@@ -91,15 +92,15 @@ pub fn log_deletion(record: &DeletionRecord) -> Result<(), String> {
     let log_path = get_log_path()?;
 
     let json = serde_json::to_string(record)
-        .map_err(|e| format!("Failed to serialize deletion record: {}", e))?;
+        .map_err(|e| format!("Failed to serialize deletion record: {e}"))?;
 
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(&log_path)
-        .map_err(|e| format!("Failed to open deletion log: {}", e))?;
+        .map_err(|e| format!("Failed to open deletion log: {e}"))?;
 
-    writeln!(file, "{}", json).map_err(|e| format!("Failed to write deletion log: {}", e))?;
+    writeln!(file, "{json}").map_err(|e| format!("Failed to write deletion log: {e}"))?;
 
     log::debug!("Logged deletion: {} ({})", record.path, record.category);
 
@@ -121,7 +122,7 @@ pub fn get_deletion_history() -> Result<Vec<DeletionRecord>, String> {
     }
 
     let content = std::fs::read_to_string(&log_path)
-        .map_err(|e| format!("Failed to read deletion log: {}", e))?;
+        .map_err(|e| format!("Failed to read deletion log: {e}"))?;
 
     let mut records = Vec::new();
     for line in content.lines() {
@@ -132,7 +133,7 @@ pub fn get_deletion_history() -> Result<Vec<DeletionRecord>, String> {
         match serde_json::from_str::<DeletionRecord>(line) {
             Ok(record) => records.push(record),
             Err(e) => {
-                log::warn!("Failed to parse deletion log entry: {} (line: {})", e, line);
+                log::warn!("Failed to parse deletion log entry: {e} (line: {line})");
                 // Continue parsing other lines
             }
         }
@@ -163,7 +164,7 @@ pub fn clear_log() -> Result<(), String> {
 
     if log_path.exists() {
         std::fs::remove_file(&log_path)
-            .map_err(|e| format!("Failed to clear deletion log: {}", e))?;
+            .map_err(|e| format!("Failed to clear deletion log: {e}"))?;
 
         log::warn!("Deletion log cleared by user action");
     }

@@ -56,6 +56,7 @@ struct ComplianceChange {
 ///
 /// Returns total disk size, used/free space, and usage percentage.
 #[tauri::command]
+#[allow(clippy::cast_precision_loss)]
 async fn get_disk_info() -> Result<DiskInfoResponse, String> {
     use sysinfo::Disks;
 
@@ -96,6 +97,7 @@ async fn get_disk_info() -> Result<DiskInfoResponse, String> {
 /// - CPU core count
 /// - Operating system name, version, and hostname
 #[tauri::command]
+#[allow(clippy::cast_precision_loss)]
 async fn get_system_info() -> Result<SystemInfoResponse, String> {
     use sysinfo::{Disks, System};
 
@@ -283,7 +285,7 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 ///
 /// **Cache Types Detected:**
 /// - Node.js/npm/yarn, Python/pip, Rust/Cargo, Java/Maven/Gradle
-/// - Docker, VS Code, IntelliJ IDEA, macOS system caches
+/// - Docker, VS Code, `IntelliJ` IDEA, macOS system caches
 ///
 /// **Returns:** Vector of `CacheCategory` objects containing:
 /// - Category ID, display name, and safety level
@@ -328,6 +330,7 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
 
 /// Get lightweight git status for a repository path
 #[tauri::command]
+#[allow(clippy::too_many_lines)]
 async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
     use std::process::Command;
 
@@ -338,14 +341,14 @@ async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
     // Ensure path exists (redundant check but kept for clarity)
     let repo_path = &validated_path;
     if !repo_path.exists() {
-        return Err(format!("Path does not exist: {}", path));
+        return Err(format!("Path does not exist: {path}"));
     }
 
     // Normalize to the working tree root if a .git directory was provided
-    let work_dir_path = if repo_path.file_name().map_or(false, |n| n == ".git") {
+    let work_dir_path = if repo_path.file_name().is_some_and(|n| n == ".git") {
         repo_path.parent().unwrap_or(repo_path).to_path_buf()
     } else {
-        repo_path.to_path_buf()
+        repo_path.clone()
     };
     let work_dir = work_dir_path.to_string_lossy().to_string();
 
@@ -359,11 +362,11 @@ async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
         Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout).trim().to_string(),
         Ok(out) => {
             let err = String::from_utf8_lossy(&out.stderr);
-            log::warn!("git rev-parse failed: {}", err);
+            log::warn!("git rev-parse failed: {err}");
             "unknown".to_string()
         }
         Err(e) => {
-            log::warn!("git not available: {}", e);
+            log::warn!("git not available: {e}");
             "unknown".to_string()
         }
     };
@@ -451,33 +454,34 @@ async fn get_git_repo_status(path: String) -> Result<GitRepoStatus, String> {
     })
 }
 
-/// Initializes and runs the Tauri application with all scanning and cleanup commands.
-///
-/// This function sets up the Tauri runtime, registers plugins for logging and file dialogs,
-/// and registers all command handlers for disk scanning operations.
-///
-/// The application exposes the following commands to the frontend:
-/// - `get_disk_info` - Retrieve disk usage statistics
-/// - `get_system_info` - Retrieve system information
-/// - `scan_large_files` - Scan for large files exceeding size thresholds
-/// - `scan_bloat` - Detect bloated files and directories
-/// - `scan_duplicates` - Find duplicate files by hash
-/// - `scan_junk_files` - Detect junk files (cache, temp, etc.)
-/// - `scan_dev_caches` - Analyze developer tool caches
-/// - `scan_git_repos` - Find and analyze Git repositories
-/// - `cleanup_dirs` - Safely delete selected files and directories
-/// - `get_git_repo_status` - Get lightweight git status for a repository
-/// - `store_project_scan` - Store project scan result in database
-/// - `get_project_history` - Get project scan history
-/// - `configure_project_monitoring` - Configure project monitoring
-/// - `get_monitored_projects` - Get monitored projects
-/// - `prepare_osm_migration` - Prepare OSM-lite migration plan
+// Initializes and runs the Tauri application with all scanning and cleanup commands.
+//
+// This function sets up the Tauri runtime, registers plugins for logging and file dialogs,
+// and registers all command handlers for disk scanning operations.
+//
+// The application exposes the following commands to the frontend:
+// - `get_disk_info` - Retrieve disk usage statistics
+// - `get_system_info` - Retrieve system information
+// - `scan_large_files` - Scan for large files exceeding size thresholds
+// - `scan_bloat` - Detect bloated files and directories
+// - `scan_duplicates` - Find duplicate files by hash
+// - `scan_junk_files` - Detect junk files (cache, temp, etc.)
+// - `scan_dev_caches` - Analyze developer tool caches
+// - `scan_git_repos` - Find and analyze Git repositories
+// - `cleanup_dirs` - Safely delete selected files and directories
+// - `get_git_repo_status` - Get lightweight git status for a repository
+// - `store_project_scan` - Store project scan result in database
+// - `get_project_history` - Get project scan history
+// - `configure_project_monitoring` - Configure project monitoring
+// - `get_monitored_projects` - Get monitored projects
+// - `prepare_osm_migration` - Prepare OSM-lite migration plan
 
 // ============================================================================
 // Database Commands for Project Monitoring
 // ============================================================================
 
 /// Store project scan result in database
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 async fn store_project_scan(
     project_path: String,
@@ -494,9 +498,9 @@ async fn store_project_scan(
 
     let db_path = "./data/project_monitor.db";
     std::fs::create_dir_all("./data")
-        .map_err(|e| format!("Failed to create data directory: {}", e))?;
+        .map_err(|e| format!("Failed to create data directory: {e}"))?;
 
-    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
 
     let scan_result = ProjectScanResult {
         id: None,
@@ -513,7 +517,7 @@ async fn store_project_scan(
     };
 
     db.store_scan_result(&scan_result)
-        .map_err(|e| format!("Failed to store scan result: {}", e))
+        .map_err(|e| format!("Failed to store scan result: {e}"))
 }
 
 /// Get project scan history
@@ -523,10 +527,10 @@ async fn get_project_history(
     limit: i32,
 ) -> Result<Vec<ProjectScanResult>, String> {
     let db_path = "./data/project_monitor.db";
-    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
-
+let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+ 
     db.get_project_history(&project_path, limit)
-        .map_err(|e| format!("Failed to get project history: {}", e))
+        .map_err(|e| format!("Failed to get project history: {e}"))
 }
 
 /// Configure project monitoring
@@ -540,8 +544,8 @@ async fn configure_project_monitoring(
     use chrono::Utc;
 
     let db_path = "./data/project_monitor.db";
-    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
-
+let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+ 
     let config = ProjectMonitorConfig {
         id: None,
         project_path,
@@ -553,27 +557,27 @@ async fn configure_project_monitoring(
     };
 
     db.configure_monitoring(&config)
-        .map_err(|e| format!("Failed to configure monitoring: {}", e))
+        .map_err(|e| format!("Failed to configure monitoring: {e}"))
 }
 
 /// Get monitored projects
 #[tauri::command]
 async fn get_monitored_projects() -> Result<Vec<ProjectMonitorConfig>, String> {
     let db_path = "./data/project_monitor.db";
-    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
-
+let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+ 
     db.get_monitored_projects()
-        .map_err(|e| format!("Failed to get monitored projects: {}", e))
+        .map_err(|e| format!("Failed to get monitored projects: {e}"))
 }
 
 /// Prepare OSM-lite migration plan
 #[tauri::command]
 async fn prepare_osm_migration() -> Result<database::OSMMigrationPlan, String> {
     let db_path = "./data/project_monitor.db";
-    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {}", e))?;
-
+let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+ 
     db.prepare_osm_migration()
-        .map_err(|e| format!("Failed to prepare OSM migration: {}", e))
+        .map_err(|e| format!("Failed to prepare OSM migration: {e}"))
 }
 
 // ============================================================================
@@ -586,7 +590,7 @@ async fn run_pacs_scan(
     project_path: String,
     config: Option<PACSConfig>,
 ) -> Result<ProjectAuditReport, String> {
-    log::info!("Starting PACS scan for: {}", project_path);
+    log::info!("Starting PACS scan for: {project_path}");
 
     let config = config.unwrap_or_default();
     let mut scanner = DeepProjectScanner::new(&project_path, config);
@@ -594,19 +598,19 @@ async fn run_pacs_scan(
     // Load existing baseline if available
     scanner
         .load_baseline()
-        .map_err(|e| format!("Failed to load baseline: {}", e))?;
+        .map_err(|e| format!("Failed to load baseline: {e}"))?;
 
     // Perform the scan
     let report = scanner
         .scan()
         .await
-        .map_err(|e| format!("Scan failed: {}", e))?;
+        .map_err(|e| format!("Scan failed: {e}"))?;
 
     // Save the report
     scanner
         .save_report(&report)
         .await
-        .map_err(|e| format!("Failed to save report: {}", e))?;
+        .map_err(|e| format!("Failed to save report: {e}"))?;
 
     log::info!(
         "PACS scan completed. Compliance score: {:.1}/100",
@@ -637,23 +641,23 @@ async fn update_pacs_config(config: PACSConfig) -> Result<(), String> {
 /// Get all baselines for a project
 #[tauri::command]
 async fn get_project_baselines(project_path: String) -> Result<Vec<ProjectBaseline>, String> {
-    log::info!("Getting baselines for project: {}", project_path);
+    log::info!("Getting baselines for project: {project_path}");
 
     let baselines_dir = Path::new(&project_path).join(".pacs").join("baselines");
     let mut baselines = Vec::new();
 
     if baselines_dir.exists() {
         for entry in std::fs::read_dir(&baselines_dir)
-            .map_err(|e| format!("Failed to read baselines directory: {}", e))?
+            .map_err(|e| format!("Failed to read baselines directory: {e}"))?
         {
-            let entry = entry.map_err(|e| format!("Failed to read baseline entry: {}", e))?;
+            let entry = entry.map_err(|e| format!("Failed to read baseline entry: {e}"))?;
             let path = entry.path();
 
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let content = std::fs::read_to_string(&path)
-                    .map_err(|e| format!("Failed to read baseline file: {}", e))?;
+                    .map_err(|e| format!("Failed to read baseline file: {e}"))?;
                 let baseline: ProjectBaseline = serde_json::from_str(&content)
-                    .map_err(|e| format!("Failed to parse baseline: {}", e))?;
+                    .map_err(|e| format!("Failed to parse baseline: {e}"))?;
                 baselines.push(baseline);
             }
         }
@@ -672,11 +676,7 @@ async fn create_project_baseline(
     version: String,
     _description: Option<String>,
 ) -> Result<(), String> {
-    log::info!(
-        "Creating baseline '{}' for project: {}",
-        version,
-        project_path
-    );
+    log::info!("Creating baseline '{version}' for project: {project_path}");
 
     let config = PACSConfig::default();
     let mut scanner = DeepProjectScanner::new(&project_path, config);
@@ -684,13 +684,13 @@ async fn create_project_baseline(
     // Load existing baseline if available
     scanner
         .load_baseline()
-        .map_err(|e| format!("Failed to load existing baseline: {}", e))?;
+        .map_err(|e| format!("Failed to load existing baseline: {e}"))?;
 
     // Perform scan to get current state
     let report = scanner
         .scan()
         .await
-        .map_err(|e| format!("Failed to scan project: {}", e))?;
+        .map_err(|e| format!("Failed to scan project: {e}"))?;
 
     if let Some(baseline) = report.baseline {
         // Create versioned baseline
@@ -700,18 +700,17 @@ async fn create_project_baseline(
         // Save to baselines directory
         let baselines_dir = Path::new(&project_path).join(".pacs").join("baselines");
         std::fs::create_dir_all(&baselines_dir)
-            .map_err(|e| format!("Failed to create baselines directory: {}", e))?;
+            .map_err(|e| format!("Failed to create baselines directory: {e}"))?;
 
-        let baseline_file = baselines_dir.join(format!("{}.json", version));
+        let baseline_file = baselines_dir.join(format!("{version}.json"));
         let baseline_content = serde_json::to_string_pretty(&versioned_baseline)
-            .map_err(|e| format!("Failed to serialize baseline: {}", e))?;
+            .map_err(|e| format!("Failed to serialize baseline: {e}"))?;
 
         std::fs::write(&baseline_file, baseline_content)
-            .map_err(|e| format!("Failed to write baseline file: {}", e))?;
+            .map_err(|e| format!("Failed to write baseline file: {e}"))?;
 
         log::info!(
-            "Created baseline '{}' at: {}",
-            version,
+            "Created baseline '{version}' at: {}",
             baseline_file.display()
         );
     } else {
@@ -724,23 +723,19 @@ async fn create_project_baseline(
 /// Delete a project baseline
 #[tauri::command]
 async fn delete_project_baseline(project_path: String, version: String) -> Result<(), String> {
-    log::info!(
-        "Deleting baseline '{}' for project: {}",
-        version,
-        project_path
-    );
+    log::info!("Deleting baseline '{version}' for project: {project_path}");
 
     let baseline_file = Path::new(&project_path)
         .join(".pacs")
         .join("baselines")
-        .join(format!("{}.json", version));
+        .join(format!("{version}.json"));
 
     if baseline_file.exists() {
         std::fs::remove_file(&baseline_file)
-            .map_err(|e| format!("Failed to delete baseline file: {}", e))?;
+            .map_err(|e| format!("Failed to delete baseline file: {e}"))?;
         log::info!("Deleted baseline file: {}", baseline_file.display());
     } else {
-        return Err(format!("Baseline '{}' not found", version));
+        return Err(format!("Baseline '{version}' not found"));
     }
 
     Ok(())
@@ -753,42 +748,42 @@ async fn compare_with_baseline(
     baseline_version: String,
     current_report: ProjectAuditReport,
 ) -> Result<BaselineComparison, String> {
-    log::info!(
-        "Comparing current state with baseline '{}' for project: {}",
-        baseline_version,
-        project_path
-    );
+    log::info!("Comparing current state with baseline '{baseline_version}' for project: {project_path}");
 
     // Load the baseline
     let baseline_file = Path::new(&project_path)
         .join(".pacs")
         .join("baselines")
-        .join(format!("{}.json", baseline_version));
+        .join(format!("{baseline_version}.json"));
 
     if !baseline_file.exists() {
-        return Err(format!("Baseline '{}' not found", baseline_version));
+        return Err(format!("Baseline '{baseline_version}' not found"));
     }
 
     let baseline_content = std::fs::read_to_string(&baseline_file)
-        .map_err(|e| format!("Failed to read baseline: {}", e))?;
+        .map_err(|e| format!("Failed to read baseline: {e}"))?;
     let baseline: ProjectBaseline = serde_json::from_str(&baseline_content)
-        .map_err(|e| format!("Failed to parse baseline: {}", e))?;
+        .map_err(|e| format!("Failed to parse baseline: {e}"))?;
 
     // Compare file inventories
-    let baseline_files: std::collections::HashSet<_> = baseline.file_inventory.keys().collect();
-    let current_files: std::collections::HashSet<_> = current_report
+    let baseline_files: std::collections::HashSet<String> = baseline
+        .file_inventory
+        .keys()
+        .cloned()
+        .collect();
+    let current_files: std::collections::HashSet<String> = current_report
         .baseline
         .as_ref()
-        .map(|b| b.file_inventory.keys().collect())
+        .map(|b| b.file_inventory.keys().cloned().collect())
         .unwrap_or_default();
 
     let files_added: Vec<String> = current_files
         .difference(&baseline_files)
-        .map(|s| s.to_string())
+        .cloned()
         .collect();
     let files_removed: Vec<String> = baseline_files
         .difference(&current_files)
-        .map(|s| s.to_string())
+        .cloned()
         .collect();
 
     // Find modified files (same path, different hash)
@@ -876,7 +871,7 @@ async fn run_architecture_analysis(
     project_path: String,
     config: Option<ArchVizConfig>,
 ) -> Result<ArchitectureAnalysis, String> {
-    log::info!("Starting architecture analysis for: {}", project_path);
+    log::info!("Starting architecture analysis for: {project_path}");
 
     let config = config.unwrap_or_default();
     let mut engine = ArchVizEngine::new(&project_path, config)
@@ -1027,7 +1022,7 @@ async fn export_all_diagrams(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
@@ -1058,7 +1053,9 @@ pub fn run() {
             update_archviz_config,
             generate_diagram,
             export_all_diagrams
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        ]);
+
+    if let Err(e) = app.run(tauri::generate_context!()) {
+        log::error!("error while running tauri application: {}", e);
+    }
 }
