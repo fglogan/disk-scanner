@@ -289,7 +289,7 @@
   }
 </script>
 
-<div class="p-6 bg-white rounded-lg shadow-lg max-w-7xl mx-auto">
+<div class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg shadow-lg max-w-7xl mx-auto">
   <div class="mb-6">
     <div class="flex items-center justify-between">
       <div>
@@ -319,9 +319,9 @@
     </div>
   </div>
   
-  <!-- Configuration Editor -->
-  {#if showConfigEditor && config}
-    <div class="mb-6 p-6 bg-gray-50 border-2 border-gray-200 rounded-lg">
+   <!-- Configuration Editor -->
+   {#if showConfigEditor && config}
+     <div class="mb-6 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-amber-300 rounded-lg shadow-sm">
       <h3 class="text-xl font-bold text-gray-900 mb-4">⚙️ PACS Configuration</h3>
       <div class="grid grid-cols-2 gap-6">
         <div class="space-y-4">
@@ -384,9 +384,9 @@
     </div>
   {/if}
   
-  <!-- Configuration Display (when not editing) -->
-  {#if config && !showConfigEditor}
-    <div class="mb-6 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm">
+   <!-- Configuration Display (when not editing) -->
+   {#if config && !showConfigEditor}
+     <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-lg shadow-sm">
       <h3 class="text-xl font-bold text-gray-900 mb-4">⚙️ Current Configuration</h3>
       <div class="grid grid-cols-2 gap-6 text-base">
         <div>
@@ -517,8 +517,8 @@
       
       <!-- Standards Summary -->
       {#if Object.keys(report.standards_summary).length > 0}
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Standards Compliance</h3>
+         <div class="bg-white p-6 rounded-lg border-2 border-indigo-200 shadow-sm">
+           <h3 class="text-lg font-semibold text-gray-900 mb-4">Standards Compliance</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {#each Object.entries(report.standards_summary) as [standard, status]}
               <div class="p-4 border rounded-lg {status.compliant ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
@@ -539,29 +539,29 @@
         </div>
       {/if}
       
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-lg border border-gray-200">
-          <div class="text-2xl font-bold text-gray-900">{report.findings.length}</div>
-          <div class="text-sm text-gray-600">Total Findings</div>
-        </div>
-        <div class="bg-white p-4 rounded-lg border border-gray-200">
-          <div class="text-2xl font-bold text-red-600">
-            {report.findings.filter(f => f.severity === 'Critical').length}
-          </div>
-          <div class="text-sm text-gray-600">Critical Issues</div>
-        </div>
-        <div class="bg-white p-4 rounded-lg border border-gray-200">
-          <div class="text-2xl font-bold text-orange-600">
-            {report.findings.filter(f => f.severity === 'High').length}
-          </div>
-          <div class="text-sm text-gray-600">High Priority</div>
-        </div>
-        <div class="bg-white p-4 rounded-lg border border-gray-200">
-          <div class="text-2xl font-bold text-green-600">{report.auto_fixes_available}</div>
-          <div class="text-sm text-gray-600">Auto-Fixable</div>
-        </div>
-      </div>
+       <!-- Quick Stats -->
+       <div class="grid grid-cols-4 gap-4">
+         <div class="bg-gradient-to-br from-slate-100 to-slate-50 p-4 rounded-lg border-2 border-slate-300 shadow-sm">
+           <div class="text-2xl font-bold text-gray-900">{report.findings.length}</div>
+           <div class="text-sm text-gray-600">Total Findings</div>
+         </div>
+         <div class="bg-gradient-to-br from-red-100 to-red-50 p-4 rounded-lg border-2 border-red-300 shadow-sm">
+           <div class="text-2xl font-bold text-red-600">
+             {report.findings.filter(f => f.severity === 'Critical').length}
+           </div>
+           <div class="text-sm text-gray-600">Critical Issues</div>
+         </div>
+         <div class="bg-gradient-to-br from-orange-100 to-orange-50 p-4 rounded-lg border-2 border-orange-300 shadow-sm">
+           <div class="text-2xl font-bold text-orange-600">
+             {report.findings.filter(f => f.severity === 'High').length}
+           </div>
+           <div class="text-sm text-gray-600">High Priority</div>
+         </div>
+         <div class="bg-gradient-to-br from-green-100 to-green-50 p-4 rounded-lg border-2 border-green-300 shadow-sm">
+           <div class="text-2xl font-bold text-green-600">{report.auto_fixes_available}</div>
+           <div class="text-sm text-gray-600">Auto-Fixable</div>
+         </div>
+       </div>
       
       <!-- Recommendations -->
       {#if report.recommendations.length > 0}
@@ -603,9 +603,9 @@
             </div>
           </div>
           
-          <div class="space-y-3">
-            {#each getFilteredFindings() as finding}
-              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+           <div class="space-y-3">
+             {#each getFilteredFindings() as finding}
+               <div class="border-2 border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg p-4 hover:border-indigo-400 hover:shadow-md transition-all">
                 <div class="flex items-start justify-between mb-2">
                   <div class="flex items-center gap-3">
                     <span class="text-2xl">{getFindingIcon(finding.category)}</span>
@@ -658,8 +658,8 @@
         </div>
       {/if}
       
-      <!-- Scan Metadata -->
-      <div class="text-xs text-gray-700 pt-4 border-t border-gray-200 bg-gray-50 p-4 rounded">
+       <!-- Scan Metadata -->
+       <div class="text-xs text-gray-700 pt-4 border-t border-gray-200 bg-gradient-to-r from-slate-100 to-slate-50 p-4 rounded border-2 border-slate-300">
         <div class="grid grid-cols-3 gap-4">
           <div>
             <strong>Scanned:</strong> {formatDate(report.scanned_at)}

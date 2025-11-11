@@ -589,7 +589,7 @@
 	}
 
 	.tab-content {
-		background: white;
+		background: #f8f9fb;
 		border-radius: 8px;
 		padding: 20px;
 		animation: fadeIn 0.3s ease;
@@ -771,7 +771,8 @@
 
 	.workflow-steps {
 		padding: 20px;
-		background: white;
+		background: #f8f9fb;
+		border-top: 1px solid #e2e8f0;
 	}
 
 	.step {

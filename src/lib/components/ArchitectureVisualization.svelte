@@ -301,7 +301,7 @@
   }
 </script>
 
-<div class="p-6 bg-white rounded-lg shadow-lg">
+<div class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg shadow-lg">
   <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-900 mb-2">
       Architecture Visualization
@@ -312,8 +312,8 @@
   </div>
   
   <!-- Configuration Section -->
-  {#if config}
-    <div class="mb-6 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm">
+   {#if config}
+     <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg shadow-sm">
       <h3 class="text-xl font-bold text-gray-900 mb-4">⚙️ Analysis Configuration</h3>
       <div class="grid grid-cols-2 gap-6 text-base">
         <div>
@@ -347,8 +347,8 @@
     </div>
   {/if}
   
-  <!-- Project Selection and Analysis Controls -->
-  <div class="mb-6 bg-white p-4 rounded-lg border border-gray-200">
+   <!-- Project Selection and Analysis Controls -->
+   <div class="mb-6 bg-white p-4 rounded-lg border-2 border-indigo-200 shadow-sm">
     <label for="project-path" class="block text-lg font-semibold text-gray-900 mb-3">
       📁 Select Project Directory
     </label>
@@ -472,28 +472,28 @@
           </div>
         </div>
         
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-4 gap-4">
-          <div class="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
-            <div class="text-3xl font-bold text-gray-900">{analysis.file_count}</div>
-            <div class="text-base font-medium text-gray-700">Files Analyzed</div>
-          </div>
-          <div class="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-sm">
-            <div class="text-3xl font-bold text-blue-700">{analysis.metrics.total_functions}</div>
-            <div class="text-base font-medium text-gray-700">Functions</div>
-          </div>
-          <div class="bg-white p-6 rounded-lg border-2 border-green-200 shadow-sm">
-            <div class="text-3xl font-bold text-green-700">{analysis.metrics.total_classes}</div>
-            <div class="text-base font-medium text-gray-700">Classes</div>
-          </div>
-          <div class="bg-white p-6 rounded-lg border-2 border-purple-200 shadow-sm">
-            <div class="text-3xl font-bold text-purple-700">{analysis.metrics.total_lines.toLocaleString()}</div>
-            <div class="text-base font-medium text-gray-700">Lines of Code</div>
-          </div>
-        </div>
+         <!-- Quick Stats -->
+         <div class="grid grid-cols-4 gap-4">
+           <div class="bg-gradient-to-br from-slate-100 to-slate-50 p-6 rounded-lg border-2 border-slate-300 shadow-sm">
+             <div class="text-3xl font-bold text-gray-900">{analysis.file_count}</div>
+             <div class="text-base font-medium text-gray-700">Files Analyzed</div>
+           </div>
+           <div class="bg-gradient-to-br from-blue-100 to-blue-50 p-6 rounded-lg border-2 border-blue-300 shadow-sm">
+             <div class="text-3xl font-bold text-blue-700">{analysis.metrics.total_functions}</div>
+             <div class="text-base font-medium text-gray-700">Functions</div>
+           </div>
+           <div class="bg-gradient-to-br from-green-100 to-green-50 p-6 rounded-lg border-2 border-green-300 shadow-sm">
+             <div class="text-3xl font-bold text-green-700">{analysis.metrics.total_classes}</div>
+             <div class="text-base font-medium text-gray-700">Classes</div>
+           </div>
+           <div class="bg-gradient-to-br from-purple-100 to-purple-50 p-6 rounded-lg border-2 border-purple-300 shadow-sm">
+             <div class="text-3xl font-bold text-purple-700">{analysis.metrics.total_lines.toLocaleString()}</div>
+             <div class="text-base font-medium text-gray-700">Lines of Code</div>
+           </div>
+         </div>
         
-        <!-- Language Breakdown -->
-        <div class="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+         <!-- Language Breakdown -->
+         <div class="bg-white p-6 rounded-lg border-2 border-indigo-200 shadow-sm">
           <h3 class="text-xl font-bold text-gray-900 mb-6">🔤 Language Breakdown</h3>
           <div class="space-y-4">
             {#each Object.entries(analysis.language_breakdown) as [language, count]}
@@ -681,8 +681,8 @@
         <!-- Generated Diagrams Display -->
         {#if Object.keys(generatedDiagrams).length > 0}
           <div class="space-y-6">
-            {#each Object.entries(generatedDiagrams) as [diagramType, diagramContent]}
-              <div class="bg-white border-2 border-gray-200 rounded-lg p-4">
+             {#each Object.entries(generatedDiagrams) as [diagramType, diagramContent]}
+               <div class="bg-white border-2 border-indigo-200 rounded-lg p-4 shadow-sm">
                 <div class="flex justify-between items-center mb-3">
                   <h4 class="text-lg font-semibold text-gray-900">
                     {#if diagramType === 'overview'}📊 Architecture Overview
