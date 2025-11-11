@@ -139,6 +139,33 @@
     }
   }
 
+  async function openInEditor(repoPath) {
+    try {
+      // Try to open in VS Code on macOS, default editor on others
+      const isMac = navigator.platform?.includes('Mac');
+      await invoke('open_command', { 
+        path: repoPath,
+        app: isMac ? 'com.microsoft.VSCode' : null
+      });
+      console.log('Opened in editor:', repoPath);
+    } catch (e) {
+      console.error('Failed to open editor:', e);
+      alert('Could not open editor: ' + String(e));
+    }
+  }
+
+  async function launchFixerAgent(repoPath) {
+    try {
+      console.log('Launching Fixer Agent for:', repoPath);
+      alert('🤖 Fixer Agent for: ' + repoPath + '\n\nThis feature will analyze your code and suggest fixes.');
+      // In future: invoke a Tauri command to launch the fixer agent
+      // await invoke('launch_fixer_agent', { project_path: repoPath });
+    } catch (e) {
+      console.error('Failed to launch fixer agent:', e);
+      alert('Could not launch fixer agent: ' + e);
+    }
+  }
+
   $: groups = groupByActivity(repos);
 </script>
 
@@ -225,17 +252,23 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-2 mb-6">
-          <button class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded" on:click={scanProjects}>
-            Rescan
-          </button>
-          <button class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded">
-            Launch Fixer Agent
-          </button>
-          <button class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded">
-            Open in Editor
-          </button>
-        </div>
+         <div class="flex gap-2 mb-6">
+           <button class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded" on:click={scanProjects}>
+             Rescan
+           </button>
+           <button 
+             class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded"
+             on:click={() => launchFixerAgent(selectedRepo.path)}
+           >
+             Launch Fixer Agent
+           </button>
+           <button 
+             class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded"
+             on:click={() => openInEditor(selectedRepo.path)}
+           >
+             Open in Editor
+           </button>
+         </div>
 
         <!-- Status Cards Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">

@@ -811,22 +811,33 @@ impl DeepProjectScanner {
         &self,
         report: &ProjectAuditReport,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let output_dir = Path::new(&self.config.output_dir);
-        std::fs::create_dir_all(output_dir)?;
+        // Try to save to configured output dir, fallback to home directory if read-only
+        let output_dir = if Path::new(&self.config.output_dir).is_relative() {
+            // For relative paths, use user's home directory + .disk-bloat-scanner
+            let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+            home.join(".disk-bloat-scanner").join("pacs-reports")
+        } else {
+            Path::new(&self.config.output_dir).to_path_buf()
+        };
+        
+        std::fs::create_dir_all(&output_dir)
+            .map_err(|e| format!("Failed to create output directory: {}", e))?;
 
         // Save JSON report
         let json_path = output_dir.join("project-compliance-report.json");
         let json_content = serde_json::to_string_pretty(report)?;
-        std::fs::write(&json_path, json_content)?;
+        std::fs::write(&json_path, json_content)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
-        // Save baseline
+        // Save baseline to project's .pacs directory (if writable, otherwise skip)
         if let Some(baseline) = &report.baseline {
             let baseline_dir = self.project_path.join(".pacs");
-            std::fs::create_dir_all(&baseline_dir)?;
-
-            let baseline_path = baseline_dir.join("baseline.json");
-            let baseline_content = serde_json::to_string_pretty(baseline)?;
-            std::fs::write(&baseline_path, baseline_content)?;
+            // Try to save, but don't fail if we can't (e.g., read-only filesystem)
+            if let Ok(()) = std::fs::create_dir_all(&baseline_dir) {
+                let baseline_path = baseline_dir.join("baseline.json");
+                let baseline_content = serde_json::to_string_pretty(baseline)?;
+                let _ = std::fs::write(&baseline_path, baseline_content);
+            }
         }
 
         log::info!("Saved audit report to: {}", json_path.display());

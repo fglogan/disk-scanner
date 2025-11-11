@@ -1013,6 +1013,44 @@ async fn export_all_diagrams(
     Ok(exported_files)
 }
 
+/// Open a directory or file in the default editor or specified application
+#[tauri::command]
+async fn open_command(path: String, app: Option<String>) -> Result<(), String> {
+    use std::process::Command;
+    
+    #[cfg(target_os = "macos")]
+    {
+        let mut cmd = Command::new("open");
+        
+        if let Some(app_id) = app {
+            cmd.arg("-a").arg(app_id);
+        }
+        
+        cmd.arg(&path)
+            .output()
+            .map_err(|e| format!("Failed to open in editor: {}", e))?;
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("start")
+            .arg(&path)
+            .output()
+            .map_err(|e| format!("Failed to open in editor: {}", e))?;
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("xdg-open")
+            .arg(&path)
+            .output()
+            .map_err(|e| format!("Failed to open in editor: {}", e))?;
+    }
+    
+    log::info!("Opened path in editor: {}", path);
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
@@ -1045,7 +1083,8 @@ pub fn run() {
             get_archviz_config,
             update_archviz_config,
             generate_diagram,
-            export_all_diagrams
+            export_all_diagrams,
+            open_command
         ]);
 
     if let Err(e) = app.run(tauri::generate_context!()) {

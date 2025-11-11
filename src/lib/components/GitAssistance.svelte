@@ -527,18 +527,23 @@
 
 <style>
 	.git-assistance-panel {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: white;
 		border-radius: 12px;
 		padding: 20px;
 		margin: 10px 0;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 		color: #333;
+		border: 1px solid #e5e7eb;
 	}
 
 	.header {
 		text-align: center;
 		margin-bottom: 20px;
-		color: white;
+		color: #667eea;
+		background: linear-gradient(135deg, #f5f7ff 0%, #faf9ff 100%);
+		padding: 20px;
+		border-radius: 8px;
+		margin: -20px -20px 20px -20px;
 	}
 
 	.header h2 {
