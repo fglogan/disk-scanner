@@ -527,8 +527,8 @@ async fn get_project_history(
     limit: i32,
 ) -> Result<Vec<ProjectScanResult>, String> {
     let db_path = "./data/project_monitor.db";
-let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
- 
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+
     db.get_project_history(&project_path, limit)
         .map_err(|e| format!("Failed to get project history: {e}"))
 }
@@ -544,8 +544,8 @@ async fn configure_project_monitoring(
     use chrono::Utc;
 
     let db_path = "./data/project_monitor.db";
-let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
- 
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+
     let config = ProjectMonitorConfig {
         id: None,
         project_path,
@@ -564,8 +564,8 @@ let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"
 #[tauri::command]
 async fn get_monitored_projects() -> Result<Vec<ProjectMonitorConfig>, String> {
     let db_path = "./data/project_monitor.db";
-let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
- 
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+
     db.get_monitored_projects()
         .map_err(|e| format!("Failed to get monitored projects: {e}"))
 }
@@ -574,8 +574,8 @@ let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"
 #[tauri::command]
 async fn prepare_osm_migration() -> Result<database::OSMMigrationPlan, String> {
     let db_path = "./data/project_monitor.db";
-let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
- 
+    let db = ProjectDatabase::new(db_path).map_err(|e| format!("Database error: {e}"))?;
+
     db.prepare_osm_migration()
         .map_err(|e| format!("Failed to prepare OSM migration: {e}"))
 }
@@ -748,7 +748,9 @@ async fn compare_with_baseline(
     baseline_version: String,
     current_report: ProjectAuditReport,
 ) -> Result<BaselineComparison, String> {
-    log::info!("Comparing current state with baseline '{baseline_version}' for project: {project_path}");
+    log::info!(
+        "Comparing current state with baseline '{baseline_version}' for project: {project_path}"
+    );
 
     // Load the baseline
     let baseline_file = Path::new(&project_path)
@@ -766,25 +768,16 @@ async fn compare_with_baseline(
         .map_err(|e| format!("Failed to parse baseline: {e}"))?;
 
     // Compare file inventories
-    let baseline_files: std::collections::HashSet<String> = baseline
-        .file_inventory
-        .keys()
-        .cloned()
-        .collect();
+    let baseline_files: std::collections::HashSet<String> =
+        baseline.file_inventory.keys().cloned().collect();
     let current_files: std::collections::HashSet<String> = current_report
         .baseline
         .as_ref()
         .map(|b| b.file_inventory.keys().cloned().collect())
         .unwrap_or_default();
 
-    let files_added: Vec<String> = current_files
-        .difference(&baseline_files)
-        .cloned()
-        .collect();
-    let files_removed: Vec<String> = baseline_files
-        .difference(&current_files)
-        .cloned()
-        .collect();
+    let files_added: Vec<String> = current_files.difference(&baseline_files).cloned().collect();
+    let files_removed: Vec<String> = baseline_files.difference(&current_files).cloned().collect();
 
     // Find modified files (same path, different hash)
     let mut files_modified = Vec::new();

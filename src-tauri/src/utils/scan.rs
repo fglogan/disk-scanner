@@ -216,10 +216,7 @@ pub fn scan_duplicates(root: &Path, follow_symlinks: bool) -> Result<Vec<Duplica
     // Group files by size first (optimization)
     let mut size_groups: HashMap<u64, Vec<(std::path::PathBuf, u64)>> = HashMap::new();
     for (path, size, last_mod) in files {
-        size_groups
-            .entry(size)
-            .or_default()
-            .push((path, last_mod));
+        size_groups.entry(size).or_default().push((path, last_mod));
     }
 
     // Only hash files that have potential duplicates (same size)
@@ -245,14 +242,11 @@ pub fn scan_duplicates(root: &Path, follow_symlinks: bool) -> Result<Vec<Duplica
                                 continue;
                             }
                         };
-                        hash_map
-                            .entry(hash)
-            .or_default()
-                            .push(DuplicateEntry {
-                                path: path.to_string_lossy().to_string(),
-                                size_mb,
-                                last_modified: *last_mod,
-                            });
+                        hash_map.entry(hash).or_default().push(DuplicateEntry {
+                            path: path.to_string_lossy().to_string(),
+                            size_mb,
+                            last_modified: *last_mod,
+                        });
                     }
                 }
             }
@@ -295,7 +289,11 @@ pub fn scan_duplicates(root: &Path, follow_symlinks: bool) -> Result<Vec<Duplica
 /// - `follow_symlinks` - Whether to follow symbolic links
 ///
 /// **Returns:** Vector of junk file categories sorted by file count (most numerous first)
-#[allow(clippy::type_complexity, clippy::significant_drop_tightening, clippy::cast_precision_loss)]
+#[allow(
+    clippy::type_complexity,
+    clippy::significant_drop_tightening,
+    clippy::cast_precision_loss
+)]
 pub fn scan_junk_files(root: &Path, follow_symlinks: bool) -> Result<Vec<JunkCategory>, String> {
     let junk_files: Mutex<HashMap<String, (String, String, Vec<JunkFileEntry>)>> =
         Mutex::new(HashMap::new());
@@ -315,7 +313,7 @@ pub fn scan_junk_files(root: &Path, follow_symlinks: bool) -> Result<Vec<JunkCat
                     let size_kb = size_bytes as f32 / 1024.0;
 
                     // NO minimum size - catch even 0-byte files
-let mut junk = junk_files
+                    let mut junk = junk_files
                         .lock()
                         .map_err(|e| format!("junk_files mutex poisoned: {e}"))?;
                     let cat_entry = junk.entry(category_id.to_string()).or_insert_with(|| {
@@ -327,7 +325,7 @@ let mut junk = junk_files
                         size_kb,
                         pattern: filename.to_string(),
                         category: category_id.to_string(),
-safety: (*safety).to_string(),
+                        safety: (*safety).to_string(),
                     });
                 }
             }
@@ -411,12 +409,14 @@ pub fn scan_dev_caches(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCa
                 };
 
                 let key = format!("{category_id}:{display_name}");
-                let (_, _, _, entries) = cache_map.entry(key).or_insert_with(|| (
-                    (*category_id).to_string(),
-                    (*display_name).to_string(),
-                    (*safety).to_string(),
-                    Vec::new(),
-                ));
+                let (_, _, _, entries) = cache_map.entry(key).or_insert_with(|| {
+                    (
+                        (*category_id).to_string(),
+                        (*display_name).to_string(),
+                        (*safety).to_string(),
+                        Vec::new(),
+                    )
+                });
                 entries.push(cache_entry);
                 break;
             }
@@ -478,9 +478,7 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
             Ok(e) => e,
             Err(err) => {
                 error_count += 1;
-                log::warn!(
-                    "Error walking directory (#{error_count} errors total): {err}"
-                );
+                log::warn!("Error walking directory (#{error_count} errors total): {err}");
                 continue; // Skip this entry but continue scanning
             }
         };
@@ -580,7 +578,7 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
                                 total_size += file_size;
                                 git_entries.push(GitEntry {
                                     path: entry_path.to_string_lossy().to_string(),
-#[allow(clippy::cast_precision_loss)]
+                                    #[allow(clippy::cast_precision_loss)]
                                     size_mb: file_size as f32 / 1_048_576.0,
                                     entry_type: "file".to_string(),
                                     description: format!("Git file: {entry_name}"),

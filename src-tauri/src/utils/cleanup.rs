@@ -93,7 +93,8 @@ pub fn validate_deletion_request(req: &CleanupReq) -> ScannerResult<()> {
     for path in &req.paths {
         // Extract parent directory for validation (files inherit their parent's security context)
         let path_for_validation = Path::new(path)
-            .parent().map_or_else(|| path.clone(), |p| p.to_string_lossy().to_string());
+            .parent()
+            .map_or_else(|| path.clone(), |p| p.to_string_lossy().to_string());
 
         // Validate the path to prevent deletion of files in system directories
         validate_scan_path(&path_for_validation)
@@ -109,12 +110,11 @@ pub fn validate_deletion_request(req: &CleanupReq) -> ScannerResult<()> {
         .sum();
 
     if total_size > MAX_BATCH_DELETE_SIZE {
-        let total = byte_unit::Byte::from_u64(total_size).get_appropriate_unit(byte_unit::UnitType::Decimal);
-        let max = byte_unit::Byte::from_u64(MAX_BATCH_DELETE_SIZE).get_appropriate_unit(byte_unit::UnitType::Decimal);
-        return Err(format!(
-            "Cannot delete {total} at once (maximum: {max})"
-        )
-        .into());
+        let total = byte_unit::Byte::from_u64(total_size)
+            .get_appropriate_unit(byte_unit::UnitType::Decimal);
+        let max = byte_unit::Byte::from_u64(MAX_BATCH_DELETE_SIZE)
+            .get_appropriate_unit(byte_unit::UnitType::Decimal);
+        return Err(format!("Cannot delete {total} at once (maximum: {max})").into());
     }
 
     Ok(())
@@ -191,7 +191,7 @@ pub fn delete_files(
             continue;
         }
 
-log::debug!("File exists, attempting deletion (trash={use_trash}): {path}");
+        log::debug!("File exists, attempting deletion (trash={use_trash}): {path}");
 
         if use_trash {
             // Check if this is an iCloud Drive path
@@ -208,7 +208,7 @@ log::debug!("File exists, attempting deletion (trash={use_trash}): {path}");
 
             while attempts > 0 {
                 match trash::delete(p) {
-Ok(()) => {
+                    Ok(()) => {
                         log::debug!("Successfully moved to trash: {path}");
 
                         // Post-deletion verification: Wait briefly for OS to complete the operation
@@ -220,7 +220,7 @@ Ok(()) => {
                             log::warn!("File still exists after trash operation: {path}");
                             errors.push(format!("{path}: Moved to trash but file still exists (may indicate system issue)"));
                         } else {
-log::info!("Deletion verified: {path} successfully removed");
+                            log::info!("Deletion verified: {path} successfully removed");
                             deleted.push(path.clone());
 
                             // Log to deletion audit trail
@@ -233,7 +233,7 @@ log::info!("Deletion verified: {path} successfully removed");
                                 "trash".to_string(),
                             );
                             if let Err(e) = log_deletion(&record) {
-log::warn!("Failed to log deletion: {e}");
+                                log::warn!("Failed to log deletion: {e}");
                             }
                         }
                         break;
@@ -263,7 +263,9 @@ log::warn!("Failed to log deletion: {e}");
                     || error_msg.contains("404")
                 {
                     // File doesn't exist - this can happen due to TOCTOU race conditions
-                    log::debug!("File does not exist (likely deleted by another process), skipping: {path}");
+                    log::debug!(
+                        "File does not exist (likely deleted by another process), skipping: {path}"
+                    );
                     skipped.push(path.clone());
                     continue;
                 } else if error_msg.contains("permission") || error_msg.contains("-5000") {
@@ -321,7 +323,7 @@ log::warn!("Failed to log deletion: {e}");
                 Err(e) => {
                     // Check if file doesn't exist (skip rather than error)
                     if e.kind() == std::io::ErrorKind::NotFound {
-log::debug!("File does not exist, skipping: {path}");
+                        log::debug!("File does not exist, skipping: {path}");
                         skipped.push(path.clone());
                     } else {
                         log::error!("Cleanup error for {path}: {e}");

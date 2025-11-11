@@ -12,8 +12,6 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
 
-
-
 /// A single deletion record in the audit trail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeletionRecord {
