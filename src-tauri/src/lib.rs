@@ -4,6 +4,10 @@
 //! files, caches, duplicates, and junk files on disk. All operations are designed
 //! with safety-first principles to prevent accidental data loss.
 
+// Enforce strict error handling - no unwrap() or expect() in production code
+#![forbid(clippy::unwrap_used)]
+#![forbid(clippy::expect_used)]
+
 /// Architecture Visualization module for code analysis and diagram generation.
 pub mod arch_viz;
 /// Database module for persistent project monitoring.

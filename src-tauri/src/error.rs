@@ -2,77 +2,92 @@
 ///
 /// Provides structured error handling with context about what went wrong,
 /// eliminating panic-prone `.unwrap()` calls and providing better error messages.
-use std::fmt;
-use std::io;
+use thiserror::Error;
 
 /// Main error type for all scanner operations
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ScannerError {
     /// File system I/O operation failed
-    Io(io::Error),
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
 
     /// Invalid path provided (e.g., protected system directory)
+    #[error("Invalid path: {0}")]
     InvalidPath(String),
 
     /// Sorting operation encountered invalid floating point value (NaN/Inf)
+    #[error("Cannot compare values: {0} (likely NaN or Inf)")]
     InvalidFloatComparison(String),
 
     /// Mutex poisoning - concurrent access error
+    #[error("Concurrent access error (mutex poisoned): {0}")]
     LockPoisoned(String),
 
     /// Permission denied for operation
+    #[error("Permission denied: {0}")]
     PermissionDenied(String),
 
     /// Path does not exist
+    #[error("Not found: {0}")]
     NotFound(String),
 
     /// Invalid configuration or parameters
+    #[error("Invalid configuration: {0}")]
     InvalidConfig(String),
 
     /// Deletion operation failed
+    #[error("Deletion failed: {0}")]
     DeletionFailed(String),
 
     /// Generic error with context message
+    #[error("{0}")]
     Other(String),
+
+    /// Serialization/deserialization errors
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+
+    /// Database errors
+    #[error("Database error: {0}")]
+    Database(#[from] rusqlite::Error),
+
+    /// Path conversion errors
+    #[error("Invalid path encoding")]
+    InvalidUtf8,
+
+    /// File access errors with path context
+    #[error("Cannot access file {path}: {source}")]
+    FileAccess {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
+
+    /// Directory scan errors with path context
+    #[error("Failed to scan directory {path}: {source}")]
+    ScanFailed {
+        path: String,
+        #[source]
+        source: Box<ScannerError>,
+    },
 }
 
-impl fmt::Display for ScannerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Io(err) => write!(f, "I/O error: {err}"),
-            Self::InvalidPath(msg) => write!(f, "Invalid path: {msg}"),
-            Self::InvalidFloatComparison(msg) => {
-                write!(f, "Cannot compare values: {msg} (likely NaN or Inf)")
-            }
-            Self::LockPoisoned(msg) => {
-                write!(f, "Concurrent access error (mutex poisoned): {msg}")
-            }
-            Self::PermissionDenied(msg) => write!(f, "Permission denied: {msg}"),
-            Self::NotFound(msg) => write!(f, "Not found: {msg}"),
-            Self::InvalidConfig(msg) => write!(f, "Invalid configuration: {msg}"),
-            Self::DeletionFailed(msg) => write!(f, "Deletion failed: {msg}"),
-            Self::Other(msg) => write!(f, "{msg}"),
-        }
+// Backward compatibility conversions
+impl From<String> for ScannerError {
+    fn from(msg: String) -> Self {
+        Self::Other(msg)
     }
 }
 
-impl std::error::Error for ScannerError {}
-
-impl From<io::Error> for ScannerError {
-    fn from(err: io::Error) -> Self {
-        Self::Io(err)
+impl From<&str> for ScannerError {
+    fn from(msg: &str) -> Self {
+        Self::Other(msg.to_string())
     }
 }
 
 impl From<ScannerError> for String {
     fn from(err: ScannerError) -> Self {
         err.to_string()
-    }
-}
-
-impl From<String> for ScannerError {
-    fn from(msg: String) -> Self {
-        Self::Other(msg)
     }
 }
 
@@ -84,8 +99,10 @@ pub type ScannerResult<T> = Result<T, ScannerError>;
 /// Sorts by the provided float values, treating NaN as smallest (end of sort)
 #[must_use]
 pub fn compare_f32_safe(a: f32, b: f32) -> std::cmp::Ordering {
-    b.partial_cmp(&a)
-        .map_or(std::cmp::Ordering::Greater, |order| order)
+    match b.partial_cmp(&a) {
+        Some(order) => order,
+        None => std::cmp::Ordering::Greater,
+    }
 }
 
 #[cfg(test)]
@@ -236,6 +253,18 @@ mod tests {
         assert_eq!(err.to_string(), "generic error message");
     }
 
+    #[test]
+    fn test_error_display_file_access() {
+        use std::io;
+        let io_err = io::Error::new(io::ErrorKind::PermissionDenied, "access denied");
+        let err = ScannerError::FileAccess {
+            path: "/etc/passwd".to_string(),
+            source: io_err,
+        };
+        let display = err.to_string();
+        assert!(display.contains("Cannot access file /etc/passwd"));
+    }
+
     // ========================================================================
     // ScannerError Debug Tests
     // ========================================================================
@@ -255,6 +284,19 @@ mod tests {
     fn test_error_is_error_trait() {
         let err = ScannerError::Other("test".to_string());
         let _: &dyn std::error::Error = &err;
+    }
+
+    #[test]
+    fn test_error_source_chain() {
+        use std::io;
+        let io_err = io::Error::new(io::ErrorKind::PermissionDenied, "denied");
+        let err = ScannerError::FileAccess {
+            path: "/test".to_string(),
+            source: io_err,
+        };
+        
+        // Should have a source
+        assert!(err.source().is_some());
     }
 
     // ========================================================================
@@ -279,6 +321,18 @@ mod tests {
     fn test_from_string() {
         let msg = "error message".to_string();
         let err: ScannerError = msg.into();
+
+        match err {
+            ScannerError::Other(m) => {
+                assert_eq!(m, "error message");
+            }
+            _ => panic!("Should be Other error"),
+        }
+    }
+
+    #[test]
+    fn test_from_str() {
+        let err: ScannerError = "error message".into();
 
         match err {
             ScannerError::Other(m) => {
@@ -328,5 +382,23 @@ mod tests {
         let err = ScannerError::InvalidPath(long_msg.clone());
         let display = err.to_string();
         assert!(display.contains(&long_msg));
+    }
+
+    // ========================================================================
+    // New Error Variants Tests
+    // ========================================================================
+
+    #[test]
+    fn test_serialization_error() {
+        let json_err = serde_json::from_str::<String>("invalid json").unwrap_err();
+        let err: ScannerError = json_err.into();
+        let display = err.to_string();
+        assert!(display.contains("Serialization error"));
+    }
+
+    #[test]
+    fn test_invalid_utf8_error() {
+        let err = ScannerError::InvalidUtf8;
+        assert_eq!(err.to_string(), "Invalid path encoding");
     }
 }

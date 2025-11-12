@@ -1,0 +1,31 @@
+# Clippy configuration for Disk Bloat Scanner
+# This file enforces strict error handling practices to ensure production safety
+
+# Deny dangerous practices in production code
+disallowed-methods = [
+    # Prevent unwrap() in production code - use proper error handling instead
+    { path = "core::option::Option::unwrap", reason = "use `.ok_or()` or `match` for proper error handling" },
+    { path = "core::result::Result::unwrap", reason = "use `?` operator or proper error handling" },
+    { path = "core::result::Result::unwrap_err", reason = "use proper error handling" },
+    
+    # Prevent expect() as it can also panic
+    { path = "core::option::Option::expect", reason = "use `.ok_or_else()` with a proper error" },
+    { path = "core::result::Result::expect", reason = "use `.map_err()` and `?` for error context" },
+    
+    # Prevent direct panicking
+    { path = "std::panic::panic_any", reason = "return errors instead of panicking" },
+    { path = "core::panicking::panic", reason = "return errors instead of panicking" },
+    { path = "core::panicking::panic_fmt", reason = "return errors instead of panicking" },
+]
+
+# Additional restrictions
+disallowed-macros = [
+    { path = "std::panic", reason = "return errors instead of panicking" },
+    { path = "core::panic", reason = "return errors instead of panicking" },
+    { path = "std::unimplemented", reason = "implement the functionality or return a proper error" },
+    { path = "core::unimplemented", reason = "implement the functionality or return a proper error" },
+    { path = "std::todo", reason = "implement the functionality or return a proper error" },
+    { path = "core::todo", reason = "implement the functionality or return a proper error" },
+]
+
+# Warn levels are already set in Cargo.toml
