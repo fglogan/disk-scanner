@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { open } from "@tauri-apps/plugin-dialog";
+  import { listen } from "@tauri-apps/api/event";
   import {
     diskInfo,
     summaryStats,
@@ -33,6 +34,7 @@
   let statsInterval: number | null = null;
   let filesScanned = 0;
   let scanningTimer: number | null = null;
+  let unlistenProgress: (() => void) | null = null;
 
   async function loadSystemInfo() {
     try {
@@ -65,6 +67,30 @@
     }
   }
 
+  // Setup real-time progress listener (BEAD-011)
+  async function setupProgressListener() {
+    try {
+      unlistenProgress = await listen("scan-progress", (event: any) => {
+        const progress = event.payload as {
+          current_path: string;
+          files_scanned: number;
+          progress_percent: number;
+          message: string;
+          eta_seconds?: number;
+        };
+        
+        // Update progress with real data
+        filesScanned = progress.files_scanned;
+        scanProgress.set(`${progress.message} (${progress.progress_percent.toFixed(1)}%)`);
+        
+        // Log progress for debugging
+        console.log("Scan progress:", progress);
+      });
+    } catch (error) {
+      console.error("Failed to setup progress listener:", error);
+    }
+  }
+
   // Cleanup on component destroy
   import { onDestroy, onMount } from "svelte";
   
@@ -72,16 +98,18 @@
     // Load system info on mount and start periodic updates
     loadSystemInfo();
     startStatsUpdates();
+    
+    // Listen for real-time scan progress events (BEAD-011)
+    setupProgressListener();
   });
 
   onDestroy(() => {
     // Ensure cleanup happens
     stopStatsUpdates();
     
-    // Also clear scanning timer if active
-    if (scanningTimer) {
-      clearInterval(scanningTimer);
-      scanningTimer = null;
+    // Unlisten from progress events
+    if (unlistenProgress) {
+      unlistenProgress();
     }
   });
 
@@ -123,10 +151,8 @@
     filesScanned = 0;
     scanProgress.set("Getting system info...");
 
-    // Start file counter animation
-    scanningTimer = setInterval(() => {
-      filesScanned += Math.floor(Math.random() * 50) + 10; // Simulate progress
-    }, 100);
+    // Real progress will be handled by event listener (BEAD-011)
+    // No need for fake progress animation
 
     try {
       console.log("Starting scan on directories:", $settings.directories);

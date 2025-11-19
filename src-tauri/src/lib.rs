@@ -29,9 +29,43 @@ use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport, ProjectBaseline};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::Arc;
+use tauri::{AppHandle, Manager};
 use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
+
+// Progress event for real-time scan updates (BEAD-011)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ScanProgressEvent {
+    pub current_path: String,
+    pub files_scanned: u64,
+    pub progress_percent: f32,
+    pub message: String,
+    pub eta_seconds: Option<u64>,
+}
+
+/// Emit progress event to frontend (BEAD-011)
+fn emit_progress(
+    app: &AppHandle,
+    current_path: &Path,
+    files_scanned: u64,
+    progress_percent: f32,
+    message: &str,
+    eta_seconds: Option<u64>,
+) {
+    let event = ScanProgressEvent {
+        current_path: current_path.to_string_lossy().to_string(),
+        files_scanned,
+        progress_percent,
+        message: message.to_string(),
+        eta_seconds,
+    };
+    
+    if let Err(e) = app.emit("scan-progress", &event) {
+        log::error!("Failed to emit progress event: {}", e);
+    }
+}
 
 // Baseline comparison types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -296,12 +330,20 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 /// - List of cache entries with paths, sizes (MB), cache type, and descriptions
 /// - Total size per category and entry count, sorted by size (largest first)
 #[tauri::command]
-async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
+async fn scan_dev_caches(app: AppHandle, opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
     // Validate the scan path to prevent system directory access
     let validated_path = validate_scan_path(&opts.root)?;
     log::info!("Scanning developer caches in: {}", validated_path.display());
 
-    scan::scan_dev_caches_async(&validated_path, opts.follow_symlinks).await
+    // Emit initial progress event
+    emit_progress(&app, &validated_path, 0, 0.0, "Starting cache scan...", None);
+
+    let result = scan::scan_dev_caches_async(&validated_path, opts.follow_symlinks).await?;
+    
+    // Emit completion event
+    emit_progress(&app, &validated_path, 0, 100.0, "Cache scan complete", None);
+    
+    Ok(result)
 }
 
 // ============================================================================
@@ -324,12 +366,20 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
 /// **Returns:** Vector of `GitRepository` objects sorted by repository size (largest first),
 /// each containing repository statistics and metadata.
 #[tauri::command]
-async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
+async fn scan_git_repos(app: AppHandle, opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     // Validate the scan path to prevent system directory access
     let validated_path = validate_scan_path(&opts.root)?;
     log::info!("Scanning git repositories in: {}", validated_path.display());
 
-    scan::scan_git_repos_async(&validated_path, opts.follow_symlinks).await
+    // Emit initial progress event
+    emit_progress(&app, &validated_path, 0, 0.0, "Starting Git repository scan...", None);
+
+    let result = scan::scan_git_repos_async(&validated_path, opts.follow_symlinks).await?;
+    
+    // Emit completion event
+    emit_progress(&app, &validated_path, 0, 100.0, "Git repository scan complete", None);
+    
+    Ok(result)
 }
 
 /// Get lightweight git status for a repository path
