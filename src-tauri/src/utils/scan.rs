@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Mutex;
 use walkdir::WalkDir;
+use tokio::task;
 
 // ============================================================================
 // Core Scanning Utilities
@@ -37,6 +38,17 @@ pub fn dir_size(path: &Path) -> u64 {
         .filter(std::fs::Metadata::is_file)
         .map(|m| m.len())
         .sum()
+}
+
+/// Async version of dir_size to prevent UI blocking (BEAD-009)
+pub async fn dir_size_async(path: &Path) -> u64 {
+    let path = path.to_owned();
+    task::spawn_blocking(move || {
+        dir_size(&path)
+    }).await.unwrap_or_else(|e| {
+        log::error!("Task failed in dir_size_async: {}", e);
+        0
+    })
 }
 
 // ============================================================================
@@ -445,6 +457,18 @@ pub fn scan_dev_caches(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCa
     Ok(result)
 }
 
+/// Async version of scan_dev_caches to prevent UI blocking (BEAD-009)
+pub async fn scan_dev_caches_async(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCategory>, String> {
+    let root = root.to_owned();
+    
+    task::spawn_blocking(move || {
+        scan_dev_caches(&root, follow_symlinks)
+    }).await.unwrap_or_else(|e| {
+        log::error!("Task failed in scan_dev_caches_async: {}", e);
+        Err(format!("Task failed: {}", e))
+    })
+}
+
 // ============================================================================
 // Git Repository Analysis
 // ============================================================================
@@ -634,6 +658,18 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
     );
 
     Ok(repositories)
+}
+
+/// Async version of scan_git_repos to prevent UI blocking (BEAD-009)
+pub async fn scan_git_repos_async(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepository>, String> {
+    let root = root.to_owned();
+    
+    task::spawn_blocking(move || {
+        scan_git_repos(&root, follow_symlinks)
+    }).await.unwrap_or_else(|e| {
+        log::error!("Task failed in scan_git_repos_async: {}", e);
+        Err(format!("Task failed: {}", e))
+    })
 }
 
 // ============================================================================

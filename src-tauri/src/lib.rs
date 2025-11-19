@@ -301,7 +301,7 @@ async fn scan_dev_caches(opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
     let validated_path = validate_scan_path(&opts.root)?;
     log::info!("Scanning developer caches in: {}", validated_path.display());
 
-    scan::scan_dev_caches(&validated_path, opts.follow_symlinks)
+    scan::scan_dev_caches_async(&validated_path, opts.follow_symlinks).await
 }
 
 // ============================================================================
@@ -329,7 +329,7 @@ async fn scan_git_repos(opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     let validated_path = validate_scan_path(&opts.root)?;
     log::info!("Scanning git repositories in: {}", validated_path.display());
 
-    scan::scan_git_repos(&validated_path, opts.follow_symlinks)
+    scan::scan_git_repos_async(&validated_path, opts.follow_symlinks).await
 }
 
 /// Get lightweight git status for a repository path
