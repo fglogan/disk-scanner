@@ -2,7 +2,9 @@
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
   import "./app.css";
-  import { currentPage, diskInfo, darkMode, toasts, showShortcutsHelp, showSuccess } from "./lib/stores.js";
+  import { currentPage, diskInfo, toasts, showShortcutsHelp, showSuccess } from "./lib/stores.js";
+  import { themeStore, isDarkMode } from "./lib/stores/theme";
+  import { t } from "./lib/i18n";
 
   import Sidebar from "./lib/components/Sidebar.svelte";
   import Dashboard from "./lib/components/Dashboard.svelte";
@@ -10,8 +12,6 @@
   import ProjectBloat from "./lib/components/ProjectBloat.svelte";
   import SystemJunk from "./lib/components/SystemJunk.svelte";
   import Duplicates from "./lib/components/Duplicates.svelte";
-  // import DevCaches from "./lib/components/DevCaches.svelte"; // Disabled: uses non-existent selectedDirectory store
-  // import GitScanner from "./lib/components/GitScanner.svelte"; // Disabled: uses non-existent selectedDirectory store
   import GitAssistance from "./lib/components/GitAssistance.svelte";
   import ProjectScanner from "./lib/components/ProjectScanner.svelte";
   import PACSCompliance from "./lib/components/PACSCompliance.svelte";
@@ -19,15 +19,20 @@
   import Settings from "./lib/components/Settings.svelte";
   import Toast from "./lib/components/ui/Toast.svelte";
   import KeyboardShortcuts from "./lib/components/ui/KeyboardShortcuts.svelte";
+  import HelpPanel from "./lib/components/HelpPanel.svelte";
+  import OnboardingTutorial from "./lib/components/OnboardingTutorial.svelte";
+  import PerformanceMonitor from "./lib/components/PerformanceMonitor.svelte";
+  import ErrorBoundary from "./lib/components/common/ErrorBoundary.svelte";
+  import { announce } from "./lib/utils/accessibility";
 
-  // Initialize theme on mount
+  let showHelp = false;
+  let showPerformance = false;
+  let onboardingTutorial: OnboardingTutorial;
+
+  // Initialize on mount
   onMount(() => {
-    // Set initial theme attribute
-    if (typeof window !== 'undefined') {
-      const isDark = $darkMode;
-      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-      document.documentElement.classList.toggle('dark', isDark);
-    }
+    // Initialize theme
+    themeStore.init();
 
     // Load initial data
     invoke("get_disk_info")
@@ -36,14 +41,21 @@
 
     // Setup keyboard shortcuts
     setupKeyboardShortcuts();
-  });
-
-  // Reactive theme updates using $effect
-  $effect(() => {
-    if (typeof window !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', $darkMode ? 'dark' : 'light');
-      document.documentElement.classList.toggle('dark', $darkMode);
-    }
+    
+    // Add skip link for accessibility
+    const skipLink = document.createElement('a');
+    skipLink.href = '#main-content';
+    skipLink.className = 'skip-link';
+    skipLink.textContent = $t('accessibility.skipToMain');
+    skipLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const main = document.getElementById('main-content');
+      if (main) {
+        main.focus();
+        main.scrollIntoView();
+      }
+    });
+    document.body.insertBefore(skipLink, document.body.firstChild);
   });
 
   function setupKeyboardShortcuts() {
@@ -59,12 +71,20 @@
         switch (event.key.toLowerCase()) {
           case 't':
             event.preventDefault();
-            darkMode.toggle();
-            showSuccess(`Switched to ${$darkMode ? 'dark' : 'light'} mode`);
+            themeStore.toggle();
+            showSuccess($t('messages.themeChanged', { theme: $isDarkMode ? 'dark' : 'light' }));
             break;
           case 'k':
             event.preventDefault();
             showShortcutsHelp.update(show => !show);
+            break;
+          case 'h':
+            event.preventDefault();
+            showHelp = !showHelp;
+            break;
+          case 'p':
+            event.preventDefault();
+            showPerformance = !showPerformance;
             break;
         }
         return;
@@ -75,57 +95,57 @@
         case 'd':
           event.preventDefault();
           currentPage.set('dashboard');
-          showSuccess('📊 Dashboard');
+          announce($t('nav.dashboard'));
           break;
         case 'p':
           event.preventDefault();
           currentPage.set('project-scanner');
-          showSuccess('🔍 Project Scanner');
+          announce('Project Scanner');
           break;
         case 's':
           event.preventDefault();
           currentPage.set('settings');
-          showSuccess('⚙️ Settings');
+          announce($t('nav.settings'));
           break;
         case 'l':
           event.preventDefault();
           currentPage.set('large-files');
-          showSuccess('📁 Large Files');
+          announce($t('categories.largeFiles'));
           break;
         case 'b':
           event.preventDefault();
           currentPage.set('project-bloat');
-          showSuccess('🗂️ Project Bloat');
+          announce($t('categories.projectBloat'));
           break;
         case 'j':
           event.preventDefault();
           currentPage.set('system-junk');
-          showSuccess('🗑️ System Junk');
+          announce($t('categories.systemJunk'));
           break;
         case 'u':
           event.preventDefault();
           currentPage.set('duplicates');
-          showSuccess('📄 Duplicates');
+          announce($t('categories.duplicates'));
           break;
         case 'c':
           event.preventDefault();
           toasts.clear();
-          showSuccess('🧹 Cleared notifications');
+          showSuccess('Cleared notifications');
           break;
         case 'g':
           event.preventDefault();
           currentPage.set('git-assistance');
-          showSuccess('🔧 Git Assistance');
+          announce('Git Assistance');
           break;
         case 'a':
           event.preventDefault();
           currentPage.set('pacs-compliance');
-          showSuccess('🔍 PACS Compliance');
+          announce('PACS Compliance');
           break;
         case 'v':
           event.preventDefault();
           currentPage.set('architecture-viz');
-          showSuccess('🏗️ Architecture Visualization');
+          announce('Architecture Visualization');
           break;
         case '?':
           event.preventDefault();
@@ -134,6 +154,8 @@
         case 'escape':
           event.preventDefault();
           showShortcutsHelp.set(false);
+          showHelp = false;
+          showPerformance = false;
           toasts.clear();
           break;
       }
@@ -147,41 +169,64 @@
   }
 </script>
 
-<div class="flex h-full transition-colors duration-200" class:dark={$darkMode} class:bg-slate-900={$darkMode} class:bg-slate-50={!$darkMode} class:text-slate-200={$darkMode} class:text-slate-800={!$darkMode}>
+<div class="app-container" class:dark={$isDarkMode}>
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="skip-link">
+    {$t('accessibility.skipToMain')}
+  </a>
+
   <!-- Sidebar Navigation -->
-  <Sidebar />
+  <ErrorBoundary>
+    <Sidebar />
+  </ErrorBoundary>
 
   <!-- Main Content Area -->
-  <main class="flex-1 overflow-y-auto p-8 md:p-12">
+  <main id="main-content" class="main-content" tabindex="-1">
     {#if $currentPage === "dashboard"}
-      <Dashboard />
+      <ErrorBoundary>
+        <Dashboard />
+      </ErrorBoundary>
     {:else if $currentPage === "large-files"}
-      <LargeFiles />
+      <ErrorBoundary>
+        <LargeFiles />
+      </ErrorBoundary>
     {:else if $currentPage === "project-bloat"}
-      <ProjectBloat />
+      <ErrorBoundary>
+        <ProjectBloat />
+      </ErrorBoundary>
     {:else if $currentPage === "system-junk"}
-      <SystemJunk />
-     {:else if $currentPage === "duplicates"}
-       <Duplicates />
-      <!-- {:else if $currentPage === "dev-caches"}
-        <DevCaches /> -->
-      <!-- {:else if $currentPage === "git-scanner"}
-        <GitScanner /> -->
-      {:else if $currentPage === "project-scanner"}
+      <ErrorBoundary>
+        <SystemJunk />
+      </ErrorBoundary>
+    {:else if $currentPage === "duplicates"}
+      <ErrorBoundary>
+        <Duplicates />
+      </ErrorBoundary>
+    {:else if $currentPage === "project-scanner"}
+      <ErrorBoundary>
         <ProjectScanner />
-      {:else if $currentPage === "git-assistance"}
+      </ErrorBoundary>
+    {:else if $currentPage === "git-assistance"}
+      <ErrorBoundary>
         <GitAssistance />
-      {:else if $currentPage === "pacs-compliance"}
+      </ErrorBoundary>
+    {:else if $currentPage === "pacs-compliance"}
+      <ErrorBoundary>
         <PACSCompliance />
-      {:else if $currentPage === "architecture-viz"}
+      </ErrorBoundary>
+    {:else if $currentPage === "architecture-viz"}
+      <ErrorBoundary>
         <ArchitectureVisualization />
-      {:else if $currentPage === "settings"}
+      </ErrorBoundary>
+    {:else if $currentPage === "settings"}
+      <ErrorBoundary>
         <Settings />
-      {/if}
+      </ErrorBoundary>
+    {/if}
   </main>
 
   <!-- Toast Notifications Container -->
-  <div class="fixed top-4 right-4 z-50 space-y-2">
+  <div class="toast-container" role="region" aria-label="Notifications" aria-live="polite">
     {#each $toasts as toast (toast.id)}
       <Toast {toast} />
     {/each}
@@ -191,35 +236,85 @@
   {#if $showShortcutsHelp}
     <KeyboardShortcuts />
   {/if}
+  
+  <!-- Help Panel -->
+  <HelpPanel bind:isOpen={showHelp} context={$currentPage} />
+  
+  <!-- Onboarding Tutorial -->
+  <OnboardingTutorial bind:this={onboardingTutorial} />
+  
+  <!-- Performance Monitor -->
+  <PerformanceMonitor bind:isVisible={showPerformance} />
 </div>
 
 <style>
   :global(body) {
-    font-family: "Inter", sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overscroll-behavior: none;
     margin: 0;
     padding: 0;
     height: 100vh;
     overflow: hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 
   :global(#app) {
     height: 100vh;
   }
-
-  /* Webkit scrollbar styling for a more native feel */
-  :global(::-webkit-scrollbar) {
-    width: 8px;
-    height: 8px;
+  
+  .app-container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
-  :global(::-webkit-scrollbar-track) {
-    background: #2d3748; /* slate-800 */
+  
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 3rem;
+    outline: none;
   }
-  :global(::-webkit-scrollbar-thumb) {
-    background: #4a5568; /* slate-600 */
-    border-radius: 4px;
+  
+  .toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
   }
-  :global(::-webkit-scrollbar-thumb:hover) {
-    background: #718096; /* slate-500 */
+  
+  .toast-container > :global(*) {
+    pointer-events: auto;
+  }
+  
+  /* Skip link for accessibility */
+  :global(.skip-link) {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--button-bg);
+    color: var(--button-text);
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: 0 0 0.25rem 0;
+    z-index: 10000;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  :global(.skip-link:focus) {
+    top: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      padding: 1rem;
+    }
   }
 </style>
