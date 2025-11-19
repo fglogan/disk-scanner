@@ -42,6 +42,14 @@ pub enum ScannerError {
     /// Generic error with context message
     #[error("{0}")]
     Other(String),
+    
+    /// Feature not yet implemented
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
+    
+    /// System command execution failed
+    #[error("System command failed: {0}")]
+    SystemCommand(String),
 
     /// Serialization/deserialization errors
     #[error("Serialization error: {0}")]
@@ -96,13 +104,252 @@ pub type ScannerResult<T> = Result<T, ScannerError>;
 
 /// Helper function to handle comparison of floats safely without panicking on NaN
 ///
-/// Sorts by the provided float values, treating NaN as smallest (end of sort)
+/// Sorts by provided float values, treating NaN as smallest (end of sort)
 #[must_use]
 pub fn compare_f32_safe(a: f32, b: f32) -> std::cmp::Ordering {
     match b.partial_cmp(&a) {
         Some(order) => order,
         None => std::cmp::Ordering::Greater,
     }
+}
+
+// ============================================================================
+// Retry Logic for Transient Failures (BEAD-014)
+// ============================================================================
+
+/// Configuration for retry operations
+#[derive(Debug, Clone)]
+pub struct RetryConfig {
+    /// Maximum number of retry attempts
+    pub max_attempts: u32,
+    /// Initial delay between retries in milliseconds
+    pub initial_delay_ms: u64,
+    /// Multiplier for exponential backoff (e.g., 2.0 for double each time)
+    pub backoff_multiplier: f32,
+    /// Maximum delay between retries in milliseconds
+    pub max_delay_ms: u64,
+    /// Whether to jitter the delay to avoid thundering herd
+    pub jitter: bool,
+}
+
+impl Default for RetryConfig {
+    fn default() -> Self {
+        Self {
+            max_attempts: 3,
+            initial_delay_ms: 1000,
+            backoff_multiplier: 2.0,
+            max_delay_ms: 10000,
+            jitter: true,
+        }
+    }
+}
+
+impl RetryConfig {
+    /// Create a new retry configuration
+    pub fn new(max_attempts: u32, initial_delay_ms: u64) -> Self {
+        Self {
+            max_attempts,
+            initial_delay_ms,
+            backoff_multiplier: 2.0,
+            max_delay_ms: 10000,
+            jitter: true,
+        }
+    }
+    
+    /// Set the backoff multiplier
+    pub fn with_backoff_multiplier(mut self, multiplier: f32) -> Self {
+        self.backoff_multiplier = multiplier;
+        self
+    }
+    
+    /// Set the maximum delay
+    pub fn with_max_delay_ms(mut self, max_delay_ms: u64) -> Self {
+        self.max_delay_ms = max_delay_ms;
+        self
+    }
+    
+    /// Enable or disable jitter
+    pub fn with_jitter(mut self, jitter: bool) -> Self {
+        self.jitter = jitter;
+        self
+    }
+}
+
+/// Check if an error is transient (might be resolved by retrying)
+pub fn is_transient_error(error: &ScannerError) -> bool {
+    match error {
+        // I/O errors that might be temporary
+        ScannerError::Io(io_err) => {
+            matches!(
+                io_err.kind(),
+                std::io::ErrorKind::TimedOut |
+                std::io::ErrorKind::ConnectionReset |
+                std::io::ErrorKind::ConnectionAborted |
+                std::io::ErrorKind::ConnectionRefused |
+                std::io::ErrorKind::WouldBlock |
+                std::io::ErrorKind::Interrupted
+            )
+        },
+        
+        // Permission denied might be temporary (e.g., file locked)
+        ScannerError::PermissionDenied(_) => true,
+        
+        // File access errors that might be temporary
+        ScannerError::FileAccess { source, .. } => {
+            matches!(
+                source.kind(),
+                std::io::ErrorKind::TimedOut |
+                std::io::ErrorKind::ConnectionReset |
+                std::io::ErrorKind::ConnectionAborted |
+                std::io::ErrorKind::ConnectionRefused |
+                std::io::ErrorKind::WouldBlock |
+                std::io::ErrorKind::Interrupted
+            )
+        },
+        
+        // Database connection issues might be temporary
+        ScannerError::Database(db_err) => {
+            // Check for common transient database errors
+            let err_str = db_err.to_string().to_lowercase();
+            err_str.contains("database is locked") ||
+            err_str.contains("connection") ||
+            err_str.contains("timeout") ||
+            err_str.contains("busy")
+        },
+        
+        // Don't retry other errors
+        _ => false,
+    }
+}
+
+/// Execute an operation with retry logic for transient failures
+pub async fn retry_with_config<F, T, Fut>(
+    config: RetryConfig,
+    operation: F,
+) -> ScannerResult<T>
+where
+    F: Fn() -> Fut,
+    Fut: std::future::Future<Output = ScannerResult<T>>,
+{
+    let mut delay = config.initial_delay_ms;
+    
+    for attempt in 1..=config.max_attempts {
+        match operation().await {
+            Ok(result) => {
+                if attempt > 1 {
+                    log::info!("Operation succeeded on attempt {} after retries", attempt);
+                }
+                return Ok(result);
+            }
+            Err(error) => {
+                // Check if this is a transient error and we have more attempts
+                if attempt < config.max_attempts && is_transient_error(&error) {
+                    log::warn!(
+                        "Attempt {} failed with transient error: {}. Retrying in {}ms...",
+                        attempt,
+                        error,
+                        delay
+                    );
+                    
+                    // Apply jitter if enabled
+                    let actual_delay = if config.jitter {
+                        use rand::Rng;
+                        let jitter_range = delay as f32 * 0.1; // ±10% jitter
+                        let mut rng = rand::thread_rng();
+                        delay + rng.gen_range(-jitter_range..=jitter_range) as u64
+                    } else {
+                        delay
+                    };
+                    
+                    // Cap delay at maximum
+                    let capped_delay = actual_delay.min(config.max_delay_ms);
+                    
+                    // Sleep before retry
+                    tokio::time::sleep(std::time::Duration::from_millis(capped_delay)).await;
+                    
+                    // Calculate next delay with exponential backoff
+                    delay = (delay as f32 * config.backoff_multiplier) as u64;
+                } else {
+                    // Either non-transient error or no more attempts
+                    if attempt > 1 {
+                        log::error!("Operation failed after {} attempts: {}", attempt, error);
+                    }
+                    return Err(error);
+                }
+            }
+        }
+    }
+    
+    // This should never be reached, but just in case
+    Err(ScannerError::Other("Retry logic exhausted all attempts".to_string()))
+}
+
+/// Execute an operation with default retry configuration
+pub async fn retry<F, T, Fut>(operation: F) -> ScannerResult<T>
+where
+    F: Fn() -> Fut,
+    Fut: std::future::Future<Output = ScannerResult<T>>,
+{
+    retry_with_config(RetryConfig::default(), operation).await
+}
+
+/// Execute a synchronous operation with retry logic
+pub fn retry_sync<F, T>(config: RetryConfig, operation: F) -> ScannerResult<T>
+where
+    F: Fn() -> ScannerResult<T>,
+{
+    let mut delay = config.initial_delay_ms;
+    
+    for attempt in 1..=config.max_attempts {
+        match operation() {
+            Ok(result) => {
+                if attempt > 1 {
+                    log::info!("Operation succeeded on attempt {} after retries", attempt);
+                }
+                return Ok(result);
+            }
+            Err(error) => {
+                // Check if this is a transient error and we have more attempts
+                if attempt < config.max_attempts && is_transient_error(&error) {
+                    log::warn!(
+                        "Attempt {} failed with transient error: {}. Retrying in {}ms...",
+                        attempt,
+                        error,
+                        delay
+                    );
+                    
+                    // Apply jitter if enabled
+                    let actual_delay = if config.jitter {
+                        use rand::Rng;
+                        let jitter_range = delay as f32 * 0.1; // ±10% jitter
+                        let mut rng = rand::thread_rng();
+                        delay + rng.gen_range(-jitter_range..=jitter_range) as u64
+                    } else {
+                        delay
+                    };
+                    
+                    // Cap delay at maximum
+                    let capped_delay = actual_delay.min(config.max_delay_ms);
+                    
+                    // Sleep before retry (blocking)
+                    std::thread::sleep(std::time::Duration::from_millis(capped_delay));
+                    
+                    // Calculate next delay with exponential backoff
+                    delay = (delay as f32 * config.backoff_multiplier) as u64;
+                } else {
+                    // Either non-transient error or no more attempts
+                    if attempt > 1 {
+                        log::error!("Operation failed after {} attempts: {}", attempt, error);
+                    }
+                    return Err(error);
+                }
+            }
+        }
+    }
+    
+    // This should never be reached, but just in case
+    Err(ScannerError::Other("Retry logic exhausted all attempts".to_string()))
+}
 }
 
 #[cfg(test)]
@@ -402,3 +649,9 @@ mod tests {
         assert_eq!(err.to_string(), "Invalid path encoding");
     }
 }
+
+/// Type alias for compatibility with modules using DiskBlotError
+pub type DiskBlotError = ScannerError;
+
+/// Type alias for compatibility with modules using DiskBlotResult
+pub type DiskBlotResult<T> = ScannerResult<T>;

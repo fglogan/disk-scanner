@@ -8,7 +8,7 @@
 //! - Developer cache discovery
 //! - Git repository analysis
 
-use crate::error;
+use crate::error::{retry_sync, RetryConfig};
 use crate::models::{
     BloatCategory, BloatEntry, CacheCategory, CacheEntry, DuplicateEntry, DuplicateSet, GitEntry,
     GitRepository, JunkCategory, JunkFileEntry, LargeFileEntry,
@@ -30,15 +30,44 @@ use tokio::sync::CancellationToken;
 /// Calculate the total size of a directory recursively.
 ///
 /// Walks the entire directory tree and sums the size of all files.
+/// Uses retry logic for transient failures (BEAD-014).
 #[must_use]
 pub fn dir_size(path: &Path) -> u64 {
-    WalkDir::new(path)
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter_map(|e| e.metadata().ok())
-        .filter(std::fs::Metadata::is_file)
-        .map(|m| m.len())
-        .sum()
+    let retry_config = RetryConfig::new(2, 100) // 2 attempts, 100ms initial delay
+        .with_backoff_multiplier(1.5)
+        .with_max_delay_ms(1000)
+        .with_jitter(false);
+    
+    retry_sync(retry_config, || {
+        let mut total_size = 0u64;
+        let mut error_count = 0;
+        
+        for entry in WalkDir::new(path) {
+            match entry {
+                Ok(entry) => {
+                    if let Ok(metadata) = entry.metadata() {
+                        if metadata.is_file() {
+                            total_size += metadata.len();
+                        }
+                    } else {
+                        error_count += 1;
+                        // Continue even if metadata fails
+                    }
+                }
+                Err(e) => {
+                    error_count += 1;
+                    // Log but continue - some files might be inaccessible
+                    log::debug!("Error accessing file during dir_size: {}", e);
+                }
+            }
+        }
+        
+        if error_count > 0 {
+            log::debug!("dir_size completed with {} errors, total size: {}", error_count, total_size);
+        }
+        
+        Ok(total_size)
+    }).unwrap_or(0) // Return 0 if all retries fail
 }
 
 /// Async version of dir_size to prevent UI blocking (BEAD-009)

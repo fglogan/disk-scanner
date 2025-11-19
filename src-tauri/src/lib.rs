@@ -35,6 +35,7 @@ use tokio::sync::CancellationToken;
 use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
+use error::{retry_with_config, RetryConfig};
 
 // Global cancellation token manager for scan operations (BEAD-010)
 struct ScanCancellationManager {
@@ -340,9 +341,16 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
     // Validate deletion request using cleanup module
     cleanup::validate_deletion_request(&req).map_err(|e| e.to_string())?;
 
-    // Execute deletion using cleanup module
-    let (deleted, skipped, errors) =
-        cleanup::delete_files(&req.paths, req.dry_run, req.trash).map_err(|e| e.to_string())?;
+    // Execute deletion using cleanup module with retry logic for transient failures (BEAD-014)
+    let retry_config = RetryConfig::new(2, 200) // 2 attempts, 200ms initial delay
+        .with_backoff_multiplier(1.5)
+        .with_max_delay_ms(2000)
+        .with_jitter(false); // No jitter for file operations
+    
+    let (deleted, skipped, errors) = retry_with_config(retry_config, || async {
+        cleanup::delete_files(&req.paths, req.dry_run, req.trash)
+            .map_err(|e| ScannerError::DeletionFailed(e.to_string()))
+    }).await.map_err(|e| e.to_string())?;
 
     Ok(CleanupResult {
         deleted,
@@ -475,7 +483,15 @@ async fn scan_dev_caches(app: AppHandle, scan_id: String, opts: ScanOpts) -> Res
     // Emit initial progress event
     emit_progress(&app, &validated_path, 0, 0.0, "Starting cache scan...", None);
 
-    let result = scan::scan_dev_caches_async_with_cancellation(&validated_path, opts.follow_symlinks, &cancel_token).await?;
+    // Use retry logic for transient failures (BEAD-014)
+    let retry_config = RetryConfig::new(3, 500) // 3 attempts, 500ms initial delay
+        .with_backoff_multiplier(2.0)
+        .with_max_delay_ms(5000)
+        .with_jitter(true);
+    
+    let result = retry_with_config(retry_config, || {
+        scan::scan_dev_caches_async_with_cancellation(&validated_path, opts.follow_symlinks, &cancel_token)
+    }).await?;
     
     // Emit completion event
     emit_progress(&app, &validated_path, 0, 100.0, "Cache scan complete", None);
@@ -532,7 +548,15 @@ async fn scan_git_repos(app: AppHandle, scan_id: String, opts: ScanOpts) -> Resu
     // Emit initial progress event
     emit_progress(&app, &validated_path, 0, 0.0, "Starting Git repository scan...", None);
 
-    let result = scan::scan_git_repos_async_with_cancellation(&validated_path, opts.follow_symlinks, &cancel_token).await?;
+    // Use retry logic for transient failures (BEAD-014)
+    let retry_config = RetryConfig::new(3, 500) // 3 attempts, 500ms initial delay
+        .with_backoff_multiplier(2.0)
+        .with_max_delay_ms(5000)
+        .with_jitter(true);
+    
+    let result = retry_with_config(retry_config, || {
+        scan::scan_git_repos_async_with_cancellation(&validated_path, opts.follow_symlinks, &cancel_token)
+    }).await?;
     
     // Emit completion event
     emit_progress(&app, &validated_path, 0, 100.0, "Git repository scan complete", None);
