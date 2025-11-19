@@ -15,6 +15,10 @@ pub enum ScannerError {
     #[error("Invalid path: {0}")]
     InvalidPath(String),
 
+    /// Invalid input parameter
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
     /// Sorting operation encountered invalid floating point value (NaN/Inf)
     #[error("Cannot compare values: {0} (likely NaN or Inf)")]
     InvalidFloatComparison(String),
@@ -59,6 +63,10 @@ pub enum ScannerError {
     #[error("Database error: {0}")]
     Database(#[from] rusqlite::Error),
 
+    /// Simple database error (for backward compatibility)
+    #[error("Database error: {0}")]
+    DatabaseSimple(String),
+
     /// Path conversion errors
     #[error("Invalid path encoding")]
     InvalidUtf8,
@@ -71,6 +79,10 @@ pub enum ScannerError {
         source: std::io::Error,
     },
 
+    /// Simple file access error (for backward compatibility)
+    #[error("File access error: {0}")]
+    FileAccessSimple(String),
+
     /// Directory scan errors with path context
     #[error("Failed to scan directory {path}: {source}")]
     ScanFailed {
@@ -78,6 +90,10 @@ pub enum ScannerError {
         #[source]
         source: Box<ScannerError>,
     },
+
+    /// Audit and compliance errors
+    #[error("Audit error: {0}")]
+    Audit(String),
 }
 
 // Backward compatibility conversions
@@ -208,7 +224,7 @@ pub fn is_transient_error(error: &ScannerError) -> bool {
         },
         
         // Database connection issues might be temporary
-        ScannerError::Database(db_err) => {
+        ScannerError::DatabaseSimple(db_err) => {
             // Check for common transient database errors
             let err_str = db_err.to_string().to_lowercase();
             err_str.contains("database is locked") ||
@@ -349,7 +365,6 @@ where
     
     // This should never be reached, but just in case
     Err(ScannerError::Other("Retry logic exhausted all attempts".to_string()))
-}
 }
 
 #[cfg(test)]

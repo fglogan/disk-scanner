@@ -301,7 +301,7 @@
   }
 </script>
 
-<div class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg shadow-lg">
+<div class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg">
   <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-900 mb-2">
       Architecture Visualization
@@ -348,7 +348,7 @@
   {/if}
   
    <!-- Project Selection and Analysis Controls -->
-   <div class="mb-6 bg-white p-4 rounded-lg border-2 border-indigo-200 shadow-sm">
+   <div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-indigo-200 dark:border-indigo-600 shadow-sm">
     <label for="project-path" class="block text-lg font-semibold text-gray-900 mb-3">
       📁 Select Project Directory
     </label>
@@ -356,7 +356,7 @@
     {#if selectedProjectPath}
       <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
         <div class="text-sm font-medium text-green-800 mb-1">Selected Directory:</div>
-        <code class="text-green-900 bg-white px-2 py-1 rounded text-sm break-all">{selectedProjectPath}</code>
+         <code class="text-green-900 dark:text-green-100 bg-white dark:bg-gray-700 px-2 py-1 rounded text-sm break-all">{selectedProjectPath}</code>
       </div>
     {:else}
       <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -493,7 +493,7 @@
          </div>
         
          <!-- Language Breakdown -->
-         <div class="bg-white p-6 rounded-lg border-2 border-indigo-200 shadow-sm">
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-indigo-200 dark:border-indigo-600 shadow-sm">
           <h3 class="text-xl font-bold text-gray-900 mb-6">🔤 Language Breakdown</h3>
           <div class="space-y-4">
             {#each Object.entries(analysis.language_breakdown) as [language, count]}

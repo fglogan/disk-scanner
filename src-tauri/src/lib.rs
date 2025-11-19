@@ -30,11 +30,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Manager};
-use tokio::sync::CancellationToken;
+use tauri::{AppHandle, Emitter, Manager};
 use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
+use utils::scan_progress::CancellationToken;
 use error::{retry_with_config, RetryConfig};
 
 // Global cancellation token manager for scan operations (BEAD-010)
@@ -468,12 +468,14 @@ async fn scan_dev_caches(app: AppHandle, scan_id: String, opts: ScanOpts) -> Res
     log::info!("Scanning developer caches in: {} (scan_id: {})", validated_path.display(), scan_id);
 
     // Get cancellation token
-    let cancellation_state = app.state::<CancellationState>();
-    let manager = cancellation_state.0.lock()
-        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
-    
-    let cancel_token = manager.get_token(&scan_id)
-        .ok_or_else(|| format!("Scan ID not found: {}", scan_id))?;
+    let cancel_token = {
+        let cancellation_state = app.state::<CancellationState>();
+        let manager = cancellation_state.0.lock()
+            .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+        
+        manager.get_token(&scan_id)
+            .ok_or_else(|| format!("Scan ID not found: {}", scan_id))?
+    };
 
     // Check if already cancelled
     if cancel_token.is_cancelled() {
@@ -497,11 +499,12 @@ async fn scan_dev_caches(app: AppHandle, scan_id: String, opts: ScanOpts) -> Res
     emit_progress(&app, &validated_path, 0, 100.0, "Cache scan complete", None);
     
     // Clean up cancellation token
-    drop(manager);
-    let cancellation_state = app.state::<CancellationState>();
-    let mut manager = cancellation_state.0.lock()
-        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
-    manager.remove_token(&scan_id);
+    {
+        let cancellation_state = app.state::<CancellationState>();
+        let mut manager = cancellation_state.0.lock()
+            .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+        manager.remove_token(&scan_id);
+    }
     
     Ok(result)
 }
@@ -533,12 +536,14 @@ async fn scan_git_repos(app: AppHandle, scan_id: String, opts: ScanOpts) -> Resu
     log::info!("Scanning git repositories in: {} (scan_id: {})", validated_path.display(), scan_id);
 
     // Get cancellation token
-    let cancellation_state = app.state::<CancellationState>();
-    let manager = cancellation_state.0.lock()
-        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
-    
-    let cancel_token = manager.get_token(&scan_id)
-        .ok_or_else(|| format!("Scan ID not found: {}", scan_id))?;
+    let cancel_token = {
+        let cancellation_state = app.state::<CancellationState>();
+        let manager = cancellation_state.0.lock()
+            .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+        
+        manager.get_token(&scan_id)
+            .ok_or_else(|| format!("Scan ID not found: {}", scan_id))?
+    };
 
     // Check if already cancelled
     if cancel_token.is_cancelled() {
@@ -562,11 +567,12 @@ async fn scan_git_repos(app: AppHandle, scan_id: String, opts: ScanOpts) -> Resu
     emit_progress(&app, &validated_path, 0, 100.0, "Git repository scan complete", None);
     
     // Clean up cancellation token
-    drop(manager);
-    let cancellation_state = app.state::<CancellationState>();
-    let mut manager = cancellation_state.0.lock()
-        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
-    manager.remove_token(&scan_id);
+    {
+        let cancellation_state = app.state::<CancellationState>();
+        let mut manager = cancellation_state.0.lock()
+            .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+        manager.remove_token(&scan_id);
+    }
     
     Ok(result)
 }

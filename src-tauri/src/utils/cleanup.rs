@@ -11,6 +11,7 @@ use std::path::Path;
 
 use super::deletion_log::{log_deletion, DeletionRecord};
 use super::path::validate_scan_path;
+use super::undo::{UndoHistory, OperationType};
 use crate::{models::CleanupReq, ScannerResult};
 
 /// Safety limits for batch deletion operations
@@ -340,6 +341,29 @@ pub fn delete_files(
         skipped.len(),
         errors.len()
     );
+
+    // Record deletions for undo functionality (BEAD-016)
+    if !deleted.is_empty() && !dry_run {
+        // Collect file information for undo tracking
+        let mut deletion_info = Vec::new();
+        for path in &deleted {
+            // Try to get file size (may fail if already deleted)
+            let size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+            deletion_info.push((path.clone(), size, use_trash));
+        }
+        
+        // Determine operation type
+        let operation_type = if use_trash {
+            OperationType::TrashFiles
+        } else {
+            OperationType::PermanentDelete
+        };
+        
+        // Record to undo history
+        if let Err(e) = UndoHistory::record_deletion(deletion_info, operation_type) {
+            log::warn!("Failed to record deletion for undo: {}", e);
+        }
+    }
 
     Ok((deleted, skipped, errors))
 }

@@ -1,0 +1,179 @@
+/* Theme variables for consistent color scheme */
+:root {
+  /* Light theme colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-accent: #eef2ff;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+  
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --border-accent: #c7d2fe;
+  
+  --surface-card: #ffffff;
+  --surface-hover: #f8fafc;
+  --surface-active: #f1f5f9;
+  
+  /* Status colors */
+  --color-success: #10b981;
+  --color-success-bg: #d1fae5;
+  --color-success-border: #6ee7b7;
+  
+  --color-error: #ef4444;
+  --color-error-bg: #fee2e2;
+  --color-error-border: #fca5a5;
+  
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+  --color-warning-border: #fcd34d;
+  
+  --color-info: #3b82f6;
+  --color-info-bg: #dbeafe;
+  --color-info-border: #93bbfc;
+  
+  /* Interactive elements */
+  --button-bg: #6366f1;
+  --button-bg-hover: #4f46e5;
+  --button-text: #ffffff;
+  
+  --link-color: #6366f1;
+  --link-hover: #4f46e5;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Focus ring */
+  --ring-color: #6366f1;
+  --ring-opacity: 0.5;
+  
+  /* Transitions */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+}
+
+[data-theme="dark"] {
+  /* Dark theme colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-accent: #1e1b4b;
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-accent: #4338ca;
+  
+  --surface-card: #1e293b;
+  --surface-hover: #334155;
+  --surface-active: #475569;
+  
+  /* Status colors - adjusted for dark mode */
+  --color-success: #10b981;
+  --color-success-bg: #064e3b;
+  --color-success-border: #047857;
+  
+  --color-error: #ef4444;
+  --color-error-bg: #7f1d1d;
+  --color-error-border: #991b1b;
+  
+  --color-warning: #f59e0b;
+  --color-warning-bg: #78350f;
+  --color-warning-border: #92400e;
+  
+  --color-info: #3b82f6;
+  --color-info-bg: #1e3a8a;
+  --color-info-border: #1e40af;
+  
+  /* Interactive elements */
+  --button-bg: #6366f1;
+  --button-bg-hover: #818cf8;
+  --button-text: #ffffff;
+  
+  --link-color: #818cf8;
+  --link-hover: #a5b4fc;
+  
+  /* Shadows - subtle in dark mode */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  
+  /* Focus ring */
+  --ring-color: #818cf8;
+  --ring-opacity: 0.6;
+}
+
+/* Utility classes for theme colors */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+.bg-accent { background-color: var(--bg-accent); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+
+.border-primary { border-color: var(--border-primary); }
+.border-secondary { border-color: var(--border-secondary); }
+.border-accent { border-color: var(--border-accent); }
+
+.surface-card { background-color: var(--surface-card); }
+.surface-hover { background-color: var(--surface-hover); }
+.surface-active { background-color: var(--surface-active); }
+
+/* Smooth theme transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: var(--transition-fast);
+}
+
+/* Disable transitions during theme switch to prevent flash */
+.theme-transitioning * {
+  transition: none !important;
+}
+
+/* Focus visible styles */
+:focus-visible {
+  outline: 2px solid var(--ring-color);
+  outline-offset: 2px;
+  opacity: var(--ring-opacity);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-primary);
+}
+
+/* Selection colors */
+::selection {
+  background-color: var(--link-color);
+  color: var(--button-text);
+  opacity: 0.3;
+}

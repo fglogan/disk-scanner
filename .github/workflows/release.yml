@@ -1,0 +1,165 @@
+name: Production Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g create-dmg
+
+      - name: Run tests
+        run: |
+          npm test
+          cd src-tauri && cargo test
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build universal binary
+        run: |
+          cd src-tauri
+          
+          # Build for x86_64
+          cargo build --release --target x86_64-apple-darwin
+          
+          # Build for aarch64
+          cargo build --release --target aarch64-apple-darwin
+          
+          # Create universal binary using lipo
+          mkdir -p target/universal-apple-darwin/release
+          lipo -create \
+            target/x86_64-apple-darwin/release/disk-bloat-scanner \
+            target/aarch64-apple-darwin/release/disk-bloat-scanner \
+            -output target/universal-apple-darwin/release/disk-bloat-scanner
+
+      - name: Build Tauri app
+        run: |
+          npm run tauri build -- --target universal-apple-darwin
+
+      - name: Code Sign & Notarize
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
+        run: |
+          # Make scripts executable
+          chmod +x scripts/sign-and-notarize.sh
+          chmod +x scripts/create-dmg.sh
+          
+          # Run signing and notarization
+          ./scripts/sign-and-notarize.sh
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ || echo "")
+          
+          # Generate changelog
+          if [ -z "$PREV_TAG" ]; then
+            echo "CHANGELOG=Initial release" >> $GITHUB_OUTPUT
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s" $PREV_TAG..HEAD | grep -E "^- (feat|fix|docs|style|refactor|perf|test|chore):" || echo "- Various improvements and bug fixes")
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Disk Bloat Scanner ${{ github.ref_name }}
+          body: |
+            ## What's Changed
+            
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            ## Installation
+            
+            Download the DMG file below and drag the app to your Applications folder.
+            
+            ### System Requirements
+            - macOS 11.0 or later
+            - Apple Silicon or Intel processor
+            
+            ### Verification
+            
+            The app is signed and notarized by Apple. You should not see any security warnings when opening it.
+            
+            SHA-256 checksum:
+            ```
+            $(shasum -a 256 DiskBloatScanner-*.dmg | cut -d' ' -f1)
+            ```
+          files: |
+            DiskBloatScanner-*.dmg
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal-dmg
+          path: DiskBloatScanner-*.dmg
+          retention-days: 7
+
+      - name: Update version in update server
+        if: success()
+        run: |
+          # This would typically update your update server
+          # For now, just log the version
+          echo "Released version: ${{ github.ref_name }}"
+          echo "DMG file: $(ls DiskBloatScanner-*.dmg)"
+          echo "SHA256: $(shasum -a 256 DiskBloatScanner-*.dmg)"
+
+  notify:
+    name: Notify Release
+    needs: release
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Send notification
+        run: |
+          echo "🎉 Release ${{ github.ref_name }} completed successfully!"
+          # Add your notification logic here (Slack, Discord, email, etc.)

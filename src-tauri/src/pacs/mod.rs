@@ -820,11 +820,26 @@ impl DeepProjectScanner {
             Path::new(&self.config.output_dir).to_path_buf()
         };
         
-        std::fs::create_dir_all(&output_dir)
-            .map_err(|e| format!("Failed to create output directory: {}", e))?;
+        // Try to create the directory, use fallback if it fails
+        let final_output_dir = match std::fs::create_dir_all(&output_dir) {
+            Ok(()) => output_dir,
+            Err(_) => {
+                // If we can't create in the specified dir, use home directory
+                let fallback_dir = dirs::home_dir()
+                    .unwrap_or_else(|| PathBuf::from("/tmp"))
+                    .join(".disk-bloat-scanner")
+                    .join("pacs-reports");
+                
+                std::fs::create_dir_all(&fallback_dir)
+                    .map_err(|e| format!("Failed to create output directory: {}", e))?;
+                
+                log::warn!("Using fallback directory: {}", fallback_dir.display());
+                fallback_dir
+            }
+        };
 
         // Save JSON report
-        let json_path = output_dir.join("project-compliance-report.json");
+        let json_path = final_output_dir.join("project-compliance-report.json");
         let json_content = serde_json::to_string_pretty(report)?;
         std::fs::write(&json_path, json_content)
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;

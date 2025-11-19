@@ -289,14 +289,14 @@
   }
 </script>
 
-<div class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg shadow-lg max-w-7xl mx-auto">
+<div class="p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg max-w-7xl mx-auto">
   <div class="mb-6">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Project Auditor & Compliance Scanner (PACS)
         </h2>
-        <p class="text-gray-600">
+        <p class="text-gray-600 dark:text-gray-400">
           Deep project analysis and compliance monitoring for TES-2025, EDGS, and OpenSpec standards.
         </p>
       </div>
@@ -346,7 +346,7 @@
             </label>
           </div>
           <div>
-            <label for="max-depth" class="block text-sm font-medium text-gray-700 mb-1">Max Scan Depth</label>
+            <label for="max-depth" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Scan Depth</label>
             <input
               id="max-depth"
               type="number"
@@ -358,7 +358,7 @@
           </div>
         </div>
         <div>
-          <label for="output-dir" class="block text-sm font-medium text-gray-700 mb-2">Output Directory</label>
+          <label for="output-dir" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Output Directory</label>
           <input
             id="output-dir"
             type="text"
@@ -415,7 +415,7 @@
   
   <!-- Project Selection and Scan Controls -->
   <div class="mb-6">
-    <label for="project-path" class="block text-sm font-medium text-gray-700 mb-2">
+    <label for="project-path" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
       Project Path
     </label>
     <div class="flex gap-3">
@@ -517,7 +517,7 @@
       
       <!-- Standards Summary -->
       {#if Object.keys(report.standards_summary).length > 0}
-         <div class="bg-white p-6 rounded-lg border-2 border-indigo-200 shadow-sm">
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-indigo-200 shadow-sm">
            <h3 class="text-lg font-semibold text-gray-900 mb-4">Standards Compliance</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {#each Object.entries(report.standards_summary) as [standard, status]}

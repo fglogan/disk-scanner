@@ -1,0 +1,21 @@
+# DMG Background Placeholder
+
+This is a placeholder file for the DMG background image.
+
+## Required Specifications:
+- Size: 600x450 pixels
+- Format: PNG with transparency support
+- Design: Should include app icon, instructions, and branding
+
+## To create the actual background:
+1. Use a design tool like Figma, Sketch, or Photoshop
+2. Create a 600x450px canvas
+3. Add the Disk Bloat Scanner logo/icon
+4. Add text: "Drag to Applications folder to install"
+5. Include visual arrow from app icon to Applications folder
+6. Use Tempext AI branding colors
+7. Export as PNG with transparency
+
+## Temporary placeholder:
+For now, this file exists to prevent build errors.
+Replace with actual PNG image before production release.

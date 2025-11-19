@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./lib/themes.css";
 
 @theme {
   --color-slate-50: #f8fafc;

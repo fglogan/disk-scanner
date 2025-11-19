@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Project Scanner",
+  "productName": "Disk Bloat Scanner",
   "version": "0.1.1",
-  "identifier": "com.tempext.projectscanner",
+  "identifier": "com.tempext.disk-bloat-scanner",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3001",
@@ -12,11 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "Project Scanner",
+        "title": "Disk Bloat Scanner",
         "width": 1200,
         "height": 800,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "minWidth": 800,
+        "minHeight": 600
       }
     ],
     "security": {
@@ -33,21 +35,39 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "category": "DeveloperTool",
+    "copyright": "© 2025 Tempext AI",
+    "shortDescription": "Find and remove disk bloat, large files, and system junk",
+    "longDescription": "Disk Bloat Scanner is a powerful tool for identifying and cleaning up wasted disk space. It helps developers and users find large files, duplicates, cache files, and other disk bloat.",
     "macOS": {
+      "entitlements": "../entitlements.plist",
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "11.0",
+      "providerShortName": "TEMPEXT",
+      "signingIdentity": "Developer ID Application",
       "dmg": {
-        "background": null,
+        "background": "../assets/dmg-background.png",
         "windowSize": {
-          "width": 660,
-          "height": 400
+          "width": 600,
+          "height": 450
         },
         "appPosition": {
-          "x": 180,
-          "y": 170
+          "x": 150,
+          "y": 225
         },
         "applicationFolderPosition": {
-          "x": 480,
-          "y": 170
+          "x": 450,
+          "y": 225
         }
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
       }
     }
   }

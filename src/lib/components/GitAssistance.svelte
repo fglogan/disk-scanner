@@ -536,6 +536,12 @@
 		border: 1px solid #e5e7eb;
 	}
 
+	:global(.dark) .git-assistance-panel {
+		background: #1f2937;
+		color: #e5e7eb;
+		border-color: #374151;
+	}
+
 	.header {
 		text-align: center;
 		margin-bottom: 20px;
@@ -543,7 +549,11 @@
 		background: linear-gradient(135deg, #f5f7ff 0%, #faf9ff 100%);
 		padding: 20px;
 		border-radius: 8px;
-		margin: -20px -20px 20px -20px;
+	}
+
+	:global(.dark) .header {
+		background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+		color: #a5b4fc;
 	}
 
 	.header h2 {
@@ -589,10 +599,14 @@
 	}
 
 	.tab-content {
+		padding: 20px;
 		background: #f8f9fb;
 		border-radius: 8px;
-		padding: 20px;
-		animation: fadeIn 0.3s ease;
+		margin-top: 20px;
+	}
+
+	:global(.dark) .tab-content {
+		background: #374151;
 	}
 
 	@keyframes fadeIn {
@@ -638,7 +652,11 @@
 		border-radius: 6px;
 		border-left: 4px solid #667eea;
 		min-width: 130px;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	}
+
+	:global(.dark) .flow-box {
+		background: #4b5563;
+		color: #e5e7eb;
 	}
 
 	.box-icon {
@@ -770,9 +788,17 @@
 	}
 
 	.workflow-steps {
-		padding: 20px;
 		background: #f8f9fb;
-		border-top: 1px solid #e2e8f0;
+		padding: 16px;
+		border-radius: 8px;
+		margin-top: 12px;
+		border: 1px solid #e5e7eb;
+		border-top: 3px solid #667eea;
+	}
+
+	:global(.dark) .workflow-steps {
+		background: #374151;
+		border-color: #4b5563;
 	}
 
 	.step {

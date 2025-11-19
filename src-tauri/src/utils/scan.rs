@@ -8,12 +8,13 @@
 //! - Developer cache discovery
 //! - Git repository analysis
 
-use crate::error::{retry_sync, RetryConfig};
+use crate::error::{retry_sync, RetryConfig, compare_f32_safe, ScannerError, ScannerResult};
 use crate::models::{
     BloatCategory, BloatEntry, CacheCategory, CacheEntry, DuplicateEntry, DuplicateSet, GitEntry,
     GitRepository, JunkCategory, JunkFileEntry, LargeFileEntry,
 };
 use crate::utils::patterns::{detect_bloat_category, detect_junk_file, CACHE_PATTERNS};
+use crate::utils::scan_progress::CancellationToken;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -21,7 +22,6 @@ use std::path::Path;
 use std::sync::Mutex;
 use walkdir::WalkDir;
 use tokio::task;
-use tokio::sync::CancellationToken;
 
 // ============================================================================
 // Core Scanning Utilities
@@ -136,7 +136,7 @@ pub fn scan_large_files(
         .collect();
 
     let mut sorted = large_files;
-    sorted.sort_by(|a, b| error::compare_f32_safe(b.size_mb, a.size_mb));
+    sorted.sort_by(|a, b| compare_f32_safe(b.size_mb, a.size_mb));
 
     Ok(sorted)
 }
@@ -204,7 +204,7 @@ pub fn scan_bloat(root: &Path, follow_symlinks: bool) -> Result<Vec<BloatCategor
         .collect();
 
     // Sort by total size (largest first)
-    result.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
+    result.sort_by(|a, b| compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     Ok(result)
 }
@@ -315,7 +315,7 @@ pub fn scan_duplicates(root: &Path, follow_symlinks: bool) -> Result<Vec<Duplica
         .collect();
 
     // Sort by savable space (largest first)
-    result.sort_by(|a, b| error::compare_f32_safe(b.total_savable_mb, a.total_savable_mb));
+    result.sort_by(|a, b| compare_f32_safe(b.total_savable_mb, a.total_savable_mb));
 
     Ok(result)
 }
@@ -482,7 +482,7 @@ pub fn scan_dev_caches(root: &Path, follow_symlinks: bool) -> Result<Vec<CacheCa
         .collect();
 
     // Sort by total size (largest first)
-    result.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
+    result.sort_by(|a, b| compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     Ok(result)
 }
@@ -679,7 +679,7 @@ pub fn scan_git_repos(root: &Path, follow_symlinks: bool) -> Result<Vec<GitRepos
     }
 
     // Sort by total size (largest first)
-    repositories.sort_by(|a, b| error::compare_f32_safe(b.total_size_mb, a.total_size_mb));
+    repositories.sort_by(|a, b| compare_f32_safe(b.total_size_mb, a.total_size_mb));
 
     log::info!(
         "Git repository scan complete: {} repositories found, {} errors encountered",
@@ -710,21 +710,21 @@ pub async fn scan_git_repos_async(root: &Path, follow_symlinks: bool) -> Result<
 pub async fn scan_dev_caches_async_with_cancellation(
     root: &Path, 
     follow_symlinks: bool,
-    cancel_token: &tokio::sync::CancellationToken
-) -> Result<Vec<CacheCategory>, String> {
+    cancel_token: &CancellationToken
+) -> ScannerResult<Vec<CacheCategory>> {
     let root = root.to_owned();
     let cancel_token = cancel_token.clone();
     
     task::spawn_blocking(move || {
         // Check for cancellation at start
         if cancel_token.is_cancelled() {
-            return Err("Scan cancelled".to_string());
+            return Err(ScannerError::Other("Scan cancelled".to_string()));
         }
         
         scan_dev_caches_with_cancellation(&root, follow_symlinks, &cancel_token)
     }).await.unwrap_or_else(|e| {
         log::error!("Task failed in scan_dev_caches_async_with_cancellation: {}", e);
-        Err(format!("Task failed: {}", e))
+        Err(ScannerError::Other(format!("Task failed: {}", e)))
     })
 }
 
@@ -733,7 +733,7 @@ fn scan_dev_caches_with_cancellation(
     root: &Path, 
     follow_symlinks: bool,
     cancel_token: &CancellationToken
-) -> Result<Vec<CacheCategory>, String> {
+) -> ScannerResult<Vec<CacheCategory>> {
     use std::sync::atomic::{AtomicU64, Ordering};
     
     let mut categories = Vec::new();
@@ -743,7 +743,7 @@ fn scan_dev_caches_with_cancellation(
     
     // Check for cancellation before starting
     if cancel_token.is_cancelled() {
-        return Err("Scan cancelled before starting".to_string());
+        return Err(ScannerError::Other("Scan cancelled before starting".to_string()));
     }
     
     // Walk through directories looking for caches
@@ -753,67 +753,87 @@ fn scan_dev_caches_with_cancellation(
         WalkDir::new(root).follow_links(false)
     };
     
+    let mut entries = Vec::new();
+    
     for entry in walker.into_iter().filter_map(Result::ok) {
         // Check for cancellation periodically
         if files_processed.load(Ordering::Relaxed) % 100 == 0 && cancel_token.is_cancelled() {
             log::info!("Cache scan cancelled at entry: {}", entry.path().display());
-            return Err("Scan cancelled by user".to_string());
+            return Err(ScannerError::Other("Scan cancelled by user".to_string()));
         }
         
         let path = entry.path();
         
         // Check if this path matches any cache pattern
-        for (category_name, patterns) in CACHE_PATTERNS {
-            let mut entries = Vec::new();
-            let mut category_size = 0u64;
-            
-            for pattern in patterns {
-                if let Some(pattern_path) = path.strip_prefix(root).ok().and_then(|p| Some(p.join(pattern))) {
-                    let full_path = root.join(pattern_path);
-                    
-                    if full_path.exists() {
-                        // Check for cancellation before expensive operations
-                        if cancel_token.is_cancelled() {
-                            return Err("Scan cancelled during directory processing".to_string());
-                        }
-                        
-                        let size = dir_size(&full_path);
-                        category_size += size;
-                        
-                        entries.push(CacheEntry {
-                            path: full_path.to_string_lossy().to_string(),
-                            size,
-                            last_modified: full_path.metadata()
-                                .map(|m| m.modified().ok())
-                                .flatten()
-                                .map(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                                .flatten()
-                                .map(|d| d.as_secs())
-                                .unwrap_or(0),
-                        });
-                        
-                        files_processed.fetch_add(1, Ordering::Relaxed);
+        for (pattern, category_id, display_name, safety, description) in CACHE_PATTERNS {
+            if let Some(pattern_path) = path.strip_prefix(root).ok().and_then(|p| Some(p.join(pattern))) {
+                let full_path = root.join(pattern_path);
+                
+                if full_path.exists() {
+                    // Check for cancellation before expensive operations
+                    if cancel_token.is_cancelled() {
+                        return Err(ScannerError::Other("Scan cancelled during directory processing".to_string()));
                     }
+                    
+                    let size = dir_size(&full_path);
+                    let size_mb = size as f32 / (1024.0 * 1024.0);
+                    
+                    entries.push(CacheEntry {
+                        path: full_path.to_string_lossy().to_string(),
+                        size_mb,
+                        cache_type: category_id.to_string(),
+                        safety: safety.to_string(),
+                        description: description.to_string(),
+                    });
+                    
+                    files_processed.fetch_add(1, Ordering::Relaxed);
                 }
             }
             
-            if !entries.is_empty() {
-                entries.sort_by(|a, b| b.size.cmp(&a.size));
+        }
+        
+        // Group entries by category
+        let mut category_map: HashMap<String, Vec<CacheEntry>> = HashMap::new();
+        for entry in &entries {
+            let category = entry.cache_type.clone();
+            category_map.entry(category).or_insert_with(Vec::new).push(entry.clone());
+        }
+        
+        for (category_id, category_entries) in category_map {
+            if !category_entries.is_empty() {
+                let mut sorted_entries = category_entries;
+                sorted_entries.sort_by(|a, b| compare_f32_safe(b.size_mb, a.size_mb));
+                
+                let total_size_mb: f32 = sorted_entries.iter().map(|e| e.size_mb).sum();
+                let safety = if sorted_entries.iter().any(|e| e.safety == "dangerous") {
+                    "dangerous".to_string()
+                } else if sorted_entries.iter().any(|e| e.safety == "caution") {
+                    "caution".to_string()
+                } else {
+                    "safe".to_string()
+                };
+                
                 categories.push(CacheCategory {
-                    name: category_name.to_string(),
-                    size: category_size,
-                    entries,
+                    category_id: category_id.clone(),
+                    display_name: format!("{} Cache", category_id),
+                    total_size_mb,
+                    entry_count: sorted_entries.len(),
+                    safety,
+                    entries: sorted_entries,
                 });
             }
+        }
+        
+        if !categories.is_empty() {
+            categories.sort_by(|a, b| compare_f32_safe(b.total_size_mb, a.total_size_mb));
         }
     }
     
     // Final cancellation check
     if cancel_token.is_cancelled() {
-        return Err("Scan cancelled during final processing".to_string());
+        return Err(ScannerError::Other("Scan cancelled during final processing".to_string()));
     }
     
-    categories.sort_by(|a, b| b.size.cmp(&a.size));
     log::info!("Completed cancellation-aware cache scan: {} categories found", categories.len());
     
     Ok(categories)
@@ -823,26 +843,26 @@ fn scan_dev_caches_with_cancellation(
 pub async fn scan_git_repos_async_with_cancellation(
     root: &Path, 
     follow_symlinks: bool,
-    cancel_token: &tokio::sync::CancellationToken
-) -> Result<Vec<GitRepository>, String> {
+    cancel_token: &CancellationToken
+) -> ScannerResult<Vec<GitRepository>> {
     let root = root.to_owned();
     let cancel_token = cancel_token.clone();
     
     task::spawn_blocking(move || {
         // Check for cancellation at start
         if cancel_token.is_cancelled() {
-            return Err("Scan cancelled".to_string());
+            return Err(ScannerError::Other("Scan cancelled".to_string()));
         }
         
         scan_git_repos_with_cancellation(&root, follow_symlinks, &cancel_token)
     }).await.unwrap_or_else(|e| {
         log::error!("Task failed in scan_git_repos_async_with_cancellation: {}", e);
-        Err(format!("Task failed: {}", e))
+        Err(ScannerError::Other(format!("Task failed: {}", e)))
     })
 }
 
 /// Analyze a single git repository (extracted from scan_git_repos for reuse)
-fn analyze_git_repository(repo_path: &Path) -> Result<GitRepository, String> {
+fn analyze_git_repository(repo_path: &Path) -> ScannerResult<GitRepository> {
     let git_path = repo_path.join(".git");
     let mut git_entries = Vec::new();
     let mut total_size = 0u64;
@@ -951,7 +971,7 @@ fn analyze_git_repository(repo_path: &Path) -> Result<GitRepository, String> {
             entries: git_entries,
         })
     } else {
-        Err("No valid git entries found".to_string())
+        Err(ScannerError::Other("No valid git entries found".to_string()))
     }
 }
 
@@ -960,7 +980,7 @@ fn scan_git_repos_with_cancellation(
     root: &Path, 
     follow_symlinks: bool,
     cancel_token: &CancellationToken
-) -> Result<Vec<GitRepository>, String> {
+) -> ScannerResult<Vec<GitRepository>> {
     use std::sync::atomic::{AtomicU64, Ordering};
     
     let mut repositories = Vec::new();
@@ -970,7 +990,7 @@ fn scan_git_repos_with_cancellation(
     
     // Check for cancellation before starting
     if cancel_token.is_cancelled() {
-        return Err("Scan cancelled before starting".to_string());
+        return Err(ScannerError::Other("Scan cancelled before starting".to_string()));
     }
     
     // Walk through directories looking for .git directories
@@ -984,7 +1004,7 @@ fn scan_git_repos_with_cancellation(
         // Check for cancellation periodically
         if files_processed.load(Ordering::Relaxed) % 50 == 0 && cancel_token.is_cancelled() {
             log::info!("Git repository scan cancelled at entry: {}", entry.path().display());
-            return Err("Scan cancelled by user".to_string());
+            return Err(ScannerError::Other("Scan cancelled by user".to_string()));
         }
         
         let path = entry.path();
@@ -994,7 +1014,7 @@ fn scan_git_repos_with_cancellation(
             if let Some(repo_path) = path.parent() {
                 // Check for cancellation before expensive operations
                 if cancel_token.is_cancelled() {
-                    return Err("Scan cancelled during repository processing".to_string());
+                    return Err(ScannerError::Other("Scan cancelled during repository processing".to_string()));
                 }
                 
                 // Analyze the repository
@@ -1008,10 +1028,9 @@ fn scan_git_repos_with_cancellation(
     
     // Final cancellation check
     if cancel_token.is_cancelled() {
-        return Err("Scan cancelled during final processing".to_string());
+        return Err(ScannerError::Other("Scan cancelled during final processing".to_string()));
     }
     
-    repositories.sort_by(|a, b| b.total_size_mb.cmp(&a.total_size_mb));
     log::info!("Completed cancellation-aware git repository scan: {} repositories found", repositories.len());
     
     Ok(repositories)
