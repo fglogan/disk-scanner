@@ -1,9 +1,9 @@
 # 🤖 AGENTS.md - Disk Bloat Scanner Development Guide
 
-**Last Updated:** November 11, 2025, 17:15 UTC  
+**Last Updated:** November 19, 2025, 05:30 UTC  
 **Project:** Disk Bloat Scanner v0.1.1 + PACS v1.0 (Proposed)  
-**Current Phase:** ✅ Phase 2 EXTENDED (UI Polish + BEAD Issues)  
-**Status**: ✅ All systems operational - UI styling improvements completed
+**Current Phase:** 🚀 Week 1 - Fast Track to GA Schedule  
+**Status**: ✅ BEAD-009 & BEAD-011 Complete - Async scanning & real progress
 
 ## ⚡ OPERATIONAL MODE: BUILD
 
@@ -21,7 +21,37 @@
 
 ---
 
-## 📋 CURRENT SESSION STATE (Nov 12, 2025)
+## 📋 CURRENT SESSION STATE (Nov 19, 2025)
+
+### 🚀 WEEK 1 FAST TRACK TO GA (Nov 19, 2025)
+
+**✅ BEAD-009 (High): Make dir_size() async to prevent UI freezing** (Complete)
+- Added async versions: `dir_size_async()`, `scan_dev_caches_async()`, `scan_git_repos_async()`
+- Updated Tauri commands to use async versions with `.await`
+- Used `tokio::spawn_blocking` to move blocking I/O off async thread
+- Result: UI no longer freezes during directory size calculations
+
+**✅ BEAD-011 (High): Implement real progress tracking via Tauri events** (Complete)
+- Added `ScanProgressEvent` structure with current_path, files_scanned, progress_percent, message, eta_seconds
+- Updated `scan_dev_caches` and `scan_git_repos` commands to accept `AppHandle`
+- Added `emit_progress()` helper function to send real-time progress events
+- Replaced fake `Math.random()` progress with event-driven real progress
+- Added progress event listener in Dashboard.svelte with proper cleanup
+- Result: Users see actual scan progress instead of fake random numbers
+
+**Files Modified:**
+- `src-tauri/src/utils/scan.rs` (+38 lines - async versions)
+- `src-tauri/src/lib.rs` (+50 lines - progress events & AppHandle)
+- `src/lib/components/Dashboard.svelte` (+38 lines - event listener, -12 lines fake progress)
+
+**Next Steps:**
+- Continue with remaining Week 1 BEADs (BEAD-010, BEAD-013, BEAD-014)
+- Test async scanning with large directories
+- Verify progress events work correctly in UI
+
+---
+
+## 📋 PREVIOUS SESSION STATE (Nov 12, 2025)
 
 ### 🛡️ CRITICAL ERROR HANDLING IMPLEMENTATION (Nov 12, 2025)
 
