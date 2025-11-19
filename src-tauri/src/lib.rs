@@ -29,11 +29,48 @@ use pacs::{DeepProjectScanner, PACSConfig, ProjectAuditReport, ProjectBaseline};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
+use tokio::sync::CancellationToken;
 use utils::cleanup;
 use utils::path::validate_scan_path;
 use utils::scan;
+
+// Global cancellation token manager for scan operations (BEAD-010)
+struct ScanCancellationManager {
+    tokens: HashMap<String, CancellationToken>,
+}
+
+impl ScanCancellationManager {
+    fn new() -> Self {
+        Self {
+            tokens: HashMap::new(),
+        }
+    }
+    
+    fn create_token(&mut self, scan_id: &str) -> CancellationToken {
+        let token = CancellationToken::new();
+        self.tokens.insert(scan_id.to_string(), token.clone());
+        token
+    }
+    
+    fn get_token(&self, scan_id: &str) -> Option<CancellationToken> {
+        self.tokens.get(scan_id).cloned()
+    }
+    
+    fn cancel_scan(&mut self, scan_id: &str) -> bool {
+        if let Some(token) = self.tokens.get(scan_id) {
+            token.cancel();
+            true
+        } else {
+            false
+        }
+    }
+    
+    fn remove_token(&mut self, scan_id: &str) {
+        self.tokens.remove(scan_id);
+    }
+}
 
 // Progress event for real-time scan updates (BEAD-011)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +81,9 @@ struct ScanProgressEvent {
     pub message: String,
     pub eta_seconds: Option<u64>,
 }
+
+// Tauri state for cancellation manager (BEAD-010)
+struct CancellationState(Mutex<ScanCancellationManager>);
 
 /// Emit progress event to frontend (BEAD-011)
 fn emit_progress(
@@ -312,36 +352,140 @@ async fn cleanup_dirs(req: CleanupReq) -> Result<CleanupResult, String> {
 }
 
 // ============================================================================
+// Scan Cancellation Commands (BEAD-010)
+// ============================================================================
+
+/// Starts a new scan with a unique scan ID and cancellation token.
+///
+/// **Parameters:**
+/// - `scan_type` - Type of scan ("dev_caches" or "git_repos")
+/// - `opts` - Scan options including root path and symlinks setting
+///
+/// **Returns:** Unique scan ID that can be used to cancel the scan
+#[tauri::command]
+async fn start_scan(app: AppHandle, scan_type: String, opts: ScanOpts) -> Result<String, String> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SCAN_COUNTER: AtomicU64 = AtomicU64::new(0);
+    
+    // Generate unique scan ID
+    let scan_id = format!("scan_{}_{}", scan_type, SCAN_COUNTER.fetch_add(1, Ordering::SeqCst));
+    
+    // Get cancellation manager from app state
+    let cancellation_state = app.state::<CancellationState>();
+    let mut manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    
+    // Create cancellation token for this scan
+    let _token = manager.create_token(&scan_id);
+    
+    log::info!("Started scan with ID: {}", scan_id);
+    
+    Ok(scan_id)
+}
+
+/// Cancels an ongoing scan by ID.
+///
+/// **Parameters:**
+/// - `scan_id` - Unique scan ID returned by start_scan
+///
+/// **Returns:** true if scan was cancelled, false if scan not found
+#[tauri::command]
+async fn cancel_scan(app: AppHandle, scan_id: String) -> Result<bool, String> {
+    // Get cancellation manager from app state
+    let cancellation_state = app.state::<CancellationState>();
+    let mut manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    
+    let cancelled = manager.cancel_scan(&scan_id);
+    
+    if cancelled {
+        log::info!("Cancelled scan: {}", scan_id);
+        // Remove the token after cancellation
+        manager.remove_token(&scan_id);
+    } else {
+        log::warn!("Scan not found for cancellation: {}", scan_id);
+    }
+    
+    Ok(cancelled)
+}
+
+/// Checks if a scan is still running.
+///
+/// **Parameters:**
+/// - `scan_id` - Unique scan ID to check
+///
+/// **Returns:** true if scan is still active, false if not found or cancelled
+#[tauri::command]
+async fn is_scan_running(app: AppHandle, scan_id: String) -> Result<bool, String> {
+    // Get cancellation manager from app state
+    let cancellation_state = app.state::<CancellationState>();
+    let manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    
+    let is_running = manager.get_token(&scan_id)
+        .map(|token| !token.is_cancelled())
+        .unwrap_or(false);
+    
+    Ok(is_running)
+}
+
+// ============================================================================
 // Developer Caches Scanner Command
 // ============================================================================
 
 /// Scans a directory for developer tool caches (npm, Cargo, pip, Maven, Gradle, Docker, etc.).
 ///
 /// **Parameters:**
+/// - `scan_id` - Unique scan ID for cancellation support (BEAD-010)
 /// - `opts.root` - Root directory path to scan (must not be a protected system directory)
 /// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
 ///
-/// **Cache Types Detected:**
-/// - Node.js/npm/yarn, Python/pip, Rust/Cargo, Java/Maven/Gradle
-/// - Docker, VS Code, `IntelliJ` IDEA, macOS system caches
+/// **Analysis Includes:**
+/// - Node.js (npm/yarn) caches from ~/.npm and ~/.cache directories
+/// - Cargo registry cache and build artifacts from ~/.cargo
+/// - Python pip and conda caches from ~/.cache/pip and ~/.conda
+/// - Maven/Gradle caches from ~/.m2 and ~/.gradle
+/// - Docker build cache, container images, and volumes
+/// - Homebrew cache and temporary files
+/// - Xcode Derived Data and build artifacts
+/// - IntelliJ IDEA caches and indexes
+/// - VS Code extensions and workspace storage
 ///
-/// **Returns:** Vector of `CacheCategory` objects containing:
-/// - Category ID, display name, and safety level
-/// - List of cache entries with paths, sizes (MB), cache type, and descriptions
-/// - Total size per category and entry count, sorted by size (largest first)
+/// **Returns:** Vector of `CacheCategory` objects sorted by total size (largest first),
+/// each containing category name, total size, and individual cache entries with sizes.
 #[tauri::command]
-async fn scan_dev_caches(app: AppHandle, opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
+async fn scan_dev_caches(app: AppHandle, scan_id: String, opts: ScanOpts) -> Result<Vec<CacheCategory>, String> {
     // Validate the scan path to prevent system directory access
     let validated_path = validate_scan_path(&opts.root)?;
-    log::info!("Scanning developer caches in: {}", validated_path.display());
+    log::info!("Scanning developer caches in: {} (scan_id: {})", validated_path.display(), scan_id);
+
+    // Get cancellation token
+    let cancellation_state = app.state::<CancellationState>();
+    let manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    
+    let cancel_token = manager.get_token(&scan_id)
+        .ok_or_else(|| format!("Scan ID not found: {}", scan_id))?;
+
+    // Check if already cancelled
+    if cancel_token.is_cancelled() {
+        return Err("Scan was cancelled before starting".to_string());
+    }
 
     // Emit initial progress event
     emit_progress(&app, &validated_path, 0, 0.0, "Starting cache scan...", None);
 
-    let result = scan::scan_dev_caches_async(&validated_path, opts.follow_symlinks).await?;
+    let result = scan::scan_dev_caches_async_with_cancellation(&validated_path, opts.follow_symlinks, &cancel_token).await?;
     
     // Emit completion event
     emit_progress(&app, &validated_path, 0, 100.0, "Cache scan complete", None);
+    
+    // Clean up cancellation token
+    drop(manager);
+    let cancellation_state = app.state::<CancellationState>();
+    let mut manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    manager.remove_token(&scan_id);
     
     Ok(result)
 }
@@ -353,6 +497,7 @@ async fn scan_dev_caches(app: AppHandle, opts: ScanOpts) -> Result<Vec<CacheCate
 /// Scans a directory recursively to discover and analyze Git repositories.
 ///
 /// **Parameters:**
+/// - `scan_id` - Unique scan ID for cancellation support (BEAD-010)
 /// - `opts.root` - Root directory path to scan (must not be a protected system directory)
 /// - `opts.follow_symlinks` - Whether to follow symbolic links during traversal
 ///
@@ -366,18 +511,38 @@ async fn scan_dev_caches(app: AppHandle, opts: ScanOpts) -> Result<Vec<CacheCate
 /// **Returns:** Vector of `GitRepository` objects sorted by repository size (largest first),
 /// each containing repository statistics and metadata.
 #[tauri::command]
-async fn scan_git_repos(app: AppHandle, opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
+async fn scan_git_repos(app: AppHandle, scan_id: String, opts: ScanOpts) -> Result<Vec<GitRepository>, String> {
     // Validate the scan path to prevent system directory access
     let validated_path = validate_scan_path(&opts.root)?;
-    log::info!("Scanning git repositories in: {}", validated_path.display());
+    log::info!("Scanning git repositories in: {} (scan_id: {})", validated_path.display(), scan_id);
+
+    // Get cancellation token
+    let cancellation_state = app.state::<CancellationState>();
+    let manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    
+    let cancel_token = manager.get_token(&scan_id)
+        .ok_or_else(|| format!("Scan ID not found: {}", scan_id))?;
+
+    // Check if already cancelled
+    if cancel_token.is_cancelled() {
+        return Err("Scan was cancelled before starting".to_string());
+    }
 
     // Emit initial progress event
     emit_progress(&app, &validated_path, 0, 0.0, "Starting Git repository scan...", None);
 
-    let result = scan::scan_git_repos_async(&validated_path, opts.follow_symlinks).await?;
+    let result = scan::scan_git_repos_async_with_cancellation(&validated_path, opts.follow_symlinks, &cancel_token).await?;
     
     // Emit completion event
     emit_progress(&app, &validated_path, 0, 100.0, "Git repository scan complete", None);
+    
+    // Clean up cancellation token
+    drop(manager);
+    let cancellation_state = app.state::<CancellationState>();
+    let mut manager = cancellation_state.0.lock()
+        .map_err(|e| format!("Failed to acquire cancellation lock: {}", e))?;
+    manager.remove_token(&scan_id);
     
     Ok(result)
 }
@@ -1110,6 +1275,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .manage(CancellationState(Mutex::new(ScanCancellationManager::new())))
         .invoke_handler(tauri::generate_handler![
             get_disk_info,
             get_system_info,
@@ -1117,6 +1283,9 @@ pub fn run() {
             scan_bloat,
             scan_duplicates,
             scan_junk_files,
+            start_scan,
+            cancel_scan,
+            is_scan_running,
             scan_dev_caches,
             scan_git_repos,
             cleanup_dirs,

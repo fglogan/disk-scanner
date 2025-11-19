@@ -21,6 +21,7 @@ use std::path::Path;
 use std::sync::Mutex;
 use walkdir::WalkDir;
 use tokio::task;
+use tokio::sync::CancellationToken;
 
 // ============================================================================
 // Core Scanning Utilities
@@ -670,6 +671,321 @@ pub async fn scan_git_repos_async(root: &Path, follow_symlinks: bool) -> Result<
         log::error!("Task failed in scan_git_repos_async: {}", e);
         Err(format!("Task failed: {}", e))
     })
+}
+
+// ============================================================================
+// Cancellation-Aware Scanning Functions (BEAD-010)
+// ============================================================================
+
+/// Async version of scan_dev_caches with cancellation support (BEAD-010)
+pub async fn scan_dev_caches_async_with_cancellation(
+    root: &Path, 
+    follow_symlinks: bool,
+    cancel_token: &tokio::sync::CancellationToken
+) -> Result<Vec<CacheCategory>, String> {
+    let root = root.to_owned();
+    let cancel_token = cancel_token.clone();
+    
+    task::spawn_blocking(move || {
+        // Check for cancellation at start
+        if cancel_token.is_cancelled() {
+            return Err("Scan cancelled".to_string());
+        }
+        
+        scan_dev_caches_with_cancellation(&root, follow_symlinks, &cancel_token)
+    }).await.unwrap_or_else(|e| {
+        log::error!("Task failed in scan_dev_caches_async_with_cancellation: {}", e);
+        Err(format!("Task failed: {}", e))
+    })
+}
+
+/// Cancellation-aware version of scan_dev_caches (BEAD-010)
+fn scan_dev_caches_with_cancellation(
+    root: &Path, 
+    follow_symlinks: bool,
+    cancel_token: &CancellationToken
+) -> Result<Vec<CacheCategory>, String> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    
+    let mut categories = Vec::new();
+    let files_processed = AtomicU64::new(0);
+    
+    log::info!("Starting cancellation-aware cache scan: {}", root.display());
+    
+    // Check for cancellation before starting
+    if cancel_token.is_cancelled() {
+        return Err("Scan cancelled before starting".to_string());
+    }
+    
+    // Walk through directories looking for caches
+    let walker = if follow_symlinks {
+        WalkDir::new(root).follow_links(true)
+    } else {
+        WalkDir::new(root).follow_links(false)
+    };
+    
+    for entry in walker.into_iter().filter_map(Result::ok) {
+        // Check for cancellation periodically
+        if files_processed.load(Ordering::Relaxed) % 100 == 0 && cancel_token.is_cancelled() {
+            log::info!("Cache scan cancelled at entry: {}", entry.path().display());
+            return Err("Scan cancelled by user".to_string());
+        }
+        
+        let path = entry.path();
+        
+        // Check if this path matches any cache pattern
+        for (category_name, patterns) in CACHE_PATTERNS {
+            let mut entries = Vec::new();
+            let mut category_size = 0u64;
+            
+            for pattern in patterns {
+                if let Some(pattern_path) = path.strip_prefix(root).ok().and_then(|p| Some(p.join(pattern))) {
+                    let full_path = root.join(pattern_path);
+                    
+                    if full_path.exists() {
+                        // Check for cancellation before expensive operations
+                        if cancel_token.is_cancelled() {
+                            return Err("Scan cancelled during directory processing".to_string());
+                        }
+                        
+                        let size = dir_size(&full_path);
+                        category_size += size;
+                        
+                        entries.push(CacheEntry {
+                            path: full_path.to_string_lossy().to_string(),
+                            size,
+                            last_modified: full_path.metadata()
+                                .map(|m| m.modified().ok())
+                                .flatten()
+                                .map(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                                .flatten()
+                                .map(|d| d.as_secs())
+                                .unwrap_or(0),
+                        });
+                        
+                        files_processed.fetch_add(1, Ordering::Relaxed);
+                    }
+                }
+            }
+            
+            if !entries.is_empty() {
+                entries.sort_by(|a, b| b.size.cmp(&a.size));
+                categories.push(CacheCategory {
+                    name: category_name.to_string(),
+                    size: category_size,
+                    entries,
+                });
+            }
+        }
+    }
+    
+    // Final cancellation check
+    if cancel_token.is_cancelled() {
+        return Err("Scan cancelled during final processing".to_string());
+    }
+    
+    categories.sort_by(|a, b| b.size.cmp(&a.size));
+    log::info!("Completed cancellation-aware cache scan: {} categories found", categories.len());
+    
+    Ok(categories)
+}
+
+/// Async version of scan_git_repos with cancellation support (BEAD-010)
+pub async fn scan_git_repos_async_with_cancellation(
+    root: &Path, 
+    follow_symlinks: bool,
+    cancel_token: &tokio::sync::CancellationToken
+) -> Result<Vec<GitRepository>, String> {
+    let root = root.to_owned();
+    let cancel_token = cancel_token.clone();
+    
+    task::spawn_blocking(move || {
+        // Check for cancellation at start
+        if cancel_token.is_cancelled() {
+            return Err("Scan cancelled".to_string());
+        }
+        
+        scan_git_repos_with_cancellation(&root, follow_symlinks, &cancel_token)
+    }).await.unwrap_or_else(|e| {
+        log::error!("Task failed in scan_git_repos_async_with_cancellation: {}", e);
+        Err(format!("Task failed: {}", e))
+    })
+}
+
+/// Analyze a single git repository (extracted from scan_git_repos for reuse)
+fn analyze_git_repository(repo_path: &Path) -> Result<GitRepository, String> {
+    let git_path = repo_path.join(".git");
+    let mut git_entries = Vec::new();
+    let mut total_size = 0u64;
+
+    // Analyze .git directory structure
+    if let Ok(git_contents) = std::fs::read_dir(&git_path) {
+        for git_entry in git_contents.flatten() {
+            let entry_path = git_entry.path();
+            let entry_name = git_entry.file_name().to_string_lossy().into_owned();
+
+            match entry_name.as_str() {
+                "objects" => {
+                    // Analyze git objects
+                    if let Ok(objects_size) = analyze_git_objects(&entry_path) {
+                        total_size += objects_size;
+                        git_entries.push(GitEntry {
+                            path: entry_path.to_string_lossy().to_string(),
+                            #[allow(clippy::cast_precision_loss)]
+                            size_mb: objects_size as f32 / 1_048_576.0,
+                            entry_type: "objects".to_string(),
+                            description: format!(
+                                "Git objects: {} files",
+                                count_git_objects(&entry_path)
+                            ),
+                            safety: "safe".to_string(),
+                            actionable: false, // Don't delete git objects
+                        });
+                    }
+                }
+                "refs" => {
+                    // Analyze refs
+                    let refs_size = dir_size(&entry_path);
+                    if refs_size > 0 {
+                        total_size += refs_size;
+                        git_entries.push(GitEntry {
+                            path: entry_path.to_string_lossy().to_string(),
+                            #[allow(clippy::cast_precision_loss)]
+                            size_mb: refs_size as f32 / 1_048_576.0,
+                            entry_type: "refs".to_string(),
+                            description: "Git references and branches".to_string(),
+                            safety: "safe".to_string(),
+                            actionable: false,
+                        });
+                    }
+                }
+                "logs" => {
+                    // Reflogs - can be cleaned up
+                    let logs_size = dir_size(&entry_path);
+                    if logs_size > 0 {
+                        total_size += logs_size;
+                        git_entries.push(GitEntry {
+                            path: entry_path.to_string_lossy().to_string(),
+                            #[allow(clippy::cast_precision_loss)]
+                            size_mb: logs_size as f32 / 1_048_576.0,
+                            entry_type: "reflog".to_string(),
+                            description: "Git reflogs - tracks branch movements".to_string(),
+                            safety: "caution".to_string(),
+                            actionable: true,
+                        });
+                    }
+                }
+                "pack" => {
+                    // Pack files
+                    let pack_size = dir_size(&entry_path);
+                    if pack_size > 0 {
+                        total_size += pack_size;
+                        git_entries.push(GitEntry {
+                            path: entry_path.to_string_lossy().to_string(),
+                            #[allow(clippy::cast_precision_loss)]
+                            size_mb: pack_size as f32 / 1_048_576.0,
+                            entry_type: "pack_file".to_string(),
+                            description: "Git pack files - compressed object storage".to_string(),
+                            safety: "safe".to_string(),
+                            actionable: false,
+                        });
+                    }
+                }
+                _ => {
+                    // Other files/directories
+                    if let Ok(metadata) = entry_path.metadata() {
+                        if metadata.is_file() {
+                            let file_size = metadata.len();
+                            total_size += file_size;
+                            git_entries.push(GitEntry {
+                                path: entry_path.to_string_lossy().to_string(),
+                                #[allow(clippy::cast_precision_loss)]
+                                size_mb: file_size as f32 / 1_048_576.0,
+                                entry_type: "file".to_string(),
+                                description: format!("Git file: {entry_name}"),
+                                safety: "safe".to_string(),
+                                actionable: false,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if !git_entries.is_empty() {
+        Ok(GitRepository {
+            repo_path: repo_path.to_string_lossy().to_string(),
+            #[allow(clippy::cast_precision_loss)]
+            total_size_mb: total_size as f32 / 1_048_576.0,
+            entry_count: git_entries.len(),
+            entries: git_entries,
+        })
+    } else {
+        Err("No valid git entries found".to_string())
+    }
+}
+
+/// Cancellation-aware version of scan_git_repos (BEAD-010)
+fn scan_git_repos_with_cancellation(
+    root: &Path, 
+    follow_symlinks: bool,
+    cancel_token: &CancellationToken
+) -> Result<Vec<GitRepository>, String> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    
+    let mut repositories = Vec::new();
+    let files_processed = AtomicU64::new(0);
+    
+    log::info!("Starting cancellation-aware git repository scan: {}", root.display());
+    
+    // Check for cancellation before starting
+    if cancel_token.is_cancelled() {
+        return Err("Scan cancelled before starting".to_string());
+    }
+    
+    // Walk through directories looking for .git directories
+    let walker = if follow_symlinks {
+        WalkDir::new(root).follow_links(true)
+    } else {
+        WalkDir::new(root).follow_links(false)
+    };
+    
+    for entry in walker.into_iter().filter_map(Result::ok) {
+        // Check for cancellation periodically
+        if files_processed.load(Ordering::Relaxed) % 50 == 0 && cancel_token.is_cancelled() {
+            log::info!("Git repository scan cancelled at entry: {}", entry.path().display());
+            return Err("Scan cancelled by user".to_string());
+        }
+        
+        let path = entry.path();
+        
+        // Check if this is a .git directory
+        if path.file_name().map(|n| n == ".git").unwrap_or(false) {
+            if let Some(repo_path) = path.parent() {
+                // Check for cancellation before expensive operations
+                if cancel_token.is_cancelled() {
+                    return Err("Scan cancelled during repository processing".to_string());
+                }
+                
+                // Analyze the repository
+                if let Ok(repo) = analyze_git_repository(repo_path) {
+                    repositories.push(repo);
+                    files_processed.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+        }
+    }
+    
+    // Final cancellation check
+    if cancel_token.is_cancelled() {
+        return Err("Scan cancelled during final processing".to_string());
+    }
+    
+    repositories.sort_by(|a, b| b.total_size_mb.cmp(&a.total_size_mb));
+    log::info!("Completed cancellation-aware git repository scan: {} repositories found", repositories.len());
+    
+    Ok(repositories)
 }
 
 // ============================================================================
