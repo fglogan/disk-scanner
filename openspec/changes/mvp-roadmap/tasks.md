@@ -11,8 +11,8 @@
 
 | ID | Task | Type | Effort | Status | Dependencies |
 |----|------|------|--------|--------|--------------|
-| M1-T1 | BEAD-005: Replace .unwrap() with proper error handling | Fix | 4h | PENDING | None |
-| M1-T2 | BEAD-006: Implement proper error types with thiserror | Fix | 3h | PENDING | M1-T1 |
+| M1-T1 | BEAD-005: Replace .unwrap() with proper error handling | Fix | 4h | COMPLETE | None |
+| M1-T2 | BEAD-006: Implement proper error types with thiserror | Fix | 3h | COMPLETE | M1-T1 |
 | M1-T3 | Configure code signing for macOS | Setup | 2h | PENDING | None |
 | M1-T4 | Setup notarization workflow | Setup | 3h | PENDING | M1-T3 |
 | M1-T5 | Create DMG release automation | Setup | 4h | PENDING | M1-T4 |
@@ -25,11 +25,11 @@
 
 | ID | Task | Type | Effort | Status | Dependencies |
 |----|------|------|--------|--------|--------------|
-| M2-T1 | BEAD-009: Symlink loop detection | Feature | 3h | PENDING | None |
-| M2-T2 | BEAD-010: Large directory warning | Feature | 2h | PENDING | None |
-| M2-T3 | BEAD-011: Network drive detection | Feature | 4h | PENDING | None |
-| M2-T4 | BEAD-013: Scan cancellation | Feature | 5h | PENDING | None |
-| M2-T5 | BEAD-014: Progress reporting enhancement | Feature | 4h | PENDING | M2-T4 |
+| M2-T1 | BEAD-009: Async dir_size (UI freeze fix) | Feature | 3h | COMPLETE | None |
+| M2-T2 | BEAD-010: Scan cancellation | Feature | 2h | COMPLETE | None |
+| M2-T3 | BEAD-011: Real progress tracking | Feature | 4h | COMPLETE | None |
+| M2-T4 | BEAD-013: Error boundaries | Feature | 5h | COMPLETE | None |
+| M2-T5 | BEAD-014: Retry logic | Feature | 4h | COMPLETE | M2-T4 |
 | M2-T6 | BEAD-015: Export functionality (CSV/JSON) | Feature | 6h | PENDING | None |
 | M2-T7 | BEAD-016: Undo/restore capability | Feature | 8h | PENDING | None |
 | M2-T8 | BEAD-017: Custom ignore patterns | Feature | 4h | PENDING | None |

@@ -42,3 +42,5 @@ pub mod external_drives;
 pub mod compression;
 /// File type statistics and visualization (BEAD-035).
 pub mod file_statistics;
+/// Specification parser for PACS multi-format support (BEAD-PACS-002).
+pub mod spec_parser;
