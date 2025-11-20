@@ -70,7 +70,7 @@
 
 **✅ BEAD-PACS-001 Complete - Foundation & Data Models**
 
-**✅ BEAD-PACS-001 (P0): Create PACS foundation: models, error types, core structures** (Complete)
+**✅ BEAD-PACS-001 (P0): Create PACS foundation: models, error types, core structures** (Complete - Commit: 7986134)
 - Created comprehensive PACS data models in `src-tauri/src/models/`
 - Added `project_audit.rs` (894 lines) with core audit structures:
   - ComplianceStatus, ComplianceLevel, EdgsPhase, LaioClassification
